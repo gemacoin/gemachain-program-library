@@ -1,6 +1,6 @@
 //! Program state processor
 
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     clock::Clock,
     entrypoint::ProgramResult,
@@ -23,7 +23,7 @@ use crate::{
         },
         vote_record::{get_vote_record_address_seeds, VoteRecord},
     },
-    tools::{account::create_and_serialize_account_signed, spl_token::get_spl_token_mint_supply},
+    tools::{account::create_and_serialize_account_signed, gpl_token::get_gpl_token_mint_supply},
 };
 
 use borsh::BorshSerialize;
@@ -118,7 +118,7 @@ pub fn process_cast_vote(
         }
     };
 
-    let governing_token_mint_supply = get_spl_token_mint_supply(governing_token_mint_info)?;
+    let governing_token_mint_supply = get_gpl_token_mint_supply(governing_token_mint_info)?;
     if proposal_data.try_tip_vote(
         governing_token_mint_supply,
         &governance_data.config,

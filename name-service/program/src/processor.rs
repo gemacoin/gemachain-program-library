@@ -5,7 +5,7 @@ use {
         state::{write_data, NameRecordHeader},
     },
     borsh::BorshDeserialize,
-    solana_program::{
+    gemachain_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
         msg,
@@ -24,7 +24,7 @@ impl Processor {
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         hashed_name: Vec<u8>,
-        lamports: u64,
+        carats: u64,
         space: u32,
     ) -> ProgramResult {
         let accounts_iter = &mut accounts.iter();
@@ -82,9 +82,9 @@ impl Processor {
         if name_account.data.borrow().len() == 0 {
             // Issue the name registry account
             // The creation is done in three steps: transfer, allocate and assign, because
-            // one cannot `system_instruction::create` an account to which lamports have been transfered before.
+            // one cannot `system_instruction::create` an account to which carats have been transfered before.
             invoke(
-                &system_instruction::transfer(payer_account.key, &name_account_key, lamports),
+                &system_instruction::transfer(payer_account.key, &name_account_key, carats),
                 &[
                     payer_account.clone(),
                     name_account.clone(),
@@ -199,9 +199,9 @@ impl Processor {
         // Overwrite the data with zeroes
         write_data(name_account, &vec![0; name_account.data_len()], 0);
 
-        // Close the account by transferring the rent sol
-        let source_amount: &mut u64 = &mut name_account.lamports.borrow_mut();
-        let dest_amount: &mut u64 = &mut refund_target.lamports.borrow_mut();
+        // Close the account by transferring the rent gema
+        let source_amount: &mut u64 = &mut name_account.carats.borrow_mut();
+        let dest_amount: &mut u64 = &mut refund_target.carats.borrow_mut();
         *dest_amount += *source_amount;
         *source_amount = 0;
 
@@ -221,11 +221,11 @@ impl Processor {
         match instruction {
             NameRegistryInstruction::Create {
                 hashed_name,
-                lamports,
+                carats,
                 space,
             } => {
                 msg!("Instruction: Create");
-                Processor::process_create(program_id, accounts, hashed_name, lamports, space)?;
+                Processor::process_create(program_id, accounts, hashed_name, carats, space)?;
             }
             NameRegistryInstruction::Update { offset, data } => {
                 msg!("Instruction: Update Data");

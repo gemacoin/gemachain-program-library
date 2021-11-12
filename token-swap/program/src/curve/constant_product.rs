@@ -8,11 +8,11 @@ use {
         },
         error::SwapError,
     },
-    solana_program::{
+    gemachain_program::{
         program_error::ProgramError,
         program_pack::{IsInitialized, Pack, Sealed},
     },
-    spl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber},
+    gpl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber},
 };
 
 /// ConstantProductCurve struct implementing CurveCalculator

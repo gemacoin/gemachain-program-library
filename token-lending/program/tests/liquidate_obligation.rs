@@ -3,14 +3,14 @@
 mod helpers;
 
 use helpers::*;
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program_test::*;
+use gemachain_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
-use spl_token::instruction::approve;
-use spl_token_lending::{
+use gpl_token::instruction::approve;
+use gpl_token_lending::{
     instruction::{liquidate_obligation, refresh_obligation},
     processor::process_instruction,
     state::INITIAL_COLLATERAL_RATIO,
@@ -19,24 +19,24 @@ use spl_token_lending::{
 #[tokio::test]
 async fn test_success() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
     // limit to track compute unit increase
     test.set_bpf_compute_max_units(68_000);
 
-    // 100 SOL collateral
-    const SOL_DEPOSIT_AMOUNT_LAMPORTS: u64 = 100 * LAMPORTS_TO_SOL * INITIAL_COLLATERAL_RATIO;
-    // 100 SOL * 80% LTV -> 80 SOL * 20 USDC -> 1600 USDC borrow
+    // 100 GEMA collateral
+    const GEMA_DEPOSIT_AMOUNT_CARATS: u64 = 100 * CARATS_TO_GEMA * INITIAL_COLLATERAL_RATIO;
+    // 100 GEMA * 80% LTV -> 80 GEMA * 20 USDC -> 1600 USDC borrow
     const USDC_BORROW_AMOUNT_FRACTIONAL: u64 = 1_600 * FRACTIONAL_TO_USDC;
     // 1600 USDC * 50% -> 800 USDC liquidation
     const USDC_LIQUIDATION_AMOUNT_FRACTIONAL: u64 = USDC_BORROW_AMOUNT_FRACTIONAL / 2;
-    // 800 USDC / 20 USDC per SOL -> 40 SOL + 10% bonus -> 44 SOL
-    const SOL_LIQUIDATION_AMOUNT_LAMPORTS: u64 = 44 * LAMPORTS_TO_SOL * INITIAL_COLLATERAL_RATIO;
+    // 800 USDC / 20 USDC per GEMA -> 40 GEMA + 10% bonus -> 44 GEMA
+    const GEMA_LIQUIDATION_AMOUNT_CARATS: u64 = 44 * CARATS_TO_GEMA * INITIAL_COLLATERAL_RATIO;
 
-    const SOL_RESERVE_COLLATERAL_LAMPORTS: u64 = 2 * SOL_DEPOSIT_AMOUNT_LAMPORTS;
+    const GEMA_RESERVE_COLLATERAL_CARATS: u64 = 2 * GEMA_DEPOSIT_AMOUNT_CARATS;
     const USDC_RESERVE_LIQUIDITY_FRACTIONAL: u64 = 2 * USDC_BORROW_AMOUNT_FRACTIONAL;
 
     let user_accounts_owner = Keypair::new();
@@ -48,15 +48,15 @@ async fn test_success() {
     reserve_config.liquidation_threshold = 80;
     reserve_config.liquidation_bonus = 10;
 
-    let sol_oracle = add_sol_oracle(&mut test);
-    let sol_test_reserve = add_reserve(
+    let gema_oracle = add_gema_oracle(&mut test);
+    let gema_test_reserve = add_reserve(
         &mut test,
         &lending_market,
-        &sol_oracle,
+        &gema_oracle,
         &user_accounts_owner,
         AddReserveArgs {
-            collateral_amount: SOL_RESERVE_COLLATERAL_LAMPORTS,
-            liquidity_mint_pubkey: spl_token::native_mint::id(),
+            collateral_amount: GEMA_RESERVE_COLLATERAL_CARATS,
+            liquidity_mint_pubkey: gpl_token::native_mint::id(),
             liquidity_mint_decimals: 9,
             config: reserve_config,
             mark_fresh: true,
@@ -88,7 +88,7 @@ async fn test_success() {
         &lending_market,
         &user_accounts_owner,
         AddObligationArgs {
-            deposits: &[(&sol_test_reserve, SOL_DEPOSIT_AMOUNT_LAMPORTS)],
+            deposits: &[(&gema_test_reserve, GEMA_DEPOSIT_AMOUNT_CARATS)],
             borrows: &[(&usdc_test_reserve, USDC_BORROW_AMOUNT_FRACTIONAL)],
             ..AddObligationArgs::default()
         },
@@ -101,14 +101,14 @@ async fn test_success() {
     let initial_liquidity_supply_balance =
         get_token_balance(&mut banks_client, usdc_test_reserve.liquidity_supply_pubkey).await;
     let initial_user_collateral_balance =
-        get_token_balance(&mut banks_client, sol_test_reserve.user_collateral_pubkey).await;
+        get_token_balance(&mut banks_client, gema_test_reserve.user_collateral_pubkey).await;
     let initial_collateral_supply_balance =
-        get_token_balance(&mut banks_client, sol_test_reserve.collateral_supply_pubkey).await;
+        get_token_balance(&mut banks_client, gema_test_reserve.collateral_supply_pubkey).await;
 
     let mut transaction = Transaction::new_with_payer(
         &[
             approve(
-                &spl_token::id(),
+                &gpl_token::id(),
                 &usdc_test_reserve.user_liquidity_pubkey,
                 &user_transfer_authority.pubkey(),
                 &user_accounts_owner.pubkey(),
@@ -117,19 +117,19 @@ async fn test_success() {
             )
             .unwrap(),
             refresh_obligation(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 test_obligation.pubkey,
-                vec![sol_test_reserve.pubkey, usdc_test_reserve.pubkey],
+                vec![gema_test_reserve.pubkey, usdc_test_reserve.pubkey],
             ),
             liquidate_obligation(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 USDC_LIQUIDATION_AMOUNT_FRACTIONAL,
                 usdc_test_reserve.user_liquidity_pubkey,
-                sol_test_reserve.user_collateral_pubkey,
+                gema_test_reserve.user_collateral_pubkey,
                 usdc_test_reserve.pubkey,
                 usdc_test_reserve.liquidity_supply_pubkey,
-                sol_test_reserve.pubkey,
-                sol_test_reserve.collateral_supply_pubkey,
+                gema_test_reserve.pubkey,
+                gema_test_reserve.collateral_supply_pubkey,
                 test_obligation.pubkey,
                 lending_market.pubkey,
                 user_transfer_authority.pubkey(),
@@ -159,23 +159,23 @@ async fn test_success() {
     );
 
     let user_collateral_balance =
-        get_token_balance(&mut banks_client, sol_test_reserve.user_collateral_pubkey).await;
+        get_token_balance(&mut banks_client, gema_test_reserve.user_collateral_pubkey).await;
     assert_eq!(
         user_collateral_balance,
-        initial_user_collateral_balance + SOL_LIQUIDATION_AMOUNT_LAMPORTS
+        initial_user_collateral_balance + GEMA_LIQUIDATION_AMOUNT_CARATS
     );
 
     let collateral_supply_balance =
-        get_token_balance(&mut banks_client, sol_test_reserve.collateral_supply_pubkey).await;
+        get_token_balance(&mut banks_client, gema_test_reserve.collateral_supply_pubkey).await;
     assert_eq!(
         collateral_supply_balance,
-        initial_collateral_supply_balance - SOL_LIQUIDATION_AMOUNT_LAMPORTS
+        initial_collateral_supply_balance - GEMA_LIQUIDATION_AMOUNT_CARATS
     );
 
     let obligation = test_obligation.get_state(&mut banks_client).await;
     assert_eq!(
         obligation.deposits[0].deposited_amount,
-        SOL_DEPOSIT_AMOUNT_LAMPORTS - SOL_LIQUIDATION_AMOUNT_LAMPORTS
+        GEMA_DEPOSIT_AMOUNT_CARATS - GEMA_LIQUIDATION_AMOUNT_CARATS
     );
     assert_eq!(
         obligation.borrows[0].borrowed_amount_wads,

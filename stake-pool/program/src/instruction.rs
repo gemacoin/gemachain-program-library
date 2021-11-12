@@ -10,7 +10,7 @@ use {
         MAX_VALIDATORS_TO_UPDATE,
     },
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
-    solana_program::{
+    gemachain_program::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         system_program, sysvar,
@@ -35,10 +35,10 @@ pub enum PreferredValidatorType {
 pub enum FundingType {
     /// Sets the stake deposit authority
     StakeDeposit,
-    /// Sets the SOL deposit authority
-    SolDeposit,
-    /// Sets the SOL withdraw authority
-    SolWithdraw,
+    /// Sets the GEMA deposit authority
+    GemaDeposit,
+    /// Sets the GEMA withdraw authority
+    GemaWithdraw,
 }
 
 /// Instructions supported by the StakePool program.
@@ -80,7 +80,7 @@ pub enum StakePoolInstruction {
     ///   (Staker only) Adds stake account delegated to validator to the pool's
     ///   list of managed validators.
     ///
-    ///   The stake account will have the rent-exempt amount plus 1 SOL.
+    ///   The stake account will have the rent-exempt amount plus 1 GEMA.
     ///
     ///   0. `[w]` Stake pool
     ///   1. `[s]` Staker
@@ -99,7 +99,7 @@ pub enum StakePoolInstruction {
 
     ///   (Staker only) Removes validator from the pool
     ///
-    ///   Only succeeds if the validator stake account has the minimum of 1 SOL
+    ///   Only succeeds if the validator stake account has the minimum of 1 GEMA
     ///   plus the rent-exempt amount.
     ///
     ///   0. `[w]` Stake pool
@@ -109,7 +109,7 @@ pub enum StakePoolInstruction {
     ///   4. `[w]` Validator stake list storage account
     ///   5. `[w]` Stake account to remove from the pool
     ///   6. `[]` Transient stake account, to check that that we're not trying to activate
-    ///   7. `[w]` Destination stake account, to receive the minimum SOL from the validator stake account. Must be
+    ///   7. `[w]` Destination stake account, to receive the minimum GEMA from the validator stake account. Must be
     ///   8. `[]` Sysvar clock
     ///   9. `[]` Stake program id,
     RemoveValidatorFromPool,
@@ -125,7 +125,7 @@ pub enum StakePoolInstruction {
     /// validator stake account, into its "transient" stake account.
     ///
     /// The instruction only succeeds if the transient stake account does not
-    /// exist. The amount of lamports to move must be at least rent-exemption
+    /// exist. The amount of carats to move must be at least rent-exemption
     /// plus 1 lamport.
     ///
     ///  0. `[]` Stake pool
@@ -139,9 +139,9 @@ pub enum StakePoolInstruction {
     ///  8. `[]` System program
     ///  9. `[]` Stake program
     DecreaseValidatorStake {
-        /// amount of lamports to split into the transient stake account
+        /// amount of carats to split into the transient stake account
         #[allow(dead_code)] // but it's not
-        lamports: u64,
+        carats: u64,
         /// seed used to create transient stake account
         #[allow(dead_code)] // but it's not
         transient_stake_seed: u64,
@@ -154,7 +154,7 @@ pub enum StakePoolInstruction {
     /// will do the work of merging once it's ready.
     ///
     /// This instruction only succeeds if the transient stake account does not exist.
-    /// The minimum amount to move is rent-exemption plus 1 SOL in order to avoid
+    /// The minimum amount to move is rent-exemption plus 1 GEMA in order to avoid
     /// issues on credits observed when merging active stakes later.
     ///
     ///  0. `[]` Stake pool
@@ -170,15 +170,15 @@ pub enum StakePoolInstruction {
     /// 10. `[]` Stake Config sysvar
     /// 11. `[]` System program
     /// 12. `[]` Stake program
-    ///  userdata: amount of lamports to increase on the given validator.
+    ///  userdata: amount of carats to increase on the given validator.
     ///  The actual amount split into the transient stake account is:
-    ///  `lamports + stake_rent_exemption`
+    ///  `carats + stake_rent_exemption`
     ///  The rent-exemption of the stake account is withdrawn back to the reserve
     ///  after it is merged.
     IncreaseValidatorStake {
-        /// amount of lamports to increase on the given validator
+        /// amount of carats to increase on the given validator
         #[allow(dead_code)] // but it's not
-        lamports: u64,
+        carats: u64,
         /// seed used to create transient stake account
         #[allow(dead_code)] // but it's not
         transient_stake_seed: u64,
@@ -188,7 +188,7 @@ pub enum StakePoolInstruction {
     /// stake pool
     ///
     /// In order to avoid users abusing the stake pool as a free conversion
-    /// between SOL staked on different validators, the staker can force all
+    /// between GEMA staked on different validators, the staker can force all
     /// deposits and/or withdraws to go to one chosen account, or unset that account.
     ///
     /// 0. `[w]` Stake pool
@@ -273,9 +273,9 @@ pub enum StakePoolInstruction {
 
     ///   Withdraw the token from the pool at the current ratio.
     ///
-    ///   Succeeds if the stake account has enough SOL to cover the desired amount
+    ///   Succeeds if the stake account has enough GEMA to cover the desired amount
     ///   of pool tokens, and if the withdrawal keeps the total staked amount
-    ///   above the minimum of rent-exempt amount + 1 SOL.
+    ///   above the minimum of rent-exempt amount + 1 GEMA.
     ///
     ///   A validator stake account can be withdrawn from freely, and the reserve
     ///   can only be drawn from if there is no active stake left, where all
@@ -322,46 +322,46 @@ pub enum StakePoolInstruction {
     ///  2. '[]` New staker pubkey
     SetStaker,
 
-    ///   Deposit SOL directly into the pool's reserve account. The output is a "pool" token
+    ///   Deposit GEMA directly into the pool's reserve account. The output is a "pool" token
     ///   representing ownership into the pool. Inputs are converted to the current ratio.
     ///
     ///   0. `[w]` Stake pool
     ///   1. `[]` Stake pool withdraw authority
-    ///   2. `[w]` Reserve stake account, to deposit SOL
-    ///   3. `[s]` Account providing the lamports to be deposited into the pool
+    ///   2. `[w]` Reserve stake account, to deposit GEMA
+    ///   3. `[s]` Account providing the carats to be deposited into the pool
     ///   4. `[w]` User account to receive pool tokens
     ///   5. `[w]` Account to receive fee tokens
     ///   6. `[w]` Account to receive a portion of fee as referral fees
     ///   7. `[w]` Pool token mint account
     ///   8. `[]` System program account
     ///   9. `[]` Token program id
-    ///  10. `[s]` (Optional) Stake pool sol deposit authority.
-    DepositSol(u64),
+    ///  10. `[s]` (Optional) Stake pool gema deposit authority.
+    DepositGema(u64),
 
-    ///  (Manager only) Update SOL deposit authority
+    ///  (Manager only) Update GEMA deposit authority
     ///
     ///  0. `[w]` StakePool
     ///  1. `[s]` Manager
     ///  2. '[]` New authority pubkey or none
     SetFundingAuthority(FundingType),
 
-    ///   Withdraw SOL directly from the pool's reserve account. Fails if the
-    ///   reserve does not have enough SOL.
+    ///   Withdraw GEMA directly from the pool's reserve account. Fails if the
+    ///   reserve does not have enough GEMA.
     ///
     ///   0. `[w]` Stake pool
     ///   1. `[]` Stake pool withdraw authority
     ///   2. `[s]` User transfer authority, for pool token account
     ///   3. `[w]` User account to burn pool tokens
-    ///   4. `[w]` Reserve stake account, to withdraw SOL
-    ///   5. `[w]` Account receiving the lamports from the reserve, must be a system account
+    ///   4. `[w]` Reserve stake account, to withdraw GEMA
+    ///   5. `[w]` Account receiving the carats from the reserve, must be a system account
     ///   6. `[w]` Account to receive pool fee tokens
     ///   7. `[w]` Pool token mint account
     ///   8. '[]' Clock sysvar
     ///   9. '[]' Stake history sysvar
     ///  10. `[]` Stake program account
     ///  11. `[]` Token program id
-    ///  12. `[s]` (Optional) Stake pool sol withdraw authority
-    WithdrawSol(u64),
+    ///  12. `[s]` (Optional) Stake pool gema withdraw authority
+    WithdrawGema(u64),
 }
 
 /// Creates an 'initialize' instruction.
@@ -488,7 +488,7 @@ pub fn decrease_validator_stake(
     validator_list: &Pubkey,
     validator_stake: &Pubkey,
     transient_stake: &Pubkey,
-    lamports: u64,
+    carats: u64,
     transient_stake_seed: u64,
 ) -> Instruction {
     let accounts = vec![
@@ -507,7 +507,7 @@ pub fn decrease_validator_stake(
         program_id: *program_id,
         accounts,
         data: StakePoolInstruction::DecreaseValidatorStake {
-            lamports,
+            carats,
             transient_stake_seed,
         }
         .try_to_vec()
@@ -526,7 +526,7 @@ pub fn increase_validator_stake(
     reserve_stake: &Pubkey,
     transient_stake: &Pubkey,
     validator: &Pubkey,
-    lamports: u64,
+    carats: u64,
     transient_stake_seed: u64,
 ) -> Instruction {
     let accounts = vec![
@@ -548,7 +548,7 @@ pub fn increase_validator_stake(
         program_id: *program_id,
         accounts,
         data: StakePoolInstruction::IncreaseValidatorStake {
-            lamports,
+            carats,
             transient_stake_seed,
         }
         .try_to_vec()
@@ -647,7 +647,7 @@ pub fn increase_validator_stake_with_vote(
     stake_pool: &StakePool,
     stake_pool_address: &Pubkey,
     vote_account_address: &Pubkey,
-    lamports: u64,
+    carats: u64,
     transient_stake_seed: u64,
 ) -> Instruction {
     let pool_withdraw_authority =
@@ -668,7 +668,7 @@ pub fn increase_validator_stake_with_vote(
         &stake_pool.reserve_stake,
         &transient_stake_address,
         vote_account_address,
-        lamports,
+        carats,
         transient_stake_seed,
     )
 }
@@ -680,7 +680,7 @@ pub fn decrease_validator_stake_with_vote(
     stake_pool: &StakePool,
     stake_pool_address: &Pubkey,
     vote_account_address: &Pubkey,
-    lamports: u64,
+    carats: u64,
     transient_stake_seed: u64,
 ) -> Instruction {
     let pool_withdraw_authority =
@@ -701,7 +701,7 @@ pub fn decrease_validator_stake_with_vote(
         &stake_pool.validator_list,
         &validator_stake_address,
         &transient_stake_address,
-        lamports,
+        carats,
         transient_stake_seed,
     )
 }
@@ -980,13 +980,13 @@ pub fn deposit_stake_with_authority(
     ]
 }
 
-/// Creates instructions required to deposit SOL directly into a stake pool.
-pub fn deposit_sol(
+/// Creates instructions required to deposit GEMA directly into a stake pool.
+pub fn deposit_gema(
     program_id: &Pubkey,
     stake_pool: &Pubkey,
     stake_pool_withdraw_authority: &Pubkey,
     reserve_stake_account: &Pubkey,
-    lamports_from: &Pubkey,
+    carats_from: &Pubkey,
     pool_tokens_to: &Pubkey,
     manager_fee_account: &Pubkey,
     referrer_pool_tokens_account: &Pubkey,
@@ -998,7 +998,7 @@ pub fn deposit_sol(
         AccountMeta::new(*stake_pool, false),
         AccountMeta::new_readonly(*stake_pool_withdraw_authority, false),
         AccountMeta::new(*reserve_stake_account, false),
-        AccountMeta::new(*lamports_from, true),
+        AccountMeta::new(*carats_from, true),
         AccountMeta::new(*pool_tokens_to, false),
         AccountMeta::new(*manager_fee_account, false),
         AccountMeta::new(*referrer_pool_tokens_account, false),
@@ -1009,22 +1009,22 @@ pub fn deposit_sol(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: StakePoolInstruction::DepositSol(amount)
+        data: StakePoolInstruction::DepositGema(amount)
             .try_to_vec()
             .unwrap(),
     }
 }
 
-/// Creates instruction required to deposit SOL directly into a stake pool.
-/// The difference with `deposit_sol()` is that a deposit
+/// Creates instruction required to deposit GEMA directly into a stake pool.
+/// The difference with `deposit_gema()` is that a deposit
 /// authority must sign this instruction.
-pub fn deposit_sol_with_authority(
+pub fn deposit_gema_with_authority(
     program_id: &Pubkey,
     stake_pool: &Pubkey,
-    sol_deposit_authority: &Pubkey,
+    gema_deposit_authority: &Pubkey,
     stake_pool_withdraw_authority: &Pubkey,
     reserve_stake_account: &Pubkey,
-    lamports_from: &Pubkey,
+    carats_from: &Pubkey,
     pool_tokens_to: &Pubkey,
     manager_fee_account: &Pubkey,
     referrer_pool_tokens_account: &Pubkey,
@@ -1036,19 +1036,19 @@ pub fn deposit_sol_with_authority(
         AccountMeta::new(*stake_pool, false),
         AccountMeta::new_readonly(*stake_pool_withdraw_authority, false),
         AccountMeta::new(*reserve_stake_account, false),
-        AccountMeta::new(*lamports_from, true),
+        AccountMeta::new(*carats_from, true),
         AccountMeta::new(*pool_tokens_to, false),
         AccountMeta::new(*manager_fee_account, false),
         AccountMeta::new(*referrer_pool_tokens_account, false),
         AccountMeta::new(*pool_mint, false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(*token_program_id, false),
-        AccountMeta::new_readonly(*sol_deposit_authority, true),
+        AccountMeta::new_readonly(*gema_deposit_authority, true),
     ];
     Instruction {
         program_id: *program_id,
         accounts,
-        data: StakePoolInstruction::DepositSol(amount)
+        data: StakePoolInstruction::DepositGema(amount)
             .try_to_vec()
             .unwrap(),
     }
@@ -1094,15 +1094,15 @@ pub fn withdraw_stake(
     }
 }
 
-/// Creates instruction required to withdraw SOL directly from a stake pool.
-pub fn withdraw_sol(
+/// Creates instruction required to withdraw GEMA directly from a stake pool.
+pub fn withdraw_gema(
     program_id: &Pubkey,
     stake_pool: &Pubkey,
     stake_pool_withdraw_authority: &Pubkey,
     user_transfer_authority: &Pubkey,
     pool_tokens_from: &Pubkey,
     reserve_stake_account: &Pubkey,
-    lamports_to: &Pubkey,
+    carats_to: &Pubkey,
     manager_fee_account: &Pubkey,
     pool_mint: &Pubkey,
     token_program_id: &Pubkey,
@@ -1114,7 +1114,7 @@ pub fn withdraw_sol(
         AccountMeta::new_readonly(*user_transfer_authority, true),
         AccountMeta::new(*pool_tokens_from, false),
         AccountMeta::new(*reserve_stake_account, false),
-        AccountMeta::new(*lamports_to, false),
+        AccountMeta::new(*carats_to, false),
         AccountMeta::new(*manager_fee_account, false),
         AccountMeta::new(*pool_mint, false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
@@ -1125,24 +1125,24 @@ pub fn withdraw_sol(
     Instruction {
         program_id: *program_id,
         accounts,
-        data: StakePoolInstruction::WithdrawSol(pool_tokens)
+        data: StakePoolInstruction::WithdrawGema(pool_tokens)
             .try_to_vec()
             .unwrap(),
     }
 }
 
-/// Creates instruction required to withdraw SOL directly from a stake pool.
-/// The difference with `withdraw_sol()` is that the sol withdraw authority
+/// Creates instruction required to withdraw GEMA directly from a stake pool.
+/// The difference with `withdraw_gema()` is that the gema withdraw authority
 /// must sign this instruction.
-pub fn withdraw_sol_with_authority(
+pub fn withdraw_gema_with_authority(
     program_id: &Pubkey,
     stake_pool: &Pubkey,
-    sol_withdraw_authority: &Pubkey,
+    gema_withdraw_authority: &Pubkey,
     stake_pool_withdraw_authority: &Pubkey,
     user_transfer_authority: &Pubkey,
     pool_tokens_from: &Pubkey,
     reserve_stake_account: &Pubkey,
-    lamports_to: &Pubkey,
+    carats_to: &Pubkey,
     manager_fee_account: &Pubkey,
     pool_mint: &Pubkey,
     token_program_id: &Pubkey,
@@ -1154,19 +1154,19 @@ pub fn withdraw_sol_with_authority(
         AccountMeta::new_readonly(*user_transfer_authority, true),
         AccountMeta::new(*pool_tokens_from, false),
         AccountMeta::new(*reserve_stake_account, false),
-        AccountMeta::new(*lamports_to, false),
+        AccountMeta::new(*carats_to, false),
         AccountMeta::new(*manager_fee_account, false),
         AccountMeta::new(*pool_mint, false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(sysvar::stake_history::id(), false),
         AccountMeta::new_readonly(stake_program::id(), false),
         AccountMeta::new_readonly(*token_program_id, false),
-        AccountMeta::new_readonly(*sol_withdraw_authority, true),
+        AccountMeta::new_readonly(*gema_withdraw_authority, true),
     ];
     Instruction {
         program_id: *program_id,
         accounts,
-        data: StakePoolInstruction::WithdrawSol(pool_tokens)
+        data: StakePoolInstruction::WithdrawGema(pool_tokens)
             .try_to_vec()
             .unwrap(),
     }
@@ -1235,14 +1235,14 @@ pub fn set_funding_authority(
     program_id: &Pubkey,
     stake_pool: &Pubkey,
     manager: &Pubkey,
-    new_sol_deposit_authority: Option<&Pubkey>,
+    new_gema_deposit_authority: Option<&Pubkey>,
     funding_type: FundingType,
 ) -> Instruction {
     let mut accounts = vec![
         AccountMeta::new(*stake_pool, false),
         AccountMeta::new_readonly(*manager, true),
     ];
-    if let Some(auth) = new_sol_deposit_authority {
+    if let Some(auth) = new_gema_deposit_authority {
         accounts.push(AccountMeta::new_readonly(*auth, false))
     }
     Instruction {

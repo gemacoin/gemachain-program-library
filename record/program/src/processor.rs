@@ -7,7 +7,7 @@ use {
         state::{Data, RecordData},
     },
     borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
+    gemachain_program::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::ProgramResult,
         msg,
@@ -106,11 +106,11 @@ pub fn process_instruction(
                 return Err(ProgramError::UninitializedAccount);
             }
             check_authority(authority_info, &account_data.authority)?;
-            let destination_starting_lamports = destination_info.lamports();
-            let data_lamports = data_info.lamports();
-            **data_info.lamports.borrow_mut() = 0;
-            **destination_info.lamports.borrow_mut() = destination_starting_lamports
-                .checked_add(data_lamports)
+            let destination_starting_carats = destination_info.carats();
+            let data_carats = data_info.carats();
+            **data_info.carats.borrow_mut() = 0;
+            **destination_info.carats.borrow_mut() = destination_starting_carats
+                .checked_add(data_carats)
                 .ok_or(RecordError::Overflow)?;
             account_data.data = Data::default();
             account_data

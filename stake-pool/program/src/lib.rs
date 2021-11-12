@@ -13,10 +13,10 @@ pub mod state;
 pub mod entrypoint;
 
 // Export current sdk types for downstream users building with a different sdk version
-pub use solana_program;
+pub use gemachain_program;
 use {
     crate::{stake_program::Meta, state::Fee},
-    solana_program::{native_token::LAMPORTS_PER_SOL, pubkey::Pubkey},
+    gemachain_program::{native_token::CARATS_PER_GEMA, pubkey::Pubkey},
 };
 
 /// Seed for deposit authority seed
@@ -28,9 +28,9 @@ const AUTHORITY_WITHDRAW: &[u8] = b"withdraw";
 /// Seed for transient stake account
 const TRANSIENT_STAKE_SEED_PREFIX: &[u8] = b"transient";
 
-/// Minimum amount of staked SOL required in a validator stake account to allow
+/// Minimum amount of staked GEMA required in a validator stake account to allow
 /// for merges without a mismatch on credits observed
-pub const MINIMUM_ACTIVE_STAKE: u64 = LAMPORTS_PER_SOL / 1_000;
+pub const MINIMUM_ACTIVE_STAKE: u64 = CARATS_PER_GEMA / 1_000;
 
 /// Maximum amount of validator stake accounts to update per
 /// `UpdateValidatorListBalance` instruction, based on compute limits
@@ -56,7 +56,7 @@ pub const MAX_TRANSIENT_STAKE_ACCOUNTS: usize = 10;
 /// Get the stake amount under consideration when calculating pool token
 /// conversions
 #[inline]
-pub fn minimum_stake_lamports(meta: &Meta) -> u64 {
+pub fn minimum_stake_carats(meta: &Meta) -> u64 {
     meta.rent_exempt_reserve
         .saturating_add(MINIMUM_ACTIVE_STAKE)
 }
@@ -64,7 +64,7 @@ pub fn minimum_stake_lamports(meta: &Meta) -> u64 {
 /// Get the stake amount under consideration when calculating pool token
 /// conversions
 #[inline]
-pub fn minimum_reserve_lamports(meta: &Meta) -> u64 {
+pub fn minimum_reserve_carats(meta: &Meta) -> u64 {
     meta.rent_exempt_reserve.saturating_add(1)
 }
 
@@ -123,4 +123,4 @@ pub fn find_transient_stake_program_address(
     )
 }
 
-solana_program::declare_id!("SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy");
+gemachain_program::declare_id!("SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy");

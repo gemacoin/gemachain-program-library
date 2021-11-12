@@ -1,7 +1,7 @@
 //! Instruction types
 use {
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
-    solana_program::{
+    gemachain_program::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
     },

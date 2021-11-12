@@ -1,9 +1,9 @@
 use {
     arbitrary::Arbitrary,
     honggfuzz::fuzz,
-    spl_math::precise_number::PreciseNumber,
-    spl_token::error::TokenError,
-    spl_token_swap::{
+    gpl_math::precise_number::PreciseNumber,
+    gpl_token::error::TokenError,
+    gpl_token_swap::{
         curve::{
             base::{CurveType, SwapCurve},
             calculator::TradeDirection,
@@ -19,7 +19,7 @@ use {
             WithdrawSingleTokenTypeExactAmountOut,
         },
     },
-    spl_token_swap_fuzz::{
+    gpl_token_swap_fuzz::{
         native_account_data::NativeAccountData,
         native_token::{get_token_balance, transfer},
         native_token_swap::NativeTokenSwap,

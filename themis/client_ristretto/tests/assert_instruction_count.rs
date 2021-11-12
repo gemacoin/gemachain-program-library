@@ -2,12 +2,12 @@ use borsh::BorshSerialize;
 use curve25519_dalek::constants::RISTRETTO_BASEPOINT_POINT;
 use elgamal_ristretto::ciphertext::Ciphertext;
 use separator::Separatable;
-use solana_bpf_loader_program::{
+use gemachain_bpf_loader_program::{
     create_vm,
     serialization::{deserialize_parameters, serialize_parameters},
 };
-use solana_rbpf::vm::EbpfVm;
-use solana_sdk::{
+use gemachain_rbpf::vm::EbpfVm;
+use gemachain_sdk::{
     account::Account,
     bpf_loader,
     entrypoint::SUCCESS,
@@ -15,7 +15,7 @@ use solana_sdk::{
     process_instruction::{BpfComputeBudget, MockInvokeContext},
     pubkey::Pubkey,
 };
-use spl_themis_ristretto::{
+use gpl_themis_ristretto::{
     instruction::ThemisInstruction,
     state::{generate_keys, /*recover_scalar,*/ Policies, User},
 };
@@ -35,7 +35,7 @@ fn run_program(
     instruction_data: &[u8],
 ) -> u64 {
     let mut program_account = Account::default();
-    program_account.data = load_program("../../target/deploy/spl_themis_ristretto.so");
+    program_account.data = load_program("../../target/deploy/gpl_themis_ristretto.so");
     let loader_id = bpf_loader::id();
     let mut invoke_context = MockInvokeContext::default();
     invoke_context.bpf_compute_budget = BpfComputeBudget {
@@ -43,7 +43,7 @@ fn run_program(
         ..BpfComputeBudget::default()
     };
 
-    let executable = EbpfVm::<solana_bpf_loader_program::BPFError>::create_executable_from_elf(
+    let executable = EbpfVm::<gemachain_bpf_loader_program::BPFError>::create_executable_from_elf(
         &&program_account.data,
         None,
     )

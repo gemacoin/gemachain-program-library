@@ -5,17 +5,17 @@ mod helpers;
 use {
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked,
         hash::Hash,
         instruction::{AccountMeta, Instruction},
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         instruction::InstructionError, signature::Keypair, signature::Signer,
         transaction::Transaction, transaction::TransactionError, transport::TransportError,
     },
-    spl_stake_pool::{error, id, instruction, state},
+    gpl_stake_pool::{error, id, instruction, state},
 };
 
 async fn setup() -> (BanksClient, Keypair, Hash, StakePoolAccounts, Keypair) {

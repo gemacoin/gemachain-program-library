@@ -5,17 +5,17 @@ mod helpers;
 use {
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked,
         hash::Hash,
         instruction::{AccountMeta, Instruction},
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         instruction::InstructionError, signature::Keypair, signature::Signer,
         transaction::Transaction, transaction::TransactionError, transport::TransportError,
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error, find_deposit_authority_program_address, id,
         instruction::{self, FundingType},
         state,
@@ -162,8 +162,8 @@ async fn fail_without_signature() {
 }
 
 #[tokio::test]
-async fn success_set_sol_deposit_authority() {
-    let (mut banks_client, payer, recent_blockhash, stake_pool_accounts, new_sol_deposit_authority) =
+async fn success_set_gema_deposit_authority() {
+    let (mut banks_client, payer, recent_blockhash, stake_pool_accounts, new_gema_deposit_authority) =
         setup().await;
 
     let mut transaction = Transaction::new_with_payer(
@@ -171,8 +171,8 @@ async fn success_set_sol_deposit_authority() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            Some(&new_sol_deposit_authority.pubkey()),
-            FundingType::SolDeposit,
+            Some(&new_gema_deposit_authority.pubkey()),
+            FundingType::GemaDeposit,
         )],
         Some(&payer.pubkey()),
     );
@@ -184,8 +184,8 @@ async fn success_set_sol_deposit_authority() {
         try_from_slice_unchecked::<state::StakePool>(stake_pool.data.as_slice()).unwrap();
 
     assert_eq!(
-        stake_pool.sol_deposit_authority,
-        Some(new_sol_deposit_authority.pubkey())
+        stake_pool.gema_deposit_authority,
+        Some(new_gema_deposit_authority.pubkey())
     );
 
     let mut transaction = Transaction::new_with_payer(
@@ -194,7 +194,7 @@ async fn success_set_sol_deposit_authority() {
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
             None,
-            FundingType::SolDeposit,
+            FundingType::GemaDeposit,
         )],
         Some(&payer.pubkey()),
     );
@@ -205,7 +205,7 @@ async fn success_set_sol_deposit_authority() {
     let stake_pool =
         try_from_slice_unchecked::<state::StakePool>(stake_pool.data.as_slice()).unwrap();
 
-    assert_eq!(stake_pool.sol_deposit_authority, None);
+    assert_eq!(stake_pool.gema_deposit_authority, None);
 }
 
 #[tokio::test]
@@ -219,7 +219,7 @@ async fn success_set_withdraw_authority() {
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
             Some(&new_authority.pubkey()),
-            FundingType::SolWithdraw,
+            FundingType::GemaWithdraw,
         )],
         Some(&payer.pubkey()),
     );
@@ -231,7 +231,7 @@ async fn success_set_withdraw_authority() {
         try_from_slice_unchecked::<state::StakePool>(stake_pool.data.as_slice()).unwrap();
 
     assert_eq!(
-        stake_pool.sol_withdraw_authority,
+        stake_pool.gema_withdraw_authority,
         Some(new_authority.pubkey())
     );
 
@@ -241,7 +241,7 @@ async fn success_set_withdraw_authority() {
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
             None,
-            FundingType::SolWithdraw,
+            FundingType::GemaWithdraw,
         )],
         Some(&payer.pubkey()),
     );
@@ -252,5 +252,5 @@ async fn success_set_withdraw_authority() {
     let stake_pool =
         try_from_slice_unchecked::<state::StakePool>(stake_pool.data.as_slice()).unwrap();
 
-    assert_eq!(stake_pool.sol_withdraw_authority, None);
+    assert_eq!(stake_pool.gema_withdraw_authority, None);
 }

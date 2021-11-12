@@ -4,7 +4,7 @@ use crate::{
     error::LendingError,
     state::{ReserveConfig, ReserveFees},
 };
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction},
     msg,
     program_error::ProgramError,
@@ -560,7 +560,7 @@ pub fn init_lending_market(
         accounts: vec![
             AccountMeta::new(lending_market_pubkey, false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
             AccountMeta::new_readonly(oracle_program_id, false),
         ],
         data: LendingInstruction::InitLendingMarket {
@@ -629,7 +629,7 @@ pub fn init_reserve(
         AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
     ];
     Instruction {
         program_id,
@@ -689,7 +689,7 @@ pub fn deposit_reserve_liquidity(
             AccountMeta::new_readonly(lending_market_authority_pubkey, false),
             AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::DepositReserveLiquidity { liquidity_amount }.pack(),
     }
@@ -724,7 +724,7 @@ pub fn redeem_reserve_collateral(
             AccountMeta::new_readonly(lending_market_authority_pubkey, false),
             AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::RedeemReserveCollateral { collateral_amount }.pack(),
     }
@@ -746,7 +746,7 @@ pub fn init_obligation(
             AccountMeta::new_readonly(obligation_owner_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::InitObligation.pack(),
     }
@@ -799,7 +799,7 @@ pub fn deposit_obligation_collateral(
             AccountMeta::new_readonly(obligation_owner_pubkey, true),
             AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::DepositObligationCollateral { collateral_amount }.pack(),
     }
@@ -832,7 +832,7 @@ pub fn withdraw_obligation_collateral(
             AccountMeta::new_readonly(lending_market_authority_pubkey, false),
             AccountMeta::new_readonly(obligation_owner_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::WithdrawObligationCollateral { collateral_amount }.pack(),
     }
@@ -866,7 +866,7 @@ pub fn borrow_obligation_liquidity(
         AccountMeta::new_readonly(lending_market_authority_pubkey, false),
         AccountMeta::new_readonly(obligation_owner_pubkey, true),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
     ];
     if let Some(host_fee_receiver_pubkey) = host_fee_receiver_pubkey {
         accounts.push(AccountMeta::new(host_fee_receiver_pubkey, false));
@@ -900,7 +900,7 @@ pub fn repay_obligation_liquidity(
             AccountMeta::new_readonly(lending_market_pubkey, false),
             AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::RepayObligationLiquidity { liquidity_amount }.pack(),
     }
@@ -939,7 +939,7 @@ pub fn liquidate_obligation(
             AccountMeta::new_readonly(lending_market_authority_pubkey, false),
             AccountMeta::new_readonly(user_transfer_authority_pubkey, true),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
         ],
         data: LendingInstruction::LiquidateObligation { liquidity_amount }.pack(),
     }
@@ -971,7 +971,7 @@ pub fn flash_loan(
         AccountMeta::new(host_fee_receiver_pubkey, false),
         AccountMeta::new_readonly(lending_market_pubkey, false),
         AccountMeta::new_readonly(lending_market_authority_pubkey, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(flash_loan_receiver_program_id, false),
     ];
     accounts.extend(flash_loan_receiver_program_accounts);

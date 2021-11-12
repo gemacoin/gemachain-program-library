@@ -1,9 +1,9 @@
 [package]
-name = "spl-governance-chat"
+name = "gpl-governance-chat"
 version = "0.1.0"
-description = "Solana Program Library Governance Chat Program"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+description = "Gemachain Program Library Governance Chat Program"
+authors = ["Gemachain Maintainers <maintainers@gemachain.foundation>"]
+repository = "https://github.com/gemachain/gemachain-program-library"
 license = "Apache-2.0"
 edition = "2018"
 
@@ -19,9 +19,9 @@ num-derive = "0.3"
 num-traits = "0.2"
 serde = "1.0.127"
 serde_derive = "1.0.103"
-solana-program = "1.8.0"
-spl-token = { version = "3.2", path = "../../../token/program", features = [ "no-entrypoint" ] }
-spl-governance= { version = "1.1.0", path ="../../program", features = [ "no-entrypoint" ]}
+gemachain-program = "1.8.2"
+gpl-token = { version = "3.2", path = "../../../token/program", features = [ "no-entrypoint" ] }
+gpl-governance= { version = "1.1.0", path ="../../program", features = [ "no-entrypoint" ]}
 thiserror = "1.0"
 
 
@@ -29,9 +29,9 @@ thiserror = "1.0"
 assert_matches = "1.5.0"
 base64 = "0.13"
 proptest = "1.0"
-solana-program-test = "1.8.0"
-solana-sdk = "1.8.0"
-spl-governance-test-sdk = { version = "0.1.0", path ="../../test-sdk"}
+gemachain-program-test = "1.8.2"
+gemachain-sdk = "1.8.2"
+gpl-governance-test-sdk = { version = "0.1.0", path ="../../test-sdk"}
 
 
 [lib]

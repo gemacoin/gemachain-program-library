@@ -2,7 +2,7 @@
 
 use crate::id;
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
 };
@@ -40,13 +40,13 @@ pub enum RecordInstruction {
     /// 2. `[]` New record authority
     SetAuthority,
 
-    /// Close the provided record account, draining lamports to recipient account
+    /// Close the provided record account, draining carats to recipient account
     ///
     /// Accounts expected by this instruction:
     ///
     /// 0. `[writable]` Record account, must be previously initialized
     /// 1. `[signer]` Record authority
-    /// 2. `[]` Receiver of account lamports
+    /// 2. `[]` Receiver of account carats
     CloseAccount,
 }
 
@@ -108,7 +108,7 @@ pub fn close_account(record_account: &Pubkey, signer: &Pubkey, receiver: &Pubkey
 mod tests {
     use super::*;
     use crate::state::tests::TEST_DATA;
-    use solana_program::program_error::ProgramError;
+    use gemachain_program::program_error::ProgramError;
 
     #[test]
     fn serialize_initialize() {

@@ -1,24 +1,24 @@
 [package]
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-description = "SPL Token Lending CLI"
+authors = ["Gemachain Maintainers <maintainers@gemachain.foundation>"]
+description = "GPL Token Lending CLI"
 edition = "2018"
-homepage = "https://spl.solana.com/token-lending"
+homepage = "https://gpl.gemachain.com/token-lending"
 license = "Apache-2.0"
-name = "spl-token-lending-cli"
-repository = "https://github.com/solana-labs/solana-program-library"
+name = "gpl-token-lending-cli"
+repository = "https://github.com/gemachain/gemachain-program-library"
 version = "0.1.0"
 
 [dependencies]
 clap = "2.33.3"
-solana-clap-utils = "1.8.0"
-solana-cli-config = "1.8.0"
-solana-client = "1.8.0"
-solana-logger = "1.8.0"
-solana-sdk = "1.8.0"
-solana-program = "1.8.0"
-spl-token-lending = { path="../program", features = [ "no-entrypoint" ] }
-spl-token = { path="../../token/program", features = [ "no-entrypoint" ]  }
+gemachain-clap-utils = "1.8.2"
+gemachain-cli-config = "1.8.2"
+gemachain-client = "1.8.2"
+gemachain-logger = "1.8.2"
+gemachain-sdk = "1.8.2"
+gemachain-program = "1.8.2"
+gpl-token-lending = { path="../program", features = [ "no-entrypoint" ] }
+gpl-token = { path="../../token/program", features = [ "no-entrypoint" ]  }
 
 [[bin]]
-name = "spl-token-lending"
+name = "gpl-token-lending"
 path = "src/main.rs"

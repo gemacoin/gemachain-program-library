@@ -1,9 +1,9 @@
 //! Themis client
 
-use solana_banks_client::start_tcp_client;
-use solana_cli_config::{Config, CONFIG_FILE};
-use solana_sdk::signature::read_keypair_file;
-use spl_themis_ristretto_client::test_e2e;
+use gemachain_banks_client::start_tcp_client;
+use gemachain_cli_config::{Config, CONFIG_FILE};
+use gemachain_sdk::signature::read_keypair_file;
+use gpl_themis_ristretto_client::test_e2e;
 use std::path::Path;
 use tokio::runtime::Runtime;
 use url::Url;
@@ -25,7 +25,7 @@ fn main() {
         let sender_keypair = read_keypair_file(&config.keypair_path).unwrap();
         test_e2e(
             &mut banks_client,
-            &spl_themis_ristretto::id(),
+            &gpl_themis_ristretto::id(),
             sender_keypair,
             policies,
             1_000,

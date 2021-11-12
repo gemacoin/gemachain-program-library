@@ -5,22 +5,22 @@ mod helpers;
 use {
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked, program_option::COption, program_pack::Pack,
         pubkey::Pubkey,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         account::{Account, WritableAccount},
         clock::{Clock, Epoch},
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
-    solana_vote_program::{
+    gemachain_vote_program::{
         self,
         vote_state::{VoteInit, VoteState, VoteStateVersions},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         find_stake_program_address, find_transient_stake_program_address,
         find_withdraw_authority_program_address, id,
         instruction::{self, PreferredValidatorType},
@@ -28,7 +28,7 @@ use {
         state::{AccountType, Fee, StakePool, StakeStatus, ValidatorList, ValidatorStakeInfo},
         MAX_VALIDATORS_TO_UPDATE, MINIMUM_ACTIVE_STAKE,
     },
-    spl_token::state::{Account as SplAccount, AccountState as SplAccountState, Mint},
+    gpl_token::state::{Account as GplAccount, AccountState as GplAccountState, Mint},
 };
 
 const HUGE_POOL_SIZE: u32 = 3_950;
@@ -68,8 +68,8 @@ async fn setup(
         reserve_stake: stake_pool_accounts.reserve_stake.pubkey(),
         pool_mint: stake_pool_accounts.pool_mint.pubkey(),
         manager_fee_account: stake_pool_accounts.pool_fee_account.pubkey(),
-        token_program_id: spl_token::id(),
-        total_lamports: 0,
+        token_program_id: gpl_token::id(),
+        total_carats: 0,
         pool_token_supply: 0,
         last_update_epoch: 0,
         lockup: stake_program::Lockup::default(),
@@ -78,17 +78,17 @@ async fn setup(
         preferred_deposit_validator_vote_address: None,
         preferred_withdraw_validator_vote_address: None,
         stake_deposit_fee: Fee::default(),
-        sol_deposit_fee: Fee::default(),
+        gema_deposit_fee: Fee::default(),
         stake_withdrawal_fee: Fee::default(),
         next_stake_withdrawal_fee: None,
         stake_referral_fee: 0,
-        sol_referral_fee: 0,
-        sol_deposit_authority: None,
-        sol_withdraw_authority: None,
-        sol_withdrawal_fee: Fee::default(),
-        next_sol_withdrawal_fee: None,
+        gema_referral_fee: 0,
+        gema_deposit_authority: None,
+        gema_withdraw_authority: None,
+        gema_withdrawal_fee: Fee::default(),
+        next_gema_withdrawal_fee: None,
         last_epoch_pool_token_supply: 0,
-        last_epoch_total_lamports: 0,
+        last_epoch_total_carats: 0,
     };
 
     let mut validator_list = ValidatorList::new(max_validators);
@@ -124,7 +124,7 @@ async fn setup(
         let vote_account = Account::create(
             ACCOUNT_RENT_EXEMPTION,
             bincode::serialize::<VoteStateVersions>(&vote_state).unwrap(),
-            solana_vote_program::id(),
+            gemachain_vote_program::id(),
             false,
             Epoch::default(),
         );
@@ -158,20 +158,20 @@ async fn setup(
         let (stake_address, _) =
             find_stake_program_address(&id(), vote_account_address, &stake_pool_pubkey);
         program_test.add_account(stake_address, stake_account);
-        let active_stake_lamports = stake_amount - MINIMUM_ACTIVE_STAKE;
+        let active_stake_carats = stake_amount - MINIMUM_ACTIVE_STAKE;
         // add to validator list
         validator_list.validators.push(ValidatorStakeInfo {
             status: StakeStatus::Active,
             vote_account_address: *vote_account_address,
-            active_stake_lamports,
-            transient_stake_lamports: 0,
+            active_stake_carats,
+            transient_stake_carats: 0,
             last_update_epoch: 0,
             transient_seed_suffix_start: 0,
             transient_seed_suffix_end: 0,
         });
 
-        stake_pool.total_lamports += active_stake_lamports;
-        stake_pool.pool_token_supply += active_stake_lamports;
+        stake_pool.total_carats += active_stake_carats;
+        stake_pool.pool_token_supply += active_stake_carats;
     }
 
     let mut validator_list_bytes = validator_list.try_to_vec().unwrap();
@@ -233,19 +233,19 @@ async fn setup(
     let stake_pool_mint = Account::create(
         ACCOUNT_RENT_EXEMPTION,
         mint_vec,
-        spl_token::id(),
+        gpl_token::id(),
         false,
         Epoch::default(),
     );
     program_test.add_account(stake_pool_accounts.pool_mint.pubkey(), stake_pool_mint);
 
-    let mut fee_account_vec = vec![0u8; SplAccount::LEN];
-    let fee_account_data = SplAccount {
+    let mut fee_account_vec = vec![0u8; GplAccount::LEN];
+    let fee_account_data = GplAccount {
         mint: stake_pool_accounts.pool_mint.pubkey(),
         owner: stake_pool_accounts.manager.pubkey(),
         amount: 0,
         delegate: COption::None,
-        state: SplAccountState::Initialized,
+        state: GplAccountState::Initialized,
         is_native: COption::None,
         delegated_amount: 0,
         close_authority: COption::None,
@@ -254,7 +254,7 @@ async fn setup(
     let fee_account = Account::create(
         ACCOUNT_RENT_EXEMPTION,
         fee_account_vec,
-        spl_token::id(),
+        gpl_token::id(),
         false,
         Epoch::default(),
     );
@@ -273,7 +273,7 @@ async fn setup(
         withdrawer: user.pubkey(),
     };
 
-    let _stake_lamports = create_independent_stake_account(
+    let _stake_carats = create_independent_stake_account(
         &mut context.banks_client,
         &context.payer,
         &context.last_blockhash,
@@ -358,7 +358,7 @@ async fn update() {
             &stake_pool_accounts.reserve_stake.pubkey(),
             &stake_pool_accounts.pool_fee_account.pubkey(),
             &stake_pool_accounts.pool_mint.pubkey(),
-            &spl_token::id(),
+            &gpl_token::id(),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer],
@@ -484,18 +484,18 @@ async fn remove_validator_from_pool() {
         try_from_slice_unchecked::<ValidatorList>(validator_list.data.as_slice()).unwrap();
     let first_element = &validator_list.validators[0];
     assert_eq!(first_element.status, StakeStatus::ReadyForRemoval);
-    assert_eq!(first_element.active_stake_lamports, 0);
-    assert_eq!(first_element.transient_stake_lamports, 0);
+    assert_eq!(first_element.active_stake_carats, 0);
+    assert_eq!(first_element.transient_stake_carats, 0);
 
     let middle_element = &validator_list.validators[middle_index];
     assert_eq!(middle_element.status, StakeStatus::ReadyForRemoval);
-    assert_eq!(middle_element.active_stake_lamports, 0);
-    assert_eq!(middle_element.transient_stake_lamports, 0);
+    assert_eq!(middle_element.active_stake_carats, 0);
+    assert_eq!(middle_element.transient_stake_carats, 0);
 
     let last_element = &validator_list.validators[last_index];
     assert_eq!(last_element.status, StakeStatus::ReadyForRemoval);
-    assert_eq!(last_element.active_stake_lamports, 0);
-    assert_eq!(last_element.transient_stake_lamports, 0);
+    assert_eq!(last_element.active_stake_carats, 0);
+    assert_eq!(last_element.transient_stake_carats, 0);
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::cleanup_removed_validator_entries(
@@ -587,8 +587,8 @@ async fn add_validator_to_pool() {
     assert_eq!(validator_list.validators.len(), last_index + 1);
     let last_element = validator_list.validators[last_index];
     assert_eq!(last_element.status, StakeStatus::Active);
-    assert_eq!(last_element.active_stake_lamports, 0);
-    assert_eq!(last_element.transient_stake_lamports, 0);
+    assert_eq!(last_element.active_stake_carats, 0);
+    assert_eq!(last_element.transient_stake_carats, 0);
     assert_eq!(last_element.vote_account_address, test_vote_address);
 
     let transient_stake_seed = u64::MAX;
@@ -621,9 +621,9 @@ async fn add_validator_to_pool() {
         try_from_slice_unchecked::<ValidatorList>(validator_list.data.as_slice()).unwrap();
     let last_element = validator_list.validators[last_index];
     assert_eq!(last_element.status, StakeStatus::Active);
-    assert_eq!(last_element.active_stake_lamports, 0);
+    assert_eq!(last_element.active_stake_carats, 0);
     assert_eq!(
-        last_element.transient_stake_lamports,
+        last_element.transient_stake_carats,
         increase_amount + STAKE_ACCOUNT_RENT_EXEMPTION
     );
     assert_eq!(last_element.vote_account_address, test_vote_address);

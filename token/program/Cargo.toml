@@ -1,9 +1,9 @@
 [package]
-name = "spl-token"
+name = "gpl-token"
 version = "3.2.0"
-description = "Solana Program Library Token"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+description = "Gemachain Program Library Token"
+authors = ["Gemachain Maintainers <maintainers@gemachain.foundation>"]
+repository = "https://github.com/gemachain/gemachain-program-library"
 license = "Apache-2.0"
 edition = "2018"
 exclude = ["js/**"]
@@ -16,11 +16,11 @@ arrayref = "0.3.6"
 num-derive = "0.3"
 num-traits = "0.2"
 num_enum = "0.5.4"
-solana-program = "1.8.0"
+gemachain-program = "1.8.2"
 thiserror = "1.0"
 
 [dev-dependencies]
-solana-sdk = "1.8.0"
+gemachain-sdk = "1.8.2"
 
 [lib]
 crate-type = ["cdylib", "lib"]

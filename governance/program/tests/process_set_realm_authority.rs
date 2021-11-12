@@ -1,12 +1,12 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::pubkey::Pubkey;
-use solana_program_test::*;
+use gemachain_program::pubkey::Pubkey;
+use gemachain_program_test::*;
 
 mod program_test;
 
 use program_test::*;
-use spl_governance::error::GovernanceError;
+use gpl_governance::error::GovernanceError;
 
 #[tokio::test]
 async fn test_set_realm_authority() {

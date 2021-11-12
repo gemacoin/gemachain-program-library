@@ -4,19 +4,19 @@ pub mod flash_loan_receiver;
 pub mod genesis;
 
 use assert_matches::*;
-use solana_program::{program_option::COption, program_pack::Pack, pubkey::Pubkey};
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program::{program_option::COption, program_pack::Pack, pubkey::Pubkey};
+use gemachain_program_test::*;
+use gemachain_sdk::{
     account::Account,
     signature::{read_keypair_file, Keypair, Signer},
     system_instruction::create_account,
     transaction::{Transaction, TransactionError},
 };
-use spl_token::{
+use gpl_token::{
     instruction::approve,
     state::{Account as Token, AccountState, Mint},
 };
-use spl_token_lending::{
+use gpl_token_lending::{
     instruction::{
         borrow_obligation_liquidity, deposit_reserve_liquidity, init_lending_market,
         init_obligation, init_reserve, liquidate_obligation, refresh_reserve,
@@ -35,7 +35,7 @@ use std::{convert::TryInto, str::FromStr};
 pub const QUOTE_CURRENCY: [u8; 32] =
     *b"USD\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
-pub const LAMPORTS_TO_SOL: u64 = 1_000_000_000;
+pub const CARATS_TO_GEMA: u64 = 1_000_000_000;
 pub const FRACTIONAL_TO_USDC: u64 = 1_000_000;
 
 pub const TEST_RESERVE_CONFIG: ReserveConfig = ReserveConfig {
@@ -55,8 +55,8 @@ pub const TEST_RESERVE_CONFIG: ReserveConfig = ReserveConfig {
     },
 };
 
-pub const SOL_PYTH_PRODUCT: &str = "3Mnn2fX6rQyUsyELYms1sBJyChWofzSNRoqYzvgMVz5E";
-pub const SOL_PYTH_PRICE: &str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix";
+pub const GEMA_PYTH_PRODUCT: &str = "3Mnn2fX6rQyUsyELYms1sBJyChWofzSNRoqYzvgMVz5E";
+pub const GEMA_PYTH_PRICE: &str = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix";
 
 pub const SRM_PYTH_PRODUCT: &str = "6MEwdxe4g1NeAF9u6KDG14anJpFsVEa2cvr5H6iriFZ8";
 pub const SRM_PYTH_PRICE: &str = "992moaMQKs32GKZ9dxi8keyM2bUmbrwBZpK4p2K6X5Vs";
@@ -90,7 +90,7 @@ impl AddPacked for ProgramTest {
 pub fn add_lending_market(test: &mut ProgramTest) -> TestLendingMarket {
     let lending_market_pubkey = Pubkey::new_unique();
     let (lending_market_authority, bump_seed) =
-        Pubkey::find_program_address(&[lending_market_pubkey.as_ref()], &spl_token_lending::id());
+        Pubkey::find_program_address(&[lending_market_pubkey.as_ref()], &gpl_token_lending::id());
 
     let lending_market_owner =
         read_keypair_file("tests/fixtures/lending_market_owner.json").unwrap();
@@ -105,10 +105,10 @@ pub fn add_lending_market(test: &mut ProgramTest) -> TestLendingMarket {
             bump_seed,
             owner: lending_market_owner.pubkey(),
             quote_currency: QUOTE_CURRENCY,
-            token_program_id: spl_token::id(),
+            token_program_id: gpl_token::id(),
             oracle_program_id,
         }),
-        &spl_token_lending::id(),
+        &gpl_token_lending::id(),
     );
 
     TestLendingMarket {
@@ -199,7 +199,7 @@ pub fn add_obligation(
         obligation_pubkey,
         u32::MAX as u64,
         &obligation,
-        &spl_token_lending::id(),
+        &gpl_token_lending::id(),
     );
 
     TestObligation {
@@ -247,7 +247,7 @@ pub fn add_reserve(
         slots_elapsed,
     } = args;
 
-    let is_native = if liquidity_mint_pubkey == spl_token::native_mint::id() {
+    let is_native = if liquidity_mint_pubkey == gpl_token::native_mint::id() {
         COption::Some(1)
     } else {
         COption::None
@@ -266,7 +266,7 @@ pub fn add_reserve(
             supply: collateral_amount,
             ..Mint::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     let collateral_supply_pubkey = Pubkey::new_unique();
@@ -280,7 +280,7 @@ pub fn add_reserve(
             state: AccountState::Initialized,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     let amount = if let COption::Some(rent_reserve) = is_native {
@@ -301,7 +301,7 @@ pub fn add_reserve(
             is_native,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     let liquidity_fee_receiver_pubkey = Pubkey::new_unique();
@@ -315,7 +315,7 @@ pub fn add_reserve(
             state: AccountState::Initialized,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     let liquidity_host_pubkey = Pubkey::new_unique();
@@ -329,7 +329,7 @@ pub fn add_reserve(
             state: AccountState::Initialized,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     let reserve_keypair = Keypair::new();
@@ -367,7 +367,7 @@ pub fn add_reserve(
         reserve_pubkey,
         u32::MAX as u64,
         &reserve,
-        &spl_token_lending::id(),
+        &gpl_token_lending::id(),
     );
 
     let amount = if let COption::Some(rent_reserve) = is_native {
@@ -388,7 +388,7 @@ pub fn add_reserve(
             is_native,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
     let user_collateral_pubkey = Pubkey::new_unique();
     test.add_packable_account(
@@ -401,7 +401,7 @@ pub fn add_reserve(
             state: AccountState::Initialized,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
 
     TestReserve {
@@ -441,7 +441,7 @@ pub fn add_account_for_program(
             is_native: COption::None,
             ..Token::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
     program_owned_token_account.pubkey()
 }
@@ -481,7 +481,7 @@ impl TestLendingMarket {
         let lending_market_pubkey = lending_market_keypair.pubkey();
         let (lending_market_authority, _bump_seed) = Pubkey::find_program_address(
             &[&lending_market_pubkey.to_bytes()[..32]],
-            &spl_token_lending::id(),
+            &gpl_token_lending::id(),
         );
 
         let rent = banks_client.get_rent().await.unwrap();
@@ -492,10 +492,10 @@ impl TestLendingMarket {
                     &lending_market_pubkey,
                     rent.minimum_balance(LendingMarket::LEN),
                     LendingMarket::LEN as u64,
-                    &spl_token_lending::id(),
+                    &gpl_token_lending::id(),
                 ),
                 init_lending_market(
-                    spl_token_lending::id(),
+                    gpl_token_lending::id(),
                     lending_market_owner.pubkey(),
                     QUOTE_CURRENCY,
                     lending_market_pubkey,
@@ -526,7 +526,7 @@ impl TestLendingMarket {
     ) {
         let mut transaction = Transaction::new_with_payer(
             &[refresh_reserve(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 reserve.pubkey,
                 reserve.liquidity_oracle_pubkey,
             )],
@@ -551,7 +551,7 @@ impl TestLendingMarket {
         let mut transaction = Transaction::new_with_payer(
             &[
                 approve(
-                    &spl_token::id(),
+                    &gpl_token::id(),
                     &reserve.user_liquidity_pubkey,
                     &user_transfer_authority.pubkey(),
                     &user_accounts_owner.pubkey(),
@@ -560,7 +560,7 @@ impl TestLendingMarket {
                 )
                 .unwrap(),
                 deposit_reserve_liquidity(
-                    spl_token_lending::id(),
+                    gpl_token_lending::id(),
                     liquidity_amount,
                     reserve.user_liquidity_pubkey,
                     reserve.user_collateral_pubkey,
@@ -601,7 +601,7 @@ impl TestLendingMarket {
         let mut transaction = Transaction::new_with_payer(
             &[
                 approve(
-                    &spl_token::id(),
+                    &gpl_token::id(),
                     &repay_reserve.user_liquidity_pubkey,
                     &user_transfer_authority.pubkey(),
                     &user_accounts_owner.pubkey(),
@@ -610,7 +610,7 @@ impl TestLendingMarket {
                 )
                 .unwrap(),
                 liquidate_obligation(
-                    spl_token_lending::id(),
+                    gpl_token_lending::id(),
                     liquidity_amount,
                     repay_reserve.user_liquidity_pubkey,
                     withdraw_reserve.user_collateral_pubkey,
@@ -649,7 +649,7 @@ impl TestLendingMarket {
 
         let mut transaction = Transaction::new_with_payer(
             &[borrow_obligation_liquidity(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 liquidity_amount,
                 borrow_reserve.liquidity_supply_pubkey,
                 borrow_reserve.user_liquidity_pubkey,
@@ -740,7 +740,7 @@ impl TestReserve {
         let mut transaction = Transaction::new_with_payer(
             &[
                 approve(
-                    &spl_token::id(),
+                    &gpl_token::id(),
                     &user_liquidity_pubkey,
                     &user_transfer_authority_keypair.pubkey(),
                     &user_accounts_owner.pubkey(),
@@ -753,52 +753,52 @@ impl TestReserve {
                     &collateral_mint_keypair.pubkey(),
                     rent.minimum_balance(Mint::LEN),
                     Mint::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &collateral_supply_keypair.pubkey(),
                     rent.minimum_balance(Token::LEN),
                     Token::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &liquidity_supply_keypair.pubkey(),
                     rent.minimum_balance(Token::LEN),
                     Token::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &liquidity_fee_receiver_keypair.pubkey(),
                     rent.minimum_balance(Token::LEN),
                     Token::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &liquidity_host_keypair.pubkey(),
                     rent.minimum_balance(Token::LEN),
                     Token::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &user_collateral_token_keypair.pubkey(),
                     rent.minimum_balance(Token::LEN),
                     Token::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
                 create_account(
                     &payer.pubkey(),
                     &reserve_pubkey,
                     rent.minimum_balance(Reserve::LEN),
                     Reserve::LEN as u64,
-                    &spl_token_lending::id(),
+                    &gpl_token_lending::id(),
                 ),
                 init_reserve(
-                    spl_token_lending::id(),
+                    gpl_token_lending::id(),
                     liquidity_amount,
                     config,
                     user_liquidity_pubkey,
@@ -934,10 +934,10 @@ impl TestObligation {
                     &obligation_keypair.pubkey(),
                     rent.minimum_balance(Obligation::LEN),
                     Obligation::LEN as u64,
-                    &spl_token_lending::id(),
+                    &gpl_token_lending::id(),
                 ),
                 init_obligation(
-                    spl_token_lending::id(),
+                    gpl_token_lending::id(),
                     obligation.pubkey,
                     lending_market.pubkey,
                     user_accounts_owner.pubkey(),
@@ -1052,7 +1052,7 @@ pub fn add_usdc_mint(test: &mut ProgramTest) -> TestMint {
             decimals,
             ..Mint::default()
         },
-        &spl_token::id(),
+        &gpl_token::id(),
     );
     TestMint {
         pubkey,
@@ -1067,12 +1067,12 @@ pub struct TestOracle {
     pub price: Decimal,
 }
 
-pub fn add_sol_oracle(test: &mut ProgramTest) -> TestOracle {
+pub fn add_gema_oracle(test: &mut ProgramTest) -> TestOracle {
     add_oracle(
         test,
-        Pubkey::from_str(SOL_PYTH_PRODUCT).unwrap(),
-        Pubkey::from_str(SOL_PYTH_PRICE).unwrap(),
-        // Set SOL price to $20
+        Pubkey::from_str(GEMA_PYTH_PRODUCT).unwrap(),
+        Pubkey::from_str(GEMA_PYTH_PRICE).unwrap(),
+        // Set GEMA price to $20
         Decimal::from(20u64),
     )
 }
@@ -1128,7 +1128,7 @@ pub fn add_oracle(
     test.add_account(
         price_pubkey,
         Account {
-            lamports: u32::MAX as u64,
+            carats: u32::MAX as u64,
             data: pyth_price_data,
             owner: oracle_program_id.pubkey(),
             executable: false,
@@ -1190,18 +1190,18 @@ pub async fn create_token_account(
     let authority_pubkey = authority.unwrap_or_else(|| payer.pubkey());
 
     let rent = banks_client.get_rent().await.unwrap();
-    let lamports = rent.minimum_balance(Token::LEN) + native_amount.unwrap_or_default();
+    let carats = rent.minimum_balance(Token::LEN) + native_amount.unwrap_or_default();
     let mut transaction = Transaction::new_with_payer(
         &[
             create_account(
                 &payer.pubkey(),
                 &token_pubkey,
-                lamports,
+                carats,
                 Token::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
-            spl_token::instruction::initialize_account(
-                &spl_token::id(),
+            gpl_token::instruction::initialize_account(
+                &gpl_token::id(),
                 &token_pubkey,
                 &mint_pubkey,
                 &authority_pubkey,
@@ -1228,8 +1228,8 @@ pub async fn mint_to(
     amount: u64,
 ) {
     let mut transaction = Transaction::new_with_payer(
-        &[spl_token::instruction::mint_to(
-            &spl_token::id(),
+        &[gpl_token::instruction::mint_to(
+            &gpl_token::id(),
             &mint_pubkey,
             &account_pubkey,
             &authority.pubkey(),
@@ -1249,7 +1249,7 @@ pub async fn mint_to(
 pub async fn get_token_balance(banks_client: &mut BanksClient, pubkey: Pubkey) -> u64 {
     let token: Account = banks_client.get_account(pubkey).await.unwrap().unwrap();
 
-    spl_token::state::Account::unpack(&token.data[..])
+    gpl_token::state::Account::unpack(&token.data[..])
         .unwrap()
         .amount
 }

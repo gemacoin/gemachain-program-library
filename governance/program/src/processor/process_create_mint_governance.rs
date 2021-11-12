@@ -12,10 +12,10 @@ use crate::{
     },
     tools::{
         account::create_and_serialize_account_signed,
-        spl_token::{assert_spl_token_mint_authority_is_signer, set_spl_token_mint_authority},
+        gpl_token::{assert_gpl_token_mint_authority_is_signer, set_gpl_token_mint_authority},
     },
 };
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
@@ -41,7 +41,7 @@ pub fn process_create_mint_governance(
     let token_owner_record_info = next_account_info(account_info_iter)?; // 4
 
     let payer_info = next_account_info(account_info_iter)?; // 5
-    let spl_token_info = next_account_info(account_info_iter)?; // 6
+    let gpl_token_info = next_account_info(account_info_iter)?; // 6
 
     let system_info = next_account_info(account_info_iter)?; // 7
 
@@ -76,14 +76,14 @@ pub fn process_create_mint_governance(
     )?;
 
     if transfer_mint_authority {
-        set_spl_token_mint_authority(
+        set_gpl_token_mint_authority(
             governed_mint_info,
             governed_mint_authority_info,
             mint_governance_info.key,
-            spl_token_info,
+            gpl_token_info,
         )?;
     } else {
-        assert_spl_token_mint_authority_is_signer(
+        assert_gpl_token_mint_authority_is_signer(
             governed_mint_info,
             governed_mint_authority_info,
         )?;

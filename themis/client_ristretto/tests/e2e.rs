@@ -1,18 +1,18 @@
-use solana_banks_client::{start_tcp_client, BanksClient, BanksClientExt};
-use solana_core::test_validator::{TestValidator, TestValidatorOptions};
-use solana_sdk::{
+use gemachain_banks_client::{start_tcp_client, BanksClient, BanksClientExt};
+use gemachain_core::test_validator::{TestValidator, TestValidatorOptions};
+use gemachain_sdk::{
     bpf_loader,
     commitment_config::CommitmentLevel,
     loader_instruction,
     message::Message,
-    native_token::sol_to_lamports,
+    native_token::gema_to_carats,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_instruction,
     transaction::Transaction,
     transport,
 };
-use spl_themis_ristretto_client::{process_transactions_with_commitment, test_e2e};
+use gpl_themis_ristretto_client::{process_transactions_with_commitment, test_e2e};
 use std::{
     fs::{remove_dir_all, File},
     io::Read,
@@ -41,7 +41,7 @@ async fn create_program_account_with_commitment(
     let ix = system_instruction::create_account(
         &funder_keypair.pubkey(),
         &program_keypair.pubkey(),
-        sol_to_lamports(minimum_balance),
+        gema_to_carats(minimum_balance),
         program_len as u64,
         loader_id,
     );
@@ -155,11 +155,11 @@ fn test_validator_e2e() {
         ledger_path,
         ..
     } = TestValidator::run_with_options(TestValidatorOptions {
-        mint_lamports: sol_to_lamports(10.0),
+        mint_carats: gema_to_carats(10.0),
         ..TestValidatorOptions::default()
     });
 
-    let program = load_program("../../target/deploy/spl_themis_ristretto.so");
+    let program = load_program("../../target/deploy/gpl_themis_ristretto.so");
 
     Runtime::new().unwrap().block_on(async {
         let mut banks_client = start_tcp_client(leader_data.rpc_banks).await.unwrap();

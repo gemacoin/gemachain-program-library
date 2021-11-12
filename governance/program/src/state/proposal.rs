@@ -1,8 +1,8 @@
 //! Proposal  Account
 
-use solana_program::clock::{Slot, UnixTimestamp};
+use gemachain_program::clock::{Slot, UnixTimestamp};
 
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::IsInitialized,
     pubkey::Pubkey,
 };

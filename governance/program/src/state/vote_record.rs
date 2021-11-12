@@ -1,9 +1,9 @@
 //! Proposal Vote Record Account
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::account_info::AccountInfo;
-use solana_program::program_error::ProgramError;
-use solana_program::{program_pack::IsInitialized, pubkey::Pubkey};
+use gemachain_program::account_info::AccountInfo;
+use gemachain_program::program_error::ProgramError;
+use gemachain_program::{program_pack::IsInitialized, pubkey::Pubkey};
 
 use crate::error::GovernanceError;
 use crate::tools::account::get_account_data;

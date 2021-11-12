@@ -1,16 +1,16 @@
 #![cfg(feature = "test-bpf")]
 use std::str::FromStr;
 
-use solana_program::{instruction::Instruction, program_pack::Pack, pubkey::Pubkey};
-use solana_program_test::{processor, tokio, ProgramTest, ProgramTestContext};
+use gemachain_program::{instruction::Instruction, program_pack::Pack, pubkey::Pubkey};
+use gemachain_program_test::{processor, tokio, ProgramTest, ProgramTestContext};
 
-use solana_program::hash::hashv;
-use solana_sdk::{
+use gemachain_program::hash::hashv;
+use gemachain_sdk::{
     signature::{Keypair, Signer},
     transaction::Transaction,
     transport::TransportError,
 };
-use spl_name_service::{
+use gpl_name_service::{
     entrypoint::process_instruction,
     instruction::{create, delete, transfer, update, NameRegistryInstruction},
     state::{get_seeds_and_key, NameRecordHeader, HASH_PREFIX},
@@ -22,14 +22,14 @@ async fn test_name_service() {
     let program_id = Pubkey::from_str("XCWuBvfNamesXCWuBvfkegQfZyiNwAJb9Ss623VQ5DA").unwrap();
 
     let program_test = ProgramTest::new(
-        "spl_name_service",
+        "gpl_name_service",
         program_id,
         processor!(process_instruction),
     );
 
     let mut ctx = program_test.start_with_context().await;
 
-    let root_name = ".sol";
+    let root_name = ".gema";
     let tld_class = Keypair::new();
     let owner = Keypair::new();
 
@@ -47,7 +47,7 @@ async fn test_name_service() {
         program_id,
         NameRegistryInstruction::Create {
             hashed_name: hashed_root_name,
-            lamports: 1_000_000,
+            carats: 1_000_000,
             space: 1_000,
         },
         root_name_account_key,
@@ -75,7 +75,7 @@ async fn test_name_service() {
     println!("Name Record Header: {:?}", name_record_header);
 
     let name = "bonfida";
-    let sol_subdomains_class = Keypair::new();
+    let gema_subdomains_class = Keypair::new();
 
     let hashed_name: Vec<u8> = hashv(&[(HASH_PREFIX.to_owned() + name).as_bytes()])
         .0
@@ -83,7 +83,7 @@ async fn test_name_service() {
     let (name_account_key, _) = get_seeds_and_key(
         &program_id,
         hashed_name.clone(),
-        Some(&sol_subdomains_class.pubkey()),
+        Some(&gema_subdomains_class.pubkey()),
         Some(&root_name_account_key),
     );
 
@@ -91,13 +91,13 @@ async fn test_name_service() {
         program_id,
         NameRegistryInstruction::Create {
             hashed_name,
-            lamports: 1_000_000,
+            carats: 1_000_000,
             space: 1_000,
         },
         name_account_key,
         ctx.payer.pubkey(),
         owner.pubkey(),
-        Some(sol_subdomains_class.pubkey()),
+        Some(gema_subdomains_class.pubkey()),
         Some(root_name_account_key),
         Some(owner.pubkey()),
     )
@@ -105,7 +105,7 @@ async fn test_name_service() {
     sign_send_instruction(
         &mut ctx,
         create_name_instruction,
-        vec![&sol_subdomains_class, &owner],
+        vec![&gema_subdomains_class, &owner],
     )
     .await
     .unwrap();
@@ -121,7 +121,7 @@ async fn test_name_service() {
     )
     .unwrap();
     println!("Name Record Header: {:?}", name_record_header);
-    println!("SOl class {:?}", sol_subdomains_class.pubkey());
+    println!("Gema class {:?}", gema_subdomains_class.pubkey());
 
     let data = "@Dudl".as_bytes().to_vec();
     let update_instruction = update(
@@ -129,10 +129,10 @@ async fn test_name_service() {
         0,
         data,
         name_account_key,
-        sol_subdomains_class.pubkey(),
+        gema_subdomains_class.pubkey(),
     )
     .unwrap();
-    sign_send_instruction(&mut ctx, update_instruction, vec![&sol_subdomains_class])
+    sign_send_instruction(&mut ctx, update_instruction, vec![&gema_subdomains_class])
         .await
         .unwrap();
 
@@ -153,13 +153,13 @@ async fn test_name_service() {
         ctx.payer.pubkey(),
         name_account_key,
         owner.pubkey(),
-        Some(sol_subdomains_class.pubkey()),
+        Some(gema_subdomains_class.pubkey()),
     )
     .unwrap();
     sign_send_instruction(
         &mut ctx,
         transfer_instruction,
-        vec![&owner, &sol_subdomains_class],
+        vec![&owner, &gema_subdomains_class],
     )
     .await
     .unwrap();

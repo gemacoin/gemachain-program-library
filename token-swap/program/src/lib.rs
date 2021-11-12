@@ -1,6 +1,6 @@
 #![deny(missing_docs)]
 
-//! An Uniswap-like program for the Solana blockchain.
+//! An Uniswap-like program for the Gemachain blockchain.
 
 pub mod constraints;
 pub mod curve;
@@ -13,6 +13,6 @@ pub mod state;
 mod entrypoint;
 
 // Export current sdk types for downstream users building with a different sdk version
-pub use solana_program;
+pub use gemachain_program;
 
-solana_program::declare_id!("SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8");
+gemachain_program::declare_id!("SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8");

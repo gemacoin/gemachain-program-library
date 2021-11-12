@@ -1,9 +1,9 @@
 [package]
-name = "spl-themis-ristretto"
+name = "gpl-themis-ristretto"
 version = "0.1.0"
-description = "Solana Program Library THEMIS"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+description = "Gemachain Program Library THEMIS"
+authors = ["Gemachain Maintainers <maintainers@gemachain.foundation>"]
+repository = "https://github.com/gemachain/gemachain-program-library"
 license = "Apache-2.0"
 edition = "2018"
 
@@ -20,7 +20,7 @@ getrandom = { version = "0.1.15", features = ["dummy"] }
 num-derive = "0.3"
 num-traits = "0.2"
 rand = "0.8.0"
-solana-program = "1.8.0"
+gemachain-program = "1.8.2"
 subtle = "=2.2.3"
 thiserror = "1.0"
 

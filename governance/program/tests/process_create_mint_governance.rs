@@ -1,12 +1,12 @@
 #![cfg(feature = "test-bpf")]
 mod program_test;
 
-use solana_program_test::*;
+use gemachain_program_test::*;
 
 use program_test::*;
-use solana_sdk::{signature::Keypair, signer::Signer};
-use spl_governance::error::GovernanceError;
-use spl_token::error::TokenError;
+use gemachain_sdk::{signature::Keypair, signer::Signer};
+use gpl_governance::error::GovernanceError;
+use gpl_token::error::TokenError;
 
 #[tokio::test]
 async fn test_create_mint_governance() {

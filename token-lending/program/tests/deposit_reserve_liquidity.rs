@@ -3,15 +3,15 @@
 mod helpers;
 
 use helpers::*;
-use solana_program_test::*;
-use solana_sdk::{pubkey::Pubkey, signature::Keypair};
-use spl_token_lending::processor::process_instruction;
+use gemachain_program_test::*;
+use gemachain_sdk::{pubkey::Pubkey, signature::Keypair};
+use gpl_token_lending::processor::process_instruction;
 
 #[tokio::test]
 async fn test_success() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 

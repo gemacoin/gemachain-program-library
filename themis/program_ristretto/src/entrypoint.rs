@@ -1,6 +1,6 @@
 //! Program entrypoint
 
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, entrypoint, entrypoint::ProgramResult, pubkey::Pubkey,
 };
 

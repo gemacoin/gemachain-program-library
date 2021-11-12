@@ -1,5 +1,5 @@
 //! Math for preserving precision of token amounts which are limited
-//! by the SPL Token program to be at most u64::MAX.
+//! by the GPL Token program to be at most u64::MAX.
 //!
 //! Decimals are internally scaled by a WAD (10^18) to preserve
 //! precision up to 18 decimal places. Decimals are sized to support
@@ -16,7 +16,7 @@ use crate::{
     error::LendingError,
     math::{common::*, Rate},
 };
-use solana_program::program_error::ProgramError;
+use gemachain_program::program_error::ProgramError;
 use std::{convert::TryFrom, fmt};
 use uint::construct_uint;
 

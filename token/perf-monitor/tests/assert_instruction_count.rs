@@ -1,10 +1,10 @@
-use solana_bpf_loader_program::{
+use gemachain_bpf_loader_program::{
     create_vm,
     serialization::{deserialize_parameters, serialize_parameters},
 };
-use solana_rbpf::vm::EbpfVm;
-use solana_sdk::{
-    account::{create_account, Account as SolanaAccount},
+use gemachain_rbpf::vm::EbpfVm;
+use gemachain_sdk::{
+    account::{create_account, Account as GemachainAccount},
     bpf_loader,
     entrypoint::SUCCESS,
     keyed_account::KeyedAccount,
@@ -14,7 +14,7 @@ use solana_sdk::{
     pubkey::Pubkey,
     sysvar::rent::{self, Rent},
 };
-use spl_token::{
+use gpl_token::{
     instruction::TokenInstruction,
     state::{Account, Mint},
 };
@@ -33,14 +33,14 @@ fn run_program(
     parameter_accounts: &[KeyedAccount],
     instruction_data: &[u8],
 ) -> u64 {
-    let program_account = SolanaAccount {
-        data: load_program("../../target/deploy/spl_token.so"),
-        ..SolanaAccount::default()
+    let program_account = GemachainAccount {
+        data: load_program("../../target/deploy/gpl_token.so"),
+        ..GemachainAccount::default()
     };
     let loader_id = bpf_loader::id();
     let mut invoke_context = MockInvokeContext::default();
 
-    let executable = EbpfVm::<solana_bpf_loader_program::BPFError>::create_executable_from_elf(
+    let executable = EbpfVm::<gemachain_bpf_loader_program::BPFError>::create_executable_from_elf(
         &&program_account.data,
         None,
     )
@@ -71,14 +71,14 @@ fn run_program(
 fn assert_instruction_count() {
     let program_id = Pubkey::new_unique();
     let source_key = Pubkey::new_unique();
-    let source_account = SolanaAccount::new_ref(u64::MAX, Account::get_packed_len(), &program_id);
+    let source_account = GemachainAccount::new_ref(u64::MAX, Account::get_packed_len(), &program_id);
     let destination_key = Pubkey::new_unique();
     let destination_account =
-        SolanaAccount::new_ref(u64::MAX, Account::get_packed_len(), &program_id);
+        GemachainAccount::new_ref(u64::MAX, Account::get_packed_len(), &program_id);
     let owner_key = Pubkey::new_unique();
-    let owner_account = RefCell::new(SolanaAccount::default());
+    let owner_account = RefCell::new(GemachainAccount::default());
     let mint_key = Pubkey::new_unique();
-    let mint_account = SolanaAccount::new_ref(0, Mint::get_packed_len(), &program_id);
+    let mint_account = GemachainAccount::new_ref(0, Mint::get_packed_len(), &program_id);
     let rent_key = rent::id();
     let rent_account = RefCell::new(create_account(&Rent::free(), 42));
 

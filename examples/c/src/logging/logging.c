@@ -1,36 +1,36 @@
 /**
  * @brief A program demonstrating logging
  */
-#include <solana_sdk.h>
+#include <gemachain_sdk.h>
 
-extern uint64_t logging(SolParameters *params) {
+extern uint64_t logging(GemaParameters *params) {
   // Log a string
-  sol_log("static string");
+  gema_log("static string");
 
   // Log 5 numbers as u64s in hexadecimal format
-  sol_log_64(params->data[0], params->data[1], params->data[2], params->data[3],
+  gema_log_64(params->data[0], params->data[1], params->data[2], params->data[3],
              params->data[4]);
 
   // Log a slice
-  sol_log_array(params->data, params->data_len);
+  gema_log_array(params->data, params->data_len);
 
   // Log a public key
-  sol_log_pubkey(params->program_id);
+  gema_log_pubkey(params->program_id);
 
   // Log all the program's input parameters
-  sol_log_params(params);
+  gema_log_params(params);
 
   // Log the number of compute units remaining that the program can consume.
-  sol_log_compute_units();
+  gema_log_compute_units();
 
   return SUCCESS;
 }
 
 extern uint64_t entrypoint(const uint8_t *input) {
-  SolAccountInfo accounts[1];
-  SolParameters params = (SolParameters){.ka = accounts};
+  GemaAccountInfo accounts[1];
+  GemaParameters params = (GemaParameters){.ka = accounts};
 
-  if (!sol_deserialize(input, &params, SOL_ARRAY_SIZE(accounts))) {
+  if (!gema_deserialize(input, &params, GEMA_ARRAY_SIZE(accounts))) {
     return ERROR_INVALID_ARGUMENT;
   }
 

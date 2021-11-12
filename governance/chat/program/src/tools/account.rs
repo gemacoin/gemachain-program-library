@@ -1,11 +1,11 @@
 //! General purpose account utility functions
 
 use borsh::BorshSerialize;
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, program::invoke, program_error::ProgramError, pubkey::Pubkey,
     rent::Rent, system_instruction::create_account, system_program, sysvar::Sysvar,
 };
-use spl_governance::tools::account::AccountMaxSize;
+use gpl_governance::tools::account::AccountMaxSize;
 
 use crate::error::GovernanceChatError;
 

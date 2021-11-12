@@ -1,18 +1,18 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction, InstructionError},
     pubkey::Pubkey,
 };
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program_test::*;
+use gemachain_sdk::{
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
-use spl_memo::*;
+use gpl_memo::*;
 
 fn program_test() -> ProgramTest {
-    ProgramTest::new("spl_memo", id(), processor!(processor::process_instruction))
+    ProgramTest::new("gpl_memo", id(), processor!(processor::process_instruction))
 }
 
 #[tokio::test]

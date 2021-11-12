@@ -6,23 +6,23 @@ use {
     bincode::deserialize,
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked,
         instruction::{AccountMeta, Instruction, InstructionError},
         pubkey::Pubkey,
         sysvar,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::Transaction,
         transaction::TransactionError,
         transport::TransportError,
     },
-    spl_stake_pool::{
-        error::StakePoolError, id, instruction, minimum_stake_lamports, stake_program, state,
+    gpl_stake_pool::{
+        error::StakePoolError, id, instruction, minimum_stake_carats, stake_program, state,
     },
-    spl_token::error as token_error,
+    gpl_token::error as token_error,
 };
 
 async fn setup() -> (
@@ -70,7 +70,7 @@ async fn setup() -> (
         withdrawer: user.pubkey(),
     };
 
-    let stake_lamports = create_independent_stake_account(
+    let stake_carats = create_independent_stake_account(
         &mut context.banks_client,
         &context.payer,
         &context.last_blockhash,
@@ -123,7 +123,7 @@ async fn setup() -> (
         user,
         deposit_stake.pubkey(),
         pool_token_account.pubkey(),
-        stake_lamports,
+        stake_carats,
     )
 }
 
@@ -136,7 +136,7 @@ async fn success() {
         user,
         deposit_stake,
         pool_token_account,
-        stake_lamports,
+        stake_carats,
     ) = setup().await;
 
     let rent = context.banks_client.get_rent().await.unwrap();
@@ -164,12 +164,12 @@ async fn success() {
         .unwrap();
 
     // Save reserve state before depositing
-    let pre_reserve_lamports = get_account(
+    let pre_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
+    .carats;
 
     let error = stake_pool_accounts
         .deposit_stake(
@@ -192,7 +192,7 @@ async fn success() {
         .expect("get_account")
         .is_none());
 
-    let tokens_issued = stake_lamports; // For now tokens are 1:1 to stake
+    let tokens_issued = stake_carats; // For now tokens are 1:1 to stake
 
     // Stake pool should add its balance to the pool balance
     let post_stake_pool = get_account(
@@ -203,8 +203,8 @@ async fn success() {
     let post_stake_pool =
         try_from_slice_unchecked::<state::StakePool>(post_stake_pool.data.as_slice()).unwrap();
     assert_eq!(
-        post_stake_pool.total_lamports,
-        pre_stake_pool.total_lamports + stake_lamports
+        post_stake_pool.total_carats,
+        pre_stake_pool.total_carats + stake_carats
     );
     assert_eq!(
         post_stake_pool.pool_token_supply,
@@ -230,11 +230,11 @@ async fn success() {
         .find(&validator_stake_account.vote.pubkey())
         .unwrap();
     assert_eq!(
-        post_validator_stake_item.stake_lamports(),
-        pre_validator_stake_item.stake_lamports() + stake_lamports - stake_rent,
+        post_validator_stake_item.stake_carats(),
+        pre_validator_stake_item.stake_carats() + stake_carats - stake_rent,
     );
 
-    // Check validator stake account actual SOL balance
+    // Check validator stake account actual GEMA balance
     let validator_stake_account = get_account(
         &mut context.banks_client,
         &validator_stake_account.stake_account,
@@ -244,23 +244,23 @@ async fn success() {
         deserialize::<stake_program::StakeState>(&validator_stake_account.data).unwrap();
     let meta = stake_state.meta().unwrap();
     assert_eq!(
-        validator_stake_account.lamports - minimum_stake_lamports(meta),
-        post_validator_stake_item.stake_lamports()
+        validator_stake_account.carats - minimum_stake_carats(meta),
+        post_validator_stake_item.stake_carats()
     );
-    assert_eq!(post_validator_stake_item.transient_stake_lamports, 0);
+    assert_eq!(post_validator_stake_item.transient_stake_carats, 0);
 
     // Check reserve
-    let post_reserve_lamports = get_account(
+    let post_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
-    assert_eq!(post_reserve_lamports, pre_reserve_lamports + stake_rent);
+    .carats;
+    assert_eq!(post_reserve_carats, pre_reserve_carats + stake_rent);
 }
 
 #[tokio::test]
-async fn success_with_extra_stake_lamports() {
+async fn success_with_extra_stake_carats() {
     let (
         mut context,
         stake_pool_accounts,
@@ -268,17 +268,17 @@ async fn success_with_extra_stake_lamports() {
         user,
         deposit_stake,
         pool_token_account,
-        stake_lamports,
+        stake_carats,
     ) = setup().await;
 
-    let extra_lamports = TEST_STAKE_AMOUNT * 3 + 1;
+    let extra_carats = TEST_STAKE_AMOUNT * 3 + 1;
 
     transfer(
         &mut context.banks_client,
         &context.payer,
         &context.last_blockhash,
         &deposit_stake,
-        extra_lamports,
+        extra_carats,
     )
     .await;
 
@@ -329,12 +329,12 @@ async fn success_with_extra_stake_lamports() {
         .unwrap();
 
     // Save reserve state before depositing
-    let pre_reserve_lamports = get_account(
+    let pre_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
+    .carats;
 
     let error = stake_pool_accounts
         .deposit_stake_with_referral(
@@ -358,12 +358,12 @@ async fn success_with_extra_stake_lamports() {
         .expect("get_account")
         .is_none());
 
-    let tokens_issued = stake_lamports;
+    let tokens_issued = stake_carats;
     // For now tokens are 1:1 to stake
 
     // Stake pool should add its balance to the pool balance
 
-    // The extra lamports will not get recorded in total stake lamports unless
+    // The extra carats will not get recorded in total stake carats unless
     // update_stake_pool_balance is called
     let post_stake_pool = get_account(
         &mut context.banks_client,
@@ -374,8 +374,8 @@ async fn success_with_extra_stake_lamports() {
     let post_stake_pool =
         try_from_slice_unchecked::<state::StakePool>(post_stake_pool.data.as_slice()).unwrap();
     assert_eq!(
-        post_stake_pool.total_lamports,
-        pre_stake_pool.total_lamports + extra_lamports + stake_lamports
+        post_stake_pool.total_carats,
+        pre_stake_pool.total_carats + extra_carats + stake_carats
     );
     assert_eq!(
         post_stake_pool.pool_token_supply,
@@ -425,11 +425,11 @@ async fn success_with_extra_stake_lamports() {
         .find(&validator_stake_account.vote.pubkey())
         .unwrap();
     assert_eq!(
-        post_validator_stake_item.stake_lamports(),
-        pre_validator_stake_item.stake_lamports() + stake_lamports - stake_rent,
+        post_validator_stake_item.stake_carats(),
+        pre_validator_stake_item.stake_carats() + stake_carats - stake_rent,
     );
 
-    // Check validator stake account actual SOL balance
+    // Check validator stake account actual GEMA balance
     let validator_stake_account = get_account(
         &mut context.banks_client,
         &validator_stake_account.stake_account,
@@ -439,21 +439,21 @@ async fn success_with_extra_stake_lamports() {
         deserialize::<stake_program::StakeState>(&validator_stake_account.data).unwrap();
     let meta = stake_state.meta().unwrap();
     assert_eq!(
-        validator_stake_account.lamports - minimum_stake_lamports(meta),
-        post_validator_stake_item.stake_lamports()
+        validator_stake_account.carats - minimum_stake_carats(meta),
+        post_validator_stake_item.stake_carats()
     );
-    assert_eq!(post_validator_stake_item.transient_stake_lamports, 0);
+    assert_eq!(post_validator_stake_item.transient_stake_carats, 0);
 
     // Check reserve
-    let post_reserve_lamports = get_account(
+    let post_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
+    .carats;
     assert_eq!(
-        post_reserve_lamports,
-        pre_reserve_lamports + stake_rent + extra_lamports
+        post_reserve_carats,
+        pre_reserve_carats + stake_rent + extra_carats
     );
 }
 
@@ -466,7 +466,7 @@ async fn fail_with_wrong_stake_program_id() {
         _user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let wrong_stake_program = Pubkey::new_unique();
@@ -486,7 +486,7 @@ async fn fail_with_wrong_stake_program_id() {
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
         AccountMeta::new_readonly(sysvar::stake_history::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(wrong_stake_program, false),
     ];
     let instruction = Instruction {
@@ -524,7 +524,7 @@ async fn fail_with_wrong_token_program_id() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let wrong_token_program = Keypair::new();
@@ -572,7 +572,7 @@ async fn fail_with_wrong_validator_list_account() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let wrong_validator_list = Keypair::new();
@@ -693,7 +693,7 @@ async fn fail_with_wrong_withdraw_authority() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     stake_pool_accounts.withdraw_authority = Pubkey::new_unique();
@@ -730,7 +730,7 @@ async fn fail_with_wrong_mint_for_receiver_acc() {
         user,
         deposit_stake,
         _pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let outside_mint = Keypair::new();
@@ -816,7 +816,7 @@ async fn success_with_stake_deposit_authority() {
         staker: user.pubkey(),
         withdrawer: user.pubkey(),
     };
-    let _stake_lamports = create_independent_stake_account(
+    let _stake_carats = create_independent_stake_account(
         &mut banks_client,
         &payer,
         &recent_blockhash,
@@ -898,7 +898,7 @@ async fn fail_without_stake_deposit_authority_signature() {
         staker: user.pubkey(),
         withdrawer: user.pubkey(),
     };
-    let _stake_lamports = create_independent_stake_account(
+    let _stake_carats = create_independent_stake_account(
         &mut banks_client,
         &payer,
         &recent_blockhash,
@@ -978,7 +978,7 @@ async fn success_with_preferred_deposit() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     stake_pool_accounts
@@ -1014,7 +1014,7 @@ async fn fail_with_wrong_preferred_deposit() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let preferred_validator = simple_add_validator_to_pool(
@@ -1068,7 +1068,7 @@ async fn success_with_referral_fee() {
         user,
         deposit_stake,
         pool_token_account,
-        stake_lamports,
+        stake_carats,
     ) = setup().await;
 
     let referrer = Keypair::new();
@@ -1101,7 +1101,7 @@ async fn success_with_referral_fee() {
             &stake_pool_accounts.pool_fee_account.pubkey(),
             &referrer_token_account.pubkey(),
             &stake_pool_accounts.pool_mint.pubkey(),
-            &spl_token::id(),
+            &gpl_token::id(),
         ),
         Some(&context.payer.pubkey()),
     );
@@ -1115,7 +1115,7 @@ async fn success_with_referral_fee() {
     let referrer_balance_post =
         get_token_balance(&mut context.banks_client, &referrer_token_account.pubkey()).await;
     let referral_fee = stake_pool_accounts
-        .calculate_referral_fee(stake_pool_accounts.calculate_deposit_fee(stake_lamports));
+        .calculate_referral_fee(stake_pool_accounts.calculate_deposit_fee(stake_carats));
     assert!(referral_fee > 0);
     assert_eq!(referrer_balance_pre + referral_fee, referrer_balance_post);
 }
@@ -1129,7 +1129,7 @@ async fn fail_with_invalid_referrer() {
         user,
         deposit_stake,
         pool_token_account,
-        _stake_lamports,
+        _stake_carats,
     ) = setup().await;
 
     let invalid_token_account = Keypair::new();
@@ -1148,7 +1148,7 @@ async fn fail_with_invalid_referrer() {
             &stake_pool_accounts.pool_fee_account.pubkey(),
             &invalid_token_account.pubkey(),
             &stake_pool_accounts.pool_mint.pubkey(),
-            &spl_token::id(),
+            &gpl_token::id(),
         ),
         Some(&context.payer.pubkey()),
     );

@@ -1,6 +1,6 @@
 //! State transition types
 
-use spl_token::state::{Account, AccountState};
+use gpl_token::state::{Account, AccountState};
 use {
     crate::{
         big_vec::BigVec, error::StakePoolError, stake_program::Lockup, MAX_WITHDRAWAL_FEE_INCREASE,
@@ -9,16 +9,16 @@ use {
     borsh::{BorshDeserialize, BorshSchema, BorshSerialize},
     num_derive::FromPrimitive,
     num_traits::FromPrimitive,
-    solana_program::{
+    gemachain_program::{
         account_info::AccountInfo,
         borsh::get_instance_packed_len,
         msg,
         program_error::ProgramError,
-        program_memory::sol_memcmp,
+        program_memory::gema_memcmp,
         program_pack::{Pack, Sealed},
         pubkey::{Pubkey, PUBKEY_BYTES},
     },
-    spl_math::checked_ceil_div::CheckedCeilDiv,
+    gpl_math::checked_ceil_div::CheckedCeilDiv,
     std::{convert::TryFrom, fmt, matches},
 };
 
@@ -86,12 +86,12 @@ pub struct StakePool {
     /// Total stake under management.
     /// Note that if `last_update_epoch` does not match the current epoch then
     /// this field may not be accurate
-    pub total_lamports: u64,
+    pub total_carats: u64,
 
     /// Total supply of pool tokens (should always match the supply in the Pool Mint)
     pub pool_token_supply: u64,
 
-    /// Last epoch the `total_lamports` field was updated
+    /// Last epoch the `total_carats` field was updated
     pub last_update_epoch: u64,
 
     /// Lockup that all stakes in the pool must have
@@ -124,57 +124,57 @@ pub struct StakePool {
     /// and `stake_referral_fee`% of the collected stake deposit fees is paid out to the referrer
     pub stake_referral_fee: u8,
 
-    /// Toggles whether the `DepositSol` instruction requires a signature from
-    /// this `sol_deposit_authority`
-    pub sol_deposit_authority: Option<Pubkey>,
+    /// Toggles whether the `DepositGema` instruction requires a signature from
+    /// this `gema_deposit_authority`
+    pub gema_deposit_authority: Option<Pubkey>,
 
-    /// Fee assessed on SOL deposits
-    pub sol_deposit_fee: Fee,
+    /// Fee assessed on GEMA deposits
+    pub gema_deposit_fee: Fee,
 
-    /// Fees paid out to referrers on referred SOL deposits.
-    /// Expressed as a percentage (0 - 100) of SOL deposit fees.
-    /// i.e. `sol_deposit_fee`% of SOL deposited is collected as deposit fees for every deposit
-    /// and `sol_referral_fee`% of the collected SOL deposit fees is paid out to the referrer
-    pub sol_referral_fee: u8,
+    /// Fees paid out to referrers on referred GEMA deposits.
+    /// Expressed as a percentage (0 - 100) of GEMA deposit fees.
+    /// i.e. `gema_deposit_fee`% of GEMA deposited is collected as deposit fees for every deposit
+    /// and `gema_referral_fee`% of the collected GEMA deposit fees is paid out to the referrer
+    pub gema_referral_fee: u8,
 
-    /// Toggles whether the `WithdrawSol` instruction requires a signature from
+    /// Toggles whether the `WithdrawGema` instruction requires a signature from
     /// the `deposit_authority`
-    pub sol_withdraw_authority: Option<Pubkey>,
+    pub gema_withdraw_authority: Option<Pubkey>,
 
-    /// Fee assessed on SOL withdrawals
-    pub sol_withdrawal_fee: Fee,
+    /// Fee assessed on GEMA withdrawals
+    pub gema_withdrawal_fee: Fee,
 
-    /// Future SOL withdrawal fee, to be set for the following epoch
-    pub next_sol_withdrawal_fee: Option<Fee>,
+    /// Future GEMA withdrawal fee, to be set for the following epoch
+    pub next_gema_withdrawal_fee: Option<Fee>,
 
     /// Last epoch's total pool tokens, used only for APR estimation
     pub last_epoch_pool_token_supply: u64,
 
-    /// Last epoch's total lamports, used only for APR estimation
-    pub last_epoch_total_lamports: u64,
+    /// Last epoch's total carats, used only for APR estimation
+    pub last_epoch_total_carats: u64,
 }
 impl StakePool {
-    /// calculate the pool tokens that should be minted for a deposit of `stake_lamports`
+    /// calculate the pool tokens that should be minted for a deposit of `stake_carats`
     #[inline]
-    pub fn calc_pool_tokens_for_deposit(&self, stake_lamports: u64) -> Option<u64> {
-        if self.total_lamports == 0 || self.pool_token_supply == 0 {
-            return Some(stake_lamports);
+    pub fn calc_pool_tokens_for_deposit(&self, stake_carats: u64) -> Option<u64> {
+        if self.total_carats == 0 || self.pool_token_supply == 0 {
+            return Some(stake_carats);
         }
         u64::try_from(
-            (stake_lamports as u128)
+            (stake_carats as u128)
                 .checked_mul(self.pool_token_supply as u128)?
-                .checked_div(self.total_lamports as u128)?,
+                .checked_div(self.total_carats as u128)?,
         )
         .ok()
     }
 
-    /// calculate lamports amount on withdrawal
+    /// calculate carats amount on withdrawal
     #[inline]
-    pub fn calc_lamports_withdraw_amount(&self, pool_tokens: u64) -> Option<u64> {
+    pub fn calc_carats_withdraw_amount(&self, pool_tokens: u64) -> Option<u64> {
         // `checked_ceil_div` returns `None` for a 0 quotient result, but in this
         // case, a return of 0 is valid for small amounts of pool tokens. So
         // we check for that separately
-        let numerator = (pool_tokens as u128).checked_mul(self.total_lamports as u128)?;
+        let numerator = (pool_tokens as u128).checked_mul(self.total_carats as u128)?;
         let denominator = self.pool_token_supply as u128;
         if numerator < denominator || denominator == 0 {
             Some(0)
@@ -192,8 +192,8 @@ impl StakePool {
 
     /// calculate pool tokens to be deducted as withdrawal fees
     #[inline]
-    pub fn calc_pool_tokens_sol_withdrawal_fee(&self, pool_tokens: u64) -> Option<u64> {
-        u64::try_from(self.sol_withdrawal_fee.apply(pool_tokens)?).ok()
+    pub fn calc_pool_tokens_gema_withdrawal_fee(&self, pool_tokens: u64) -> Option<u64> {
+        u64::try_from(self.gema_withdrawal_fee.apply(pool_tokens)?).ok()
     }
 
     /// calculate pool tokens to be deducted as stake deposit fees
@@ -213,18 +213,18 @@ impl StakePool {
         .ok()
     }
 
-    /// calculate pool tokens to be deducted as SOL deposit fees
+    /// calculate pool tokens to be deducted as GEMA deposit fees
     #[inline]
-    pub fn calc_pool_tokens_sol_deposit_fee(&self, pool_tokens_minted: u64) -> Option<u64> {
-        u64::try_from(self.sol_deposit_fee.apply(pool_tokens_minted)?).ok()
+    pub fn calc_pool_tokens_gema_deposit_fee(&self, pool_tokens_minted: u64) -> Option<u64> {
+        u64::try_from(self.gema_deposit_fee.apply(pool_tokens_minted)?).ok()
     }
 
-    /// calculate pool tokens to be deducted from SOL deposit fees as referral fees
+    /// calculate pool tokens to be deducted from GEMA deposit fees as referral fees
     #[inline]
-    pub fn calc_pool_tokens_sol_referral_fee(&self, sol_deposit_fee: u64) -> Option<u64> {
+    pub fn calc_pool_tokens_gema_referral_fee(&self, gema_deposit_fee: u64) -> Option<u64> {
         u64::try_from(
-            (sol_deposit_fee as u128)
-                .checked_mul(self.sol_referral_fee as u128)?
+            (gema_deposit_fee as u128)
+                .checked_mul(self.gema_referral_fee as u128)?
                 .checked_div(100u128)?,
         )
         .ok()
@@ -232,22 +232,22 @@ impl StakePool {
 
     /// Calculate the fee in pool tokens that goes to the manager
     ///
-    /// This function assumes that `reward_lamports` has not already been added
-    /// to the stake pool's `total_lamports`
+    /// This function assumes that `reward_carats` has not already been added
+    /// to the stake pool's `total_carats`
     #[inline]
-    pub fn calc_epoch_fee_amount(&self, reward_lamports: u64) -> Option<u64> {
-        if reward_lamports == 0 {
+    pub fn calc_epoch_fee_amount(&self, reward_carats: u64) -> Option<u64> {
+        if reward_carats == 0 {
             return Some(0);
         }
-        let total_lamports = (self.total_lamports as u128).checked_add(reward_lamports as u128)?;
-        let fee_lamports = self.epoch_fee.apply(reward_lamports)?;
-        if total_lamports == fee_lamports || self.pool_token_supply == 0 {
-            Some(reward_lamports)
+        let total_carats = (self.total_carats as u128).checked_add(reward_carats as u128)?;
+        let fee_carats = self.epoch_fee.apply(reward_carats)?;
+        if total_carats == fee_carats || self.pool_token_supply == 0 {
+            Some(reward_carats)
         } else {
             u64::try_from(
                 (self.pool_token_supply as u128)
-                    .checked_mul(fee_lamports)?
-                    .checked_div(total_lamports.checked_sub(fee_lamports)?)?,
+                    .checked_mul(fee_carats)?
+                    .checked_div(total_carats.checked_sub(fee_carats)?)?,
             )
             .ok()
         }
@@ -329,40 +329,40 @@ impl StakePool {
     }
 
     /// Checks that the deposit authority is valid
-    /// Does nothing if `sol_deposit_authority` is currently not set
+    /// Does nothing if `gema_deposit_authority` is currently not set
     #[inline]
-    pub(crate) fn check_sol_deposit_authority(
+    pub(crate) fn check_gema_deposit_authority(
         &self,
-        maybe_sol_deposit_authority: Result<&AccountInfo, ProgramError>,
+        maybe_gema_deposit_authority: Result<&AccountInfo, ProgramError>,
     ) -> Result<(), ProgramError> {
-        if let Some(auth) = self.sol_deposit_authority {
-            let sol_deposit_authority = maybe_sol_deposit_authority?;
-            if auth != *sol_deposit_authority.key {
-                msg!("Expected {}, received {}", auth, sol_deposit_authority.key);
-                return Err(StakePoolError::InvalidSolDepositAuthority.into());
+        if let Some(auth) = self.gema_deposit_authority {
+            let gema_deposit_authority = maybe_gema_deposit_authority?;
+            if auth != *gema_deposit_authority.key {
+                msg!("Expected {}, received {}", auth, gema_deposit_authority.key);
+                return Err(StakePoolError::InvalidGemaDepositAuthority.into());
             }
-            if !sol_deposit_authority.is_signer {
-                msg!("SOL Deposit authority signature missing");
+            if !gema_deposit_authority.is_signer {
+                msg!("GEMA Deposit authority signature missing");
                 return Err(StakePoolError::SignatureMissing.into());
             }
         }
         Ok(())
     }
 
-    /// Checks that the sol withdraw authority is valid
-    /// Does nothing if `sol_withdraw_authority` is currently not set
+    /// Checks that the gema withdraw authority is valid
+    /// Does nothing if `gema_withdraw_authority` is currently not set
     #[inline]
-    pub(crate) fn check_sol_withdraw_authority(
+    pub(crate) fn check_gema_withdraw_authority(
         &self,
-        maybe_sol_withdraw_authority: Result<&AccountInfo, ProgramError>,
+        maybe_gema_withdraw_authority: Result<&AccountInfo, ProgramError>,
     ) -> Result<(), ProgramError> {
-        if let Some(auth) = self.sol_withdraw_authority {
-            let sol_withdraw_authority = maybe_sol_withdraw_authority?;
-            if auth != *sol_withdraw_authority.key {
-                return Err(StakePoolError::InvalidSolWithdrawAuthority.into());
+        if let Some(auth) = self.gema_withdraw_authority {
+            let gema_withdraw_authority = maybe_gema_withdraw_authority?;
+            if auth != *gema_withdraw_authority.key {
+                return Err(StakePoolError::InvalidGemaWithdrawAuthority.into());
             }
-            if !sol_withdraw_authority.is_signer {
-                msg!("SOL withdraw authority signature missing");
+            if !gema_withdraw_authority.is_signer {
+                msg!("GEMA withdraw authority signature missing");
                 return Err(StakePoolError::SignatureMissing.into());
             }
         }
@@ -460,18 +460,18 @@ impl StakePool {
     /// Updates one of the StakePool's fees.
     pub fn update_fee(&mut self, fee: &FeeType) -> Result<(), StakePoolError> {
         match fee {
-            FeeType::SolReferral(new_fee) => self.sol_referral_fee = *new_fee,
+            FeeType::GemaReferral(new_fee) => self.gema_referral_fee = *new_fee,
             FeeType::StakeReferral(new_fee) => self.stake_referral_fee = *new_fee,
             FeeType::Epoch(new_fee) => self.next_epoch_fee = Some(*new_fee),
             FeeType::StakeWithdrawal(new_fee) => {
                 new_fee.check_withdrawal(&self.stake_withdrawal_fee)?;
                 self.next_stake_withdrawal_fee = Some(*new_fee)
             }
-            FeeType::SolWithdrawal(new_fee) => {
-                new_fee.check_withdrawal(&self.sol_withdrawal_fee)?;
-                self.next_sol_withdrawal_fee = Some(*new_fee)
+            FeeType::GemaWithdrawal(new_fee) => {
+                new_fee.check_withdrawal(&self.gema_withdrawal_fee)?;
+                self.next_gema_withdrawal_fee = Some(*new_fee)
             }
-            FeeType::SolDeposit(new_fee) => self.sol_deposit_fee = *new_fee,
+            FeeType::GemaDeposit(new_fee) => self.gema_deposit_fee = *new_fee,
             FeeType::StakeDeposit(new_fee) => self.stake_deposit_fee = *new_fee,
         };
         Ok(())
@@ -535,14 +535,14 @@ pub struct ValidatorStakeInfo {
     /// Amount of active stake delegated to this validator
     /// Note that if `last_update_epoch` does not match the current epoch then
     /// this field may not be accurate
-    pub active_stake_lamports: u64,
+    pub active_stake_carats: u64,
 
     /// Amount of transient stake delegated to this validator
     /// Note that if `last_update_epoch` does not match the current epoch then
     /// this field may not be accurate
-    pub transient_stake_lamports: u64,
+    pub transient_stake_carats: u64,
 
-    /// Last epoch the active and transient stake lamports fields were updated
+    /// Last epoch the active and transient stake carats fields were updated
     pub last_update_epoch: u64,
 
     /// Start of the validator transient account seed suffixess
@@ -559,17 +559,17 @@ pub struct ValidatorStakeInfo {
 }
 
 impl ValidatorStakeInfo {
-    /// Get the total lamports delegated to this validator (active and transient)
-    pub fn stake_lamports(&self) -> u64 {
-        self.active_stake_lamports
-            .checked_add(self.transient_stake_lamports)
+    /// Get the total carats delegated to this validator (active and transient)
+    pub fn stake_carats(&self) -> u64 {
+        self.active_stake_carats
+            .checked_add(self.transient_stake_carats)
             .unwrap()
     }
 
     /// Performs a very cheap comparison, for checking if this validator stake
     /// info matches the vote account address
     pub fn memcmp_pubkey(data: &[u8], vote_address_bytes: &[u8]) -> bool {
-        sol_memcmp(
+        gema_memcmp(
             &data[41..41 + PUBKEY_BYTES],
             vote_address_bytes,
             PUBKEY_BYTES,
@@ -577,15 +577,15 @@ impl ValidatorStakeInfo {
     }
 
     /// Performs a very cheap comparison, for checking if this validator stake
-    /// info does not have active lamports equal to the given bytes
-    pub fn active_lamports_not_equal(data: &[u8], lamports_le_bytes: &[u8]) -> bool {
-        sol_memcmp(&data[0..8], lamports_le_bytes, 8) != 0
+    /// info does not have active carats equal to the given bytes
+    pub fn active_carats_not_equal(data: &[u8], carats_le_bytes: &[u8]) -> bool {
+        gema_memcmp(&data[0..8], carats_le_bytes, 8) != 0
     }
 
     /// Performs a very cheap comparison, for checking if this validator stake
-    /// info does not have lamports equal to the given bytes
-    pub fn transient_lamports_not_equal(data: &[u8], lamports_le_bytes: &[u8]) -> bool {
-        sol_memcmp(&data[8..16], lamports_le_bytes, 8) != 0
+    /// info does not have carats equal to the given bytes
+    pub fn transient_carats_not_equal(data: &[u8], carats_le_bytes: &[u8]) -> bool {
+        gema_memcmp(&data[8..16], carats_le_bytes, 8) != 0
     }
 
     /// Check that the validator stake info is valid
@@ -648,7 +648,7 @@ impl ValidatorList {
 
     /// Check if the list has any active stake
     pub fn has_active_stake(&self) -> bool {
-        self.validators.iter().any(|x| x.active_stake_lamports > 0)
+        self.validators.iter().any(|x| x.active_stake_carats > 0)
     }
 }
 
@@ -768,32 +768,32 @@ impl fmt::Display for Fee {
 /// The type of fees that can be set on the stake pool
 #[derive(Clone, Debug, PartialEq, BorshDeserialize, BorshSerialize, BorshSchema)]
 pub enum FeeType {
-    /// Referral fees for SOL deposits
-    SolReferral(u8),
+    /// Referral fees for GEMA deposits
+    GemaReferral(u8),
     /// Referral fees for stake deposits
     StakeReferral(u8),
     /// Management fee paid per epoch
     Epoch(Fee),
     /// Stake withdrawal fee
     StakeWithdrawal(Fee),
-    /// Deposit fee for SOL deposits
-    SolDeposit(Fee),
+    /// Deposit fee for GEMA deposits
+    GemaDeposit(Fee),
     /// Deposit fee for stake deposits
     StakeDeposit(Fee),
-    /// SOL withdrawal fee
-    SolWithdrawal(Fee),
+    /// GEMA withdrawal fee
+    GemaWithdrawal(Fee),
 }
 
 impl FeeType {
     /// Checks if the provided fee is too high, returning an error if so
     pub fn check_too_high(&self) -> Result<(), StakePoolError> {
         let too_high = match self {
-            Self::SolReferral(pct) => *pct > 100u8,
+            Self::GemaReferral(pct) => *pct > 100u8,
             Self::StakeReferral(pct) => *pct > 100u8,
             Self::Epoch(fee) => fee.numerator > fee.denominator,
             Self::StakeWithdrawal(fee) => fee.numerator > fee.denominator,
-            Self::SolWithdrawal(fee) => fee.numerator > fee.denominator,
-            Self::SolDeposit(fee) => fee.numerator > fee.denominator,
+            Self::GemaWithdrawal(fee) => fee.numerator > fee.denominator,
+            Self::GemaDeposit(fee) => fee.numerator > fee.denominator,
             Self::StakeDeposit(fee) => fee.numerator > fee.denominator,
         };
         if too_high {
@@ -808,7 +808,7 @@ impl FeeType {
     pub fn can_only_change_next_epoch(&self) -> bool {
         matches!(
             self,
-            Self::StakeWithdrawal(_) | Self::SolWithdrawal(_) | Self::Epoch(_)
+            Self::StakeWithdrawal(_) | Self::GemaWithdrawal(_) | Self::Epoch(_)
         )
     }
 }
@@ -818,12 +818,12 @@ mod test {
     use {
         super::*,
         proptest::prelude::*,
-        solana_program::borsh::{
+        gemachain_program::borsh::{
             get_instance_packed_len, get_packed_len, try_from_slice_unchecked,
         },
-        solana_program::{
+        gemachain_program::{
             clock::{DEFAULT_SLOTS_PER_EPOCH, DEFAULT_S_PER_SLOT, SECONDS_PER_DAY},
-            native_token::LAMPORTS_PER_SOL,
+            native_token::CARATS_PER_GEMA,
         },
     };
 
@@ -847,8 +847,8 @@ mod test {
                 ValidatorStakeInfo {
                     status: StakeStatus::Active,
                     vote_account_address: Pubkey::new_from_array([1; 32]),
-                    active_stake_lamports: u64::from_le_bytes([255; 8]),
-                    transient_stake_lamports: u64::from_le_bytes([128; 8]),
+                    active_stake_carats: u64::from_le_bytes([255; 8]),
+                    transient_stake_carats: u64::from_le_bytes([128; 8]),
                     last_update_epoch: u64::from_le_bytes([64; 8]),
                     transient_seed_suffix_start: 0,
                     transient_seed_suffix_end: 0,
@@ -856,8 +856,8 @@ mod test {
                 ValidatorStakeInfo {
                     status: StakeStatus::DeactivatingTransient,
                     vote_account_address: Pubkey::new_from_array([2; 32]),
-                    active_stake_lamports: 998877665544,
-                    transient_stake_lamports: 222222222,
+                    active_stake_carats: 998877665544,
+                    transient_stake_carats: 222222222,
                     last_update_epoch: 11223445566,
                     transient_seed_suffix_start: 0,
                     transient_seed_suffix_end: 0,
@@ -865,8 +865,8 @@ mod test {
                 ValidatorStakeInfo {
                     status: StakeStatus::ReadyForRemoval,
                     vote_account_address: Pubkey::new_from_array([3; 32]),
-                    active_stake_lamports: 0,
-                    transient_stake_lamports: 0,
+                    active_stake_carats: 0,
+                    transient_stake_carats: 0,
                     last_update_epoch: 999999999999999,
                     transient_seed_suffix_start: 0,
                     transient_seed_suffix_end: 0,
@@ -915,7 +915,7 @@ mod test {
         let mut validator_list = test_validator_list(max_validators);
         assert!(validator_list.has_active_stake());
         for validator in validator_list.validators.iter_mut() {
-            validator.active_stake_lamports = 0;
+            validator.active_stake_carats = 0;
         }
         assert!(!validator_list.has_active_stake());
     }
@@ -1000,37 +1000,37 @@ mod test {
     }
 
     prop_compose! {
-        fn total_stake_and_rewards()(total_lamports in 1..u64::MAX)(
-            total_lamports in Just(total_lamports),
-            rewards in 0..=total_lamports,
+        fn total_stake_and_rewards()(total_carats in 1..u64::MAX)(
+            total_carats in Just(total_carats),
+            rewards in 0..=total_carats,
         ) -> (u64, u64) {
-            (total_lamports - rewards, rewards)
+            (total_carats - rewards, rewards)
         }
     }
 
     #[test]
     fn specific_fee_calculation() {
-        // 10% of 10 SOL in rewards should be 1 SOL in fees
+        // 10% of 10 GEMA in rewards should be 1 GEMA in fees
         let epoch_fee = Fee {
             numerator: 1,
             denominator: 10,
         };
         let mut stake_pool = StakePool {
-            total_lamports: 100 * LAMPORTS_PER_SOL,
-            pool_token_supply: 100 * LAMPORTS_PER_SOL,
+            total_carats: 100 * CARATS_PER_GEMA,
+            pool_token_supply: 100 * CARATS_PER_GEMA,
             epoch_fee,
             ..StakePool::default()
         };
-        let reward_lamports = 10 * LAMPORTS_PER_SOL;
-        let pool_token_fee = stake_pool.calc_epoch_fee_amount(reward_lamports).unwrap();
+        let reward_carats = 10 * CARATS_PER_GEMA;
+        let pool_token_fee = stake_pool.calc_epoch_fee_amount(reward_carats).unwrap();
 
-        stake_pool.total_lamports += reward_lamports;
+        stake_pool.total_carats += reward_carats;
         stake_pool.pool_token_supply += pool_token_fee;
 
-        let fee_lamports = stake_pool
-            .calc_lamports_withdraw_amount(pool_token_fee)
+        let fee_carats = stake_pool
+            .calc_carats_withdraw_amount(pool_token_fee)
             .unwrap();
-        assert_eq!(fee_lamports, LAMPORTS_PER_SOL);
+        assert_eq!(fee_carats, CARATS_PER_GEMA);
     }
 
     #[test]
@@ -1043,14 +1043,14 @@ mod test {
             epoch_fee,
             ..StakePool::default()
         };
-        let fee_lamports = stake_pool.calc_lamports_withdraw_amount(0).unwrap();
-        assert_eq!(fee_lamports, 0);
+        let fee_carats = stake_pool.calc_carats_withdraw_amount(0).unwrap();
+        assert_eq!(fee_carats, 0);
     }
 
     #[test]
     fn divide_by_zero_fee() {
         let stake_pool = StakePool {
-            total_lamports: 0,
+            total_carats: 0,
             epoch_fee: Fee {
                 numerator: 1,
                 denominator: 10,
@@ -1066,15 +1066,15 @@ mod test {
     fn approximate_apr_calculation() {
         // 8% / year means roughly .044% / epoch
         let stake_pool = StakePool {
-            last_epoch_total_lamports: 100_000,
+            last_epoch_total_carats: 100_000,
             last_epoch_pool_token_supply: 100_000,
-            total_lamports: 100_044,
+            total_carats: 100_044,
             pool_token_supply: 100_000,
             ..StakePool::default()
         };
         let pool_token_value =
-            stake_pool.total_lamports as f64 / stake_pool.pool_token_supply as f64;
-        let last_epoch_pool_token_value = stake_pool.last_epoch_total_lamports as f64
+            stake_pool.total_carats as f64 / stake_pool.pool_token_supply as f64;
+        let last_epoch_pool_token_value = stake_pool.last_epoch_total_carats as f64
             / stake_pool.last_epoch_pool_token_supply as f64;
         let epoch_rate = pool_token_value / last_epoch_pool_token_value - 1.0;
         const SECONDS_PER_EPOCH: f64 = DEFAULT_SLOTS_PER_EPOCH as f64 * DEFAULT_S_PER_SLOT;
@@ -1088,62 +1088,62 @@ mod test {
         #[test]
         fn fee_calculation(
             (numerator, denominator) in fee(),
-            (total_lamports, reward_lamports) in total_stake_and_rewards(),
+            (total_carats, reward_carats) in total_stake_and_rewards(),
         ) {
             let epoch_fee = Fee { denominator, numerator };
             let mut stake_pool = StakePool {
-                total_lamports,
-                pool_token_supply: total_lamports,
+                total_carats,
+                pool_token_supply: total_carats,
                 epoch_fee,
                 ..StakePool::default()
             };
-            let pool_token_fee = stake_pool.calc_epoch_fee_amount(reward_lamports).unwrap();
+            let pool_token_fee = stake_pool.calc_epoch_fee_amount(reward_carats).unwrap();
 
-            stake_pool.total_lamports += reward_lamports;
+            stake_pool.total_carats += reward_carats;
             stake_pool.pool_token_supply += pool_token_fee;
 
-            let fee_lamports = stake_pool.calc_lamports_withdraw_amount(pool_token_fee).unwrap();
-            let max_fee_lamports = u64::try_from((reward_lamports as u128) * (epoch_fee.numerator as u128) / (epoch_fee.denominator as u128)).unwrap();
-            assert!(max_fee_lamports >= fee_lamports,
+            let fee_carats = stake_pool.calc_carats_withdraw_amount(pool_token_fee).unwrap();
+            let max_fee_carats = u64::try_from((reward_carats as u128) * (epoch_fee.numerator as u128) / (epoch_fee.denominator as u128)).unwrap();
+            assert!(max_fee_carats >= fee_carats,
                 "Max possible fee must always be greater than or equal to what is actually withdrawn, max {} actual {}",
-                max_fee_lamports,
-                fee_lamports);
+                max_fee_carats,
+                fee_carats);
 
             // since we do two "flooring" conversions, the max epsilon should be
-            // correct up to 2 lamports (one for each floor division), plus a
+            // correct up to 2 carats (one for each floor division), plus a
             // correction for huge discrepancies between rewards and total stake
-            let epsilon = 2 + reward_lamports / total_lamports;
-            assert!(max_fee_lamports - fee_lamports <= epsilon,
-                "Max expected fee in lamports {}, actually receive {}, epsilon {}",
-                max_fee_lamports, fee_lamports, epsilon);
+            let epsilon = 2 + reward_carats / total_carats;
+            assert!(max_fee_carats - fee_carats <= epsilon,
+                "Max expected fee in carats {}, actually receive {}, epsilon {}",
+                max_fee_carats, fee_carats, epsilon);
         }
     }
 
     prop_compose! {
-        fn total_tokens_and_deposit()(total_lamports in 1..u64::MAX)(
-            total_lamports in Just(total_lamports),
-            pool_token_supply in 1..=total_lamports,
-            deposit_lamports in 1..total_lamports,
+        fn total_tokens_and_deposit()(total_carats in 1..u64::MAX)(
+            total_carats in Just(total_carats),
+            pool_token_supply in 1..=total_carats,
+            deposit_carats in 1..total_carats,
         ) -> (u64, u64, u64) {
-            (total_lamports - deposit_lamports, pool_token_supply.saturating_sub(deposit_lamports).max(1), deposit_lamports)
+            (total_carats - deposit_carats, pool_token_supply.saturating_sub(deposit_carats).max(1), deposit_carats)
         }
     }
 
     proptest! {
         #[test]
         fn deposit_and_withdraw(
-            (total_lamports, pool_token_supply, deposit_stake) in total_tokens_and_deposit()
+            (total_carats, pool_token_supply, deposit_stake) in total_tokens_and_deposit()
         ) {
             let mut stake_pool = StakePool {
-                total_lamports,
+                total_carats,
                 pool_token_supply,
                 ..StakePool::default()
             };
             let deposit_result = stake_pool.calc_pool_tokens_for_deposit(deposit_stake).unwrap();
             prop_assume!(deposit_result > 0);
-            stake_pool.total_lamports += deposit_stake;
+            stake_pool.total_carats += deposit_stake;
             stake_pool.pool_token_supply += deposit_result;
-            let withdraw_result = stake_pool.calc_lamports_withdraw_amount(deposit_result).unwrap();
+            let withdraw_result = stake_pool.calc_carats_withdraw_amount(deposit_result).unwrap();
             assert!(withdraw_result <= deposit_stake);
         }
     }

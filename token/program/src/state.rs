@@ -3,7 +3,7 @@
 use crate::instruction::MAX_SIGNERS;
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use num_enum::TryFromPrimitive;
-use solana_program::{
+use gemachain_program::{
     program_error::ProgramError,
     program_option::COption,
     program_pack::{IsInitialized, Pack, Sealed},
@@ -97,7 +97,7 @@ pub struct Account {
     pub state: AccountState,
     /// If is_some, this is a native token, and the value logs the rent-exempt reserve. An Account
     /// is required to be rent-exempt, so the value is used by the Processor to ensure that wrapped
-    /// SOL accounts do not drop below this threshold.
+    /// GEMA accounts do not drop below this threshold.
     pub is_native: COption<u64>,
     /// The amount delegated
     pub delegated_amount: u64,

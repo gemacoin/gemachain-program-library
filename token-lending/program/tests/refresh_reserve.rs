@@ -3,13 +3,13 @@
 mod helpers;
 
 use helpers::*;
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program_test::*;
+use gemachain_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
-use spl_token_lending::{
+use gpl_token_lending::{
     instruction::refresh_reserve,
     math::{Decimal, Rate, TryAdd, TryDiv, TryMul},
     processor::process_instruction,
@@ -19,15 +19,15 @@ use spl_token_lending::{
 #[tokio::test]
 async fn test_success() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
     // limit to track compute unit increase
     test.set_bpf_compute_max_units(30_000);
 
-    const SOL_RESERVE_LIQUIDITY_LAMPORTS: u64 = 100 * LAMPORTS_TO_SOL;
+    const GEMA_RESERVE_LIQUIDITY_CARATS: u64 = 100 * CARATS_TO_GEMA;
     const USDC_RESERVE_LIQUIDITY_FRACTIONAL: u64 = 100 * FRACTIONAL_TO_USDC;
     const BORROW_AMOUNT: u64 = 100;
 
@@ -61,17 +61,17 @@ async fn test_success() {
         },
     );
 
-    let sol_oracle = add_sol_oracle(&mut test);
-    let sol_test_reserve = add_reserve(
+    let gema_oracle = add_gema_oracle(&mut test);
+    let gema_test_reserve = add_reserve(
         &mut test,
         &lending_market,
-        &sol_oracle,
+        &gema_oracle,
         &user_accounts_owner,
         AddReserveArgs {
             borrow_amount: BORROW_AMOUNT,
-            liquidity_amount: SOL_RESERVE_LIQUIDITY_LAMPORTS,
+            liquidity_amount: GEMA_RESERVE_LIQUIDITY_CARATS,
             liquidity_mint_decimals: 9,
-            liquidity_mint_pubkey: spl_token::native_mint::id(),
+            liquidity_mint_pubkey: gpl_token::native_mint::id(),
             config: reserve_config,
             slots_elapsed: 1, // elapsed from 1; clock.slot = 2
             ..AddReserveArgs::default()
@@ -91,14 +91,14 @@ async fn test_success() {
     let mut transaction = Transaction::new_with_payer(
         &[
             refresh_reserve(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 usdc_test_reserve.pubkey,
                 usdc_oracle.price_pubkey,
             ),
             refresh_reserve(
-                spl_token_lending::id(),
-                sol_test_reserve.pubkey,
-                sol_oracle.price_pubkey,
+                gpl_token_lending::id(),
+                gema_test_reserve.pubkey,
+                gema_oracle.price_pubkey,
             ),
         ],
         Some(&payer.pubkey()),
@@ -107,7 +107,7 @@ async fn test_success() {
     transaction.sign(&[&payer], recent_blockhash);
     assert!(banks_client.process_transaction(transaction).await.is_ok());
 
-    let sol_reserve = sol_test_reserve.get_state(&mut banks_client).await;
+    let gema_reserve = gema_test_reserve.get_state(&mut banks_client).await;
     let usdc_reserve = usdc_test_reserve.get_state(&mut banks_client).await;
 
     let slot_rate = Rate::from_percent(BORROW_RATE)
@@ -117,21 +117,21 @@ async fn test_success() {
     let compound_borrow = Decimal::from(BORROW_AMOUNT).try_mul(compound_rate).unwrap();
 
     assert_eq!(
-        sol_reserve.liquidity.cumulative_borrow_rate_wads,
+        gema_reserve.liquidity.cumulative_borrow_rate_wads,
         compound_rate.into()
     );
     assert_eq!(
-        sol_reserve.liquidity.cumulative_borrow_rate_wads,
+        gema_reserve.liquidity.cumulative_borrow_rate_wads,
         usdc_reserve.liquidity.cumulative_borrow_rate_wads
     );
-    assert_eq!(sol_reserve.liquidity.borrowed_amount_wads, compound_borrow);
+    assert_eq!(gema_reserve.liquidity.borrowed_amount_wads, compound_borrow);
     assert_eq!(
-        sol_reserve.liquidity.borrowed_amount_wads,
+        gema_reserve.liquidity.borrowed_amount_wads,
         usdc_reserve.liquidity.borrowed_amount_wads
     );
     assert_eq!(
-        sol_reserve.liquidity.market_price,
-        sol_test_reserve.market_price
+        gema_reserve.liquidity.market_price,
+        gema_test_reserve.market_price
     );
     assert_eq!(
         usdc_reserve.liquidity.market_price,

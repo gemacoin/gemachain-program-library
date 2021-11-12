@@ -3,26 +3,26 @@ use {
         crate_description, crate_name, crate_version, value_t, App, AppSettings, Arg, ArgMatches,
         SubCommand,
     },
-    solana_clap_utils::{
+    gemachain_clap_utils::{
         fee_payer::fee_payer_arg,
         input_parsers::{keypair_of, pubkey_of, value_of},
         input_validators::{is_amount, is_keypair, is_parsable, is_pubkey, is_url},
         keypair::signer_from_path,
     },
-    solana_client::rpc_client::RpcClient,
-    solana_program::{native_token::lamports_to_sol, program_pack::Pack, pubkey::Pubkey},
-    solana_sdk::{
+    gemachain_client::rpc_client::RpcClient,
+    gemachain_program::{native_token::carats_to_gema, program_pack::Pack, pubkey::Pubkey},
+    gemachain_sdk::{
         commitment_config::CommitmentConfig,
         signature::{Keypair, Signer},
         system_instruction,
         transaction::Transaction,
     },
-    spl_token::{
+    gpl_token::{
         instruction::{approve, revoke},
         state::{Account as Token, Mint},
         ui_amount_to_amount,
     },
-    spl_token_lending::{
+    gpl_token_lending::{
         self,
         instruction::{init_lending_market, init_reserve},
         math::WAD,
@@ -46,9 +46,9 @@ type CommandResult = Result<(), Error>;
 const PYTH_PROGRAM_ID: &str = "gSbePebfvPy7tRqimPoVecS2UsBvYv46ynrzWocc92s";
 
 fn main() {
-    solana_logger::setup_with_default("solana=info");
+    gemachain_logger::setup_with_default("gemachain=info");
 
-    let default_lending_program_id: &str = &spl_token_lending::id().to_string();
+    let default_lending_program_id: &str = &gpl_token_lending::id().to_string();
 
     let matches = App::new(crate_name!())
         .about(crate_description!())
@@ -62,7 +62,7 @@ fn main() {
                 .takes_value(true)
                 .global(true)
                 .help("Configuration file to use");
-            if let Some(ref config_file) = *solana_cli_config::CONFIG_FILE {
+            if let Some(ref config_file) = *gemachain_cli_config::CONFIG_FILE {
                 arg.default_value(config_file)
             } else {
                 arg
@@ -159,7 +159,7 @@ fn main() {
                         .value_name("KEYPAIR")
                         .takes_value(true)
                         .required(true)
-                        .help("Owner of the SPL Token account to deposit initial liquidity from"),
+                        .help("Owner of the GPL Token account to deposit initial liquidity from"),
                 )
                 .arg(
                     Arg::with_name("lending_market")
@@ -177,7 +177,7 @@ fn main() {
                         .value_name("PUBKEY")
                         .takes_value(true)
                         .required(true)
-                        .help("SPL Token account to deposit initial liquidity from"),
+                        .help("GPL Token account to deposit initial liquidity from"),
                 )
                 // @TODO: use is_amount_or_all
                 .arg(
@@ -313,9 +313,9 @@ fn main() {
     let mut wallet_manager = None;
     let config = {
         let cli_config = if let Some(config_file) = matches.value_of("config_file") {
-            solana_cli_config::Config::load(config_file).unwrap_or_default()
+            gemachain_cli_config::Config::load(config_file).unwrap_or_default()
         } else {
-            solana_cli_config::Config::default()
+            gemachain_cli_config::Config::default()
         };
         let json_rpc_url = value_t!(matches, "json_rpc_url", String)
             .unwrap_or_else(|_| cli_config.json_rpc_url.clone());
@@ -560,21 +560,21 @@ fn command_add_reserve(
                 &collateral_mint_keypair.pubkey(),
                 collateral_mint_balance,
                 Mint::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
             create_account(
                 &config.fee_payer.pubkey(),
                 &collateral_supply_keypair.pubkey(),
                 collateral_supply_balance,
                 Token::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
             create_account(
                 &config.fee_payer.pubkey(),
                 &user_collateral_keypair.pubkey(),
                 user_collateral_balance,
                 Token::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
         ],
         Some(&config.fee_payer.pubkey()),
@@ -587,14 +587,14 @@ fn command_add_reserve(
                 &liquidity_supply_keypair.pubkey(),
                 liquidity_supply_balance,
                 Token::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
             create_account(
                 &config.fee_payer.pubkey(),
                 &liquidity_fee_receiver_keypair.pubkey(),
                 liquidity_fee_receiver_balance,
                 Token::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
         ],
         Some(&config.fee_payer.pubkey()),
@@ -603,7 +603,7 @@ fn command_add_reserve(
     let mut transaction_3 = Transaction::new_with_payer(
         &[
             approve(
-                &spl_token::id(),
+                &gpl_token::id(),
                 &source_liquidity_pubkey,
                 &user_transfer_authority_keypair.pubkey(),
                 &source_liquidity_owner_keypair.pubkey(),
@@ -630,7 +630,7 @@ fn command_add_reserve(
                 user_transfer_authority_keypair.pubkey(),
             ),
             revoke(
-                &spl_token::id(),
+                &gpl_token::id(),
                 &source_liquidity_pubkey,
                 &source_liquidity_owner_keypair.pubkey(),
                 &[],
@@ -689,8 +689,8 @@ fn check_fee_payer_balance(config: &Config, required_balance: u64) -> Result<(),
         Err(format!(
             "Fee payer, {}, has insufficient balance: {} required, {} available",
             config.fee_payer.pubkey(),
-            lamports_to_sol(required_balance),
-            lamports_to_sol(balance)
+            carats_to_gema(required_balance),
+            carats_to_gema(balance)
         )
         .into())
     } else {
@@ -701,7 +701,7 @@ fn check_fee_payer_balance(config: &Config, required_balance: u64) -> Result<(),
 fn send_transaction(
     config: &Config,
     transaction: Transaction,
-) -> solana_client::client_error::Result<()> {
+) -> gemachain_client::client_error::Result<()> {
     if config.dry_run {
         let result = config.rpc_client.simulate_transaction(&transaction)?;
         println!("Simulate result: {:?}", result);

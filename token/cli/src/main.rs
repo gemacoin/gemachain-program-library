@@ -1,13 +1,13 @@
-#![allow(deprecated)] // TODO: Remove when SPL upgrades to Solana 1.8
+#![allow(deprecated)] // TODO: Remove when GPL upgrades to Gemachain 1.8
 use clap::{
     crate_description, crate_name, crate_version, value_t, value_t_or_exit, App, AppSettings, Arg,
     ArgMatches, SubCommand,
 };
-use solana_account_decoder::{
+use gemachain_account_decoder::{
     parse_token::{TokenAccountType, UiAccountState},
     UiAccountData,
 };
-use solana_clap_utils::{
+use gemachain_clap_utils::{
     fee_payer::fee_payer_arg,
     input_parsers::{pubkey_of_signer, pubkeys_of_multiple_signers, value_of},
     input_validators::{
@@ -20,14 +20,14 @@ use solana_clap_utils::{
     offline::{self, *},
     ArgConstant,
 };
-use solana_cli_output::{
+use gemachain_cli_output::{
     return_signers_with_config, CliSignature, OutputFormat, ReturnSignersConfig,
 };
-use solana_client::{
+use gemachain_client::{
     blockhash_query::BlockhashQuery, rpc_client::RpcClient, rpc_request::TokenAccountsFilter,
 };
-use solana_remote_wallet::remote_wallet::RemoteWalletManager;
-use solana_sdk::{
+use gemachain_remote_wallet::remote_wallet::RemoteWalletManager;
+use gemachain_sdk::{
     commitment_config::CommitmentConfig,
     instruction::Instruction,
     message::Message,
@@ -39,8 +39,8 @@ use solana_sdk::{
     system_instruction, system_program,
     transaction::Transaction,
 };
-use spl_associated_token_account::*;
-use spl_token::{
+use gpl_associated_token_account::*;
+use gpl_token::{
     self,
     instruction::*,
     native_mint,
@@ -222,8 +222,8 @@ pub(crate) fn check_fee_payer_balance(config: &Config, required_balance: u64) ->
         Err(format!(
             "Fee payer, {}, has insufficient balance: {} required, {} available",
             config.fee_payer,
-            lamports_to_sol(required_balance),
-            lamports_to_sol(balance)
+            carats_to_gema(required_balance),
+            carats_to_gema(balance)
         )
         .into())
     } else {
@@ -241,8 +241,8 @@ fn check_wallet_balance(
         Err(format!(
             "Wallet {}, has insufficient balance: {} required, {} available",
             wallet,
-            lamports_to_sol(required_balance),
-            lamports_to_sol(balance)
+            carats_to_gema(required_balance),
+            carats_to_gema(balance)
         )
         .into())
     } else {
@@ -295,10 +295,10 @@ fn command_create_token(
             &token,
             minimum_balance_for_rent_exemption,
             Mint::LEN as u64,
-            &spl_token::id(),
+            &gpl_token::id(),
         ),
         initialize_mint(
-            &spl_token::id(),
+            &gpl_token::id(),
             &token,
             &authority,
             freeze_authority_pubkey.as_ref(),
@@ -306,7 +306,7 @@ fn command_create_token(
         )?,
     ];
     if let Some(text) = memo {
-        instructions.push(spl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
+        instructions.push(gpl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
     }
     Ok(Some((
         minimum_balance_for_rent_exemption,
@@ -339,9 +339,9 @@ fn command_create_account(
                     &account,
                     minimum_balance_for_rent_exemption,
                     Account::LEN as u64,
-                    &spl_token::id(),
+                    &gpl_token::id(),
                 ),
-                initialize_account(&spl_token::id(), &account, &token, &owner)?,
+                initialize_account(&gpl_token::id(), &account, &token, &owner)?,
             ],
         )
     } else {
@@ -406,10 +406,10 @@ fn command_create_multisig(
             &multisig,
             minimum_balance_for_rent_exemption,
             Multisig::LEN as u64,
-            &spl_token::id(),
+            &gpl_token::id(),
         ),
         initialize_multisig(
-            &spl_token::id(),
+            &gpl_token::id(),
             &multisig,
             multisig_members.iter().collect::<Vec<_>>().as_slice(),
             minimum_signers,
@@ -440,7 +440,7 @@ fn command_authorize(
         if let Ok(mint) = Mint::unpack(&target_account.data) {
             match authority_type {
                 AuthorityType::AccountOwner | AuthorityType::CloseAccount => Err(format!(
-                    "Authority type `{}` not supported for SPL Token mints",
+                    "Authority type `{}` not supported for GPL Token mints",
                     auth_str
                 )),
                 AuthorityType::MintTokens => Ok(mint.mint_authority),
@@ -466,7 +466,7 @@ fn command_authorize(
 
             match authority_type {
                 AuthorityType::MintTokens | AuthorityType::FreezeAccount => Err(format!(
-                    "Authority type `{}` not supported for SPL Token accounts",
+                    "Authority type `{}` not supported for GPL Token accounts",
                     auth_str
                 )),
                 AuthorityType::AccountOwner => {
@@ -503,7 +503,7 @@ fn command_authorize(
     );
 
     let instructions = vec![set_authority(
-        &spl_token::id(),
+        &gpl_token::id(),
         &account,
         new_authority.as_ref(),
         authority_type,
@@ -573,7 +573,7 @@ fn command_transfer(
     };
     let (mint_pubkey, decimals) = resolve_mint_info(config, &sender, Some(token), mint_decimals)?;
     let maybe_transfer_balance =
-        ui_amount.map(|ui_amount| spl_token::ui_amount_to_amount(ui_amount, decimals));
+        ui_amount.map(|ui_amount| gpl_token::ui_amount_to_amount(ui_amount, decimals));
     let transfer_balance = if !config.sign_only {
         let sender_token_amount = config
             .rpc_client
@@ -596,7 +596,7 @@ fn command_transfer(
             config,
             format!(
                 "Transfer {} tokens\n  Sender: {}\n  Recipient: {}",
-                spl_token::amount_to_ui_amount(transfer_balance, decimals),
+                gpl_token::amount_to_ui_amount(transfer_balance, decimals),
                 sender,
                 recipient
             ),
@@ -624,7 +624,7 @@ fn command_transfer(
             .rpc_client
             .get_account_with_commitment(&recipient, config.rpc_client.commitment())?
             .value
-            .map(|account| account.owner == spl_token::id() && account.data.len() == Account::LEN);
+            .map(|account| account.owner == gpl_token::id() && account.data.len() == Account::LEN);
 
         if recipient_account_info.is_none() && !allow_unfunded_recipient {
             return Err("Error: The recipient address is not funded. \
@@ -659,7 +659,7 @@ fn command_transfer(
             {
                 if recipient_token_account_data.owner == system_program::id() {
                     true
-                } else if recipient_token_account_data.owner == spl_token::id() {
+                } else if recipient_token_account_data.owner == gpl_token::id() {
                     false
                 } else {
                     return Err(
@@ -682,9 +682,9 @@ fn command_transfer(
                     println_display(
                         config,
                         format!(
-                            "  Funding recipient: {} ({} SOL)",
+                            "  Funding recipient: {} ({} GEMA)",
                             recipient_token_account,
-                            lamports_to_sol(minimum_balance_for_rent_exemption)
+                            carats_to_gema(minimum_balance_for_rent_exemption)
                         ),
                     );
                 }
@@ -705,7 +705,7 @@ fn command_transfer(
 
     if use_unchecked_instruction {
         instructions.push(transfer(
-            &spl_token::id(),
+            &gpl_token::id(),
             &sender,
             &recipient_token_account,
             &sender_owner,
@@ -714,7 +714,7 @@ fn command_transfer(
         )?);
     } else {
         instructions.push(transfer_checked(
-            &spl_token::id(),
+            &gpl_token::id(),
             &sender,
             &mint_pubkey,
             &recipient_token_account,
@@ -725,7 +725,7 @@ fn command_transfer(
         )?);
     }
     if let Some(text) = memo {
-        instructions.push(spl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
+        instructions.push(gpl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
     }
     Ok(Some((
         minimum_balance_for_rent_exemption,
@@ -750,11 +750,11 @@ fn command_burn(
     );
 
     let (mint_pubkey, decimals) = resolve_mint_info(config, &source, mint_address, mint_decimals)?;
-    let amount = spl_token::ui_amount_to_amount(ui_amount, decimals);
+    let amount = gpl_token::ui_amount_to_amount(ui_amount, decimals);
 
     let mut instructions = if use_unchecked_instruction {
         vec![burn(
-            &spl_token::id(),
+            &gpl_token::id(),
             &source,
             &mint_pubkey,
             &source_owner,
@@ -763,7 +763,7 @@ fn command_burn(
         )?]
     } else {
         vec![burn_checked(
-            &spl_token::id(),
+            &gpl_token::id(),
             &source,
             &mint_pubkey,
             &source_owner,
@@ -773,7 +773,7 @@ fn command_burn(
         )?]
     };
     if let Some(text) = memo {
-        instructions.push(spl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
+        instructions.push(gpl_memo::build_memo(text.as_bytes(), &[&config.fee_payer]));
     }
     Ok(Some((0, vec![instructions])))
 }
@@ -796,11 +796,11 @@ fn command_mint(
     );
 
     let (_, decimals) = resolve_mint_info(config, &recipient, None, mint_decimals)?;
-    let amount = spl_token::ui_amount_to_amount(ui_amount, decimals);
+    let amount = gpl_token::ui_amount_to_amount(ui_amount, decimals);
 
     let instructions = if use_unchecked_instruction {
         vec![mint_to(
-            &spl_token::id(),
+            &gpl_token::id(),
             &token,
             &recipient,
             &mint_authority,
@@ -809,7 +809,7 @@ fn command_mint(
         )?]
     } else {
         vec![mint_to_checked(
-            &spl_token::id(),
+            &gpl_token::id(),
             &token,
             &recipient,
             &mint_authority,
@@ -835,7 +835,7 @@ fn command_freeze(
     );
 
     let instructions = vec![freeze_account(
-        &spl_token::id(),
+        &gpl_token::id(),
         &account,
         &token,
         &freeze_authority,
@@ -858,7 +858,7 @@ fn command_thaw(
     );
 
     let instructions = vec![thaw_account(
-        &spl_token::id(),
+        &gpl_token::id(),
         &account,
         &token,
         &freeze_authority,
@@ -869,28 +869,28 @@ fn command_thaw(
 
 fn command_wrap(
     config: &Config,
-    sol: f64,
+    gema: f64,
     wallet_address: Pubkey,
-    wrapped_sol_account: Option<Pubkey>,
+    wrapped_gema_account: Option<Pubkey>,
 ) -> CommandResult {
-    let lamports = sol_to_lamports(sol);
+    let carats = gema_to_carats(gema);
 
-    let instructions = if let Some(wrapped_sol_account) = wrapped_sol_account {
+    let instructions = if let Some(wrapped_gema_account) = wrapped_gema_account {
         println_display(
             config,
-            format!("Wrapping {} SOL into {}", sol, wrapped_sol_account),
+            format!("Wrapping {} GEMA into {}", gema, wrapped_gema_account),
         );
         vec![
             system_instruction::create_account(
                 &wallet_address,
-                &wrapped_sol_account,
-                lamports,
+                &wrapped_gema_account,
+                carats,
                 Account::LEN as u64,
-                &spl_token::id(),
+                &gpl_token::id(),
             ),
             initialize_account(
-                &spl_token::id(),
-                &wrapped_sol_account,
+                &gpl_token::id(),
+                &wrapped_gema_account,
                 &native_mint::id(),
                 &wallet_address,
             )?,
@@ -910,14 +910,14 @@ fn command_wrap(
             }
         }
 
-        println_display(config, format!("Wrapping {} SOL into {}", sol, account));
+        println_display(config, format!("Wrapping {} GEMA into {}", gema, account));
         vec![
-            system_instruction::transfer(&wallet_address, &account, lamports),
+            system_instruction::transfer(&wallet_address, &account, carats),
             create_associated_token_account(&config.fee_payer, &wallet_address, &native_mint::id()),
         ]
     };
     if !config.sign_only {
-        check_wallet_balance(config, &wallet_address, lamports)?;
+        check_wallet_balance(config, &wallet_address, carats)?;
     }
     Ok(Some((0, vec![instructions])))
 }
@@ -932,23 +932,23 @@ fn command_unwrap(
         .unwrap_or_else(|| get_associated_token_address(&wallet_address, &native_mint::id()));
     println_display(config, format!("Unwrapping {}", address));
     if !config.sign_only {
-        let lamports = config.rpc_client.get_balance(&address)?;
-        if lamports == 0 {
+        let carats = config.rpc_client.get_balance(&address)?;
+        if carats == 0 {
             if use_associated_account {
-                return Err("No wrapped SOL in associated account; did you mean to specify an auxiliary address?".to_string().into());
+                return Err("No wrapped GEMA in associated account; did you mean to specify an auxiliary address?".to_string().into());
             } else {
-                return Err(format!("No wrapped SOL in {}", address).into());
+                return Err(format!("No wrapped GEMA in {}", address).into());
             }
         }
         println_display(
             config,
-            format!("  Amount: {} SOL", lamports_to_sol(lamports)),
+            format!("  Amount: {} GEMA", carats_to_gema(carats)),
         );
     }
     println_display(config, format!("  Recipient: {}", &wallet_address));
 
     let instructions = vec![close_account(
-        &spl_token::id(),
+        &gpl_token::id(),
         &address,
         &wallet_address,
         &wallet_address,
@@ -977,11 +977,11 @@ fn command_approve(
     );
 
     let (mint_pubkey, decimals) = resolve_mint_info(config, &account, mint_address, mint_decimals)?;
-    let amount = spl_token::ui_amount_to_amount(ui_amount, decimals);
+    let amount = gpl_token::ui_amount_to_amount(ui_amount, decimals);
 
     let instructions = if use_unchecked_instruction {
         vec![approve(
-            &spl_token::id(),
+            &gpl_token::id(),
             &account,
             &delegate,
             &owner,
@@ -990,7 +990,7 @@ fn command_approve(
         )?]
     } else {
         vec![approve_checked(
-            &spl_token::id(),
+            &gpl_token::id(),
             &account,
             &mint_pubkey,
             &delegate,
@@ -1037,7 +1037,7 @@ fn command_revoke(
     }
 
     let instructions = vec![revoke(
-        &spl_token::id(),
+        &gpl_token::id(),
         &account,
         &owner,
         &config.multisigner_pubkeys,
@@ -1078,7 +1078,7 @@ fn command_close(
     }
 
     let instructions = vec![close_account(
-        &spl_token::id(),
+        &gpl_token::id(),
         &account,
         &recipient,
         &close_authority,
@@ -1120,7 +1120,7 @@ fn command_accounts(config: &Config, token: Option<Pubkey>, owner: Pubkey) -> Co
         &owner,
         match token {
             Some(token) => TokenAccountsFilter::Mint(token),
-            None => TokenAccountsFilter::ProgramId(spl_token::id()),
+            None => TokenAccountsFilter::ProgramId(gpl_token::id()),
         },
     )?;
     if accounts.is_empty() {
@@ -1218,7 +1218,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
     println_display(config, "Fetching token accounts".to_string());
     let accounts = config
         .rpc_client
-        .get_token_accounts_by_owner(&owner, TokenAccountsFilter::ProgramId(spl_token::id()))?;
+        .get_token_accounts_by_owner(&owner, TokenAccountsFilter::ProgramId(gpl_token::id()))?;
     if accounts.is_empty() {
         println_display(config, "Nothing to do".to_string());
         return Ok(None);
@@ -1236,7 +1236,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
 
     for keyed_account in accounts {
         if let UiAccountData::Json(parsed_account) = keyed_account.account.data {
-            if parsed_account.program == "spl-token" {
+            if parsed_account.program == "gpl-token" {
                 if let Ok(TokenAccountType::Account(ui_token_account)) =
                     serde_json::from_value(parsed_account.parsed)
                 {
@@ -1277,7 +1277,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
     }
 
     let mut instructions = vec![];
-    let mut lamports_needed = 0;
+    let mut carats_needed = 0;
 
     for (token, accounts) in accounts_by_token.into_iter() {
         println_display(config, format!("Processing token: {}", token));
@@ -1291,7 +1291,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
                 &owner,
                 &token,
             )]);
-            lamports_needed += minimum_balance_for_rent_exemption;
+            carats_needed += minimum_balance_for_rent_exemption;
         }
 
         for (address, (amount, decimals, frozen, close_authority)) in accounts {
@@ -1310,7 +1310,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
             // Transfer the account balance into the associated token account
             if amount > 0 {
                 account_instructions.push(transfer_checked(
-                    &spl_token::id(),
+                    &gpl_token::id(),
                     &address,
                     &token,
                     &associated_token_account,
@@ -1323,7 +1323,7 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
             // Close the account if config.owner is able to
             if close_authority == owner {
                 account_instructions.push(close_account(
-                    &spl_token::id(),
+                    &gpl_token::id(),
                     &address,
                     &owner,
                     &owner,
@@ -1337,11 +1337,11 @@ fn command_gc(config: &Config, owner: Pubkey) -> CommandResult {
         }
     }
 
-    Ok(Some((lamports_needed, instructions)))
+    Ok(Some((carats_needed, instructions)))
 }
 
 fn command_sync_native(native_account_address: Pubkey) -> CommandResult {
-    let instructions = vec![sync_native(&spl_token::id(), &native_account_address)?];
+    let instructions = vec![sync_native(&gpl_token::id(), &native_account_address)?];
     Ok(Some((0, vec![instructions])))
 }
 
@@ -1388,7 +1388,7 @@ fn main() {
                 .takes_value(true)
                 .global(true)
                 .help("Configuration file to use");
-            if let Some(ref config_file) = *solana_cli_config::CONFIG_FILE {
+            if let Some(ref config_file) = *gemachain_cli_config::CONFIG_FILE {
                 arg.default_value(config_file)
             } else {
                 arg
@@ -1420,7 +1420,7 @@ fn main() {
                 .global(true)
                 .validator(is_url_or_moniker)
                 .help(
-                    "URL for Solana's JSON RPC or moniker (or their first letter): \
+                    "URL for Gemachain's JSON RPC or moniker (or their first letter): \
                        [mainnet-beta, testnet, devnet, localhost] \
                     Default from the configuration file."
                 ),
@@ -1842,7 +1842,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("wrap")
-                .about("Wrap native SOL in a SOL token account")
+                .about("Wrap native GEMA in a GEMA token account")
                 .arg(
                     Arg::with_name("amount")
                         .validator(is_amount)
@@ -1850,7 +1850,7 @@ fn main() {
                         .takes_value(true)
                         .index(1)
                         .required(true)
-                        .help("Amount of SOL to wrap"),
+                        .help("Amount of GEMA to wrap"),
                 )
                 .arg(
                     Arg::with_name("wallet_keypair")
@@ -1859,8 +1859,8 @@ fn main() {
                         .validator(is_valid_signer)
                         .takes_value(true)
                         .help(
-                            "Specify the keypair for the wallet which will have its native SOL wrapped. \
-                             This wallet will be assigned as the owner of the wrapped SOL token account. \
+                            "Specify the keypair for the wallet which will have its native GEMA wrapped. \
+                             This wallet will be assigned as the owner of the wrapped GEMA token account. \
                              This may be a keypair file or the ASK keyword. \
                              Defaults to the client keypair."
                         ),
@@ -1869,14 +1869,14 @@ fn main() {
                     Arg::with_name("create_aux_account")
                         .takes_value(false)
                         .long("create-aux-account")
-                        .help("Wrap SOL in an auxillary account instead of associated token account"),
+                        .help("Wrap GEMA in an auxillary account instead of associated token account"),
                 )
                 .nonce_args(true)
                 .offline_args(),
         )
         .subcommand(
             SubCommand::with_name("unwrap")
-                .about("Unwrap a SOL token account")
+                .about("Unwrap a GEMA token account")
                 .arg(
                     Arg::with_name("address")
                         .validator(is_valid_pubkey)
@@ -1893,8 +1893,8 @@ fn main() {
                         .validator(is_valid_signer)
                         .takes_value(true)
                         .help(
-                            "Specify the keypair for the wallet which owns the wrapped SOL. \
-                             This wallet will receive the unwrapped SOL. \
+                            "Specify the keypair for the wallet which owns the wrapped GEMA. \
+                             This wallet will receive the unwrapped GEMA. \
                              This may be a keypair file or the ASK keyword. \
                              Defaults to the client keypair."
                         ),
@@ -1979,7 +1979,7 @@ fn main() {
                         .validator(is_valid_pubkey)
                         .value_name("REFUND_ACCOUNT_ADDRESS")
                         .takes_value(true)
-                        .help("The address of the account to receive remaining SOL [default: --owner]"),
+                        .help("The address of the account to receive remaining GEMA [default: --owner]"),
                 )
                 .arg(
                     Arg::with_name("close_authority")
@@ -2081,7 +2081,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("account-info")
-                .about("Query details of an SPL Token account by address")
+                .about("Query details of an GPL Token account by address")
                 .arg(
                     Arg::with_name("token")
                         .validator(is_valid_pubkey)
@@ -2113,7 +2113,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("multisig-info")
-                .about("Query details about and SPL Token multisig account by address")
+                .about("Query details about and GPL Token multisig account by address")
                 .arg(
                     Arg::with_name("address")
                     .validator(is_valid_pubkey)
@@ -2121,7 +2121,7 @@ fn main() {
                     .takes_value(true)
                     .index(1)
                     .required(true)
-                    .help("The address of the SPL Token multisig account to query"),
+                    .help("The address of the GPL Token multisig account to query"),
                 ),
         )
         .subcommand(
@@ -2131,7 +2131,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("sync-native")
-                .about("Sync a native SOL token account to its underlying lamports")
+                .about("Sync a native GEMA token account to its underlying carats")
                 .arg(
                     owner_address_arg()
                         .index(1)
@@ -2161,16 +2161,16 @@ fn main() {
 
     let config = {
         let cli_config = if let Some(config_file) = matches.value_of("config_file") {
-            solana_cli_config::Config::load(config_file).unwrap_or_default()
+            gemachain_cli_config::Config::load(config_file).unwrap_or_default()
         } else {
-            solana_cli_config::Config::default()
+            gemachain_cli_config::Config::default()
         };
         let json_rpc_url = normalize_to_url_if_moniker(
             matches
                 .value_of("json_rpc_url")
                 .unwrap_or(&cli_config.json_rpc_url),
         );
-        let websocket_url = solana_cli_config::Config::compute_websocket_url(&json_rpc_url);
+        let websocket_url = gemachain_cli_config::Config::compute_websocket_url(&json_rpc_url);
 
         let (signer, fee_payer) = signer_from_path(
             matches,
@@ -2268,7 +2268,7 @@ fn main() {
         }
     };
 
-    solana_logger::setup_with_default("solana=info");
+    gemachain_logger::setup_with_default("gemachain=info");
 
     let _ = match (sub_command, sub_matches) {
         ("bench", Some(arg_matches)) => bench_process_command(
@@ -2603,7 +2603,7 @@ fn main() {
             match config.output_format {
                 OutputFormat::Json | OutputFormat::JsonCompact => {
                     eprintln!(
-                        "`spl-token gc` does not support the `--ouput` parameter at this time"
+                        "`gpl-token gc` does not support the `--ouput` parameter at this time"
                     );
                     exit(1);
                 }

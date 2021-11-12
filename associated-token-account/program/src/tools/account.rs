@@ -1,6 +1,6 @@
 //! Account utility functions
 
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo,
     entrypoint::ProgramResult,
     program::{invoke, invoke_signed},
@@ -19,15 +19,15 @@ pub fn create_pda_account<'a>(
     new_pda_account: &AccountInfo<'a>,
     new_pda_signer_seeds: &[&[u8]],
 ) -> ProgramResult {
-    if new_pda_account.lamports() > 0 {
-        let required_lamports = rent
+    if new_pda_account.carats() > 0 {
+        let required_carats = rent
             .minimum_balance(space)
             .max(1)
-            .saturating_sub(new_pda_account.lamports());
+            .saturating_sub(new_pda_account.carats());
 
-        if required_lamports > 0 {
+        if required_carats > 0 {
             invoke(
-                &system_instruction::transfer(payer.key, new_pda_account.key, required_lamports),
+                &system_instruction::transfer(payer.key, new_pda_account.key, required_carats),
                 &[
                     payer.clone(),
                     new_pda_account.clone(),

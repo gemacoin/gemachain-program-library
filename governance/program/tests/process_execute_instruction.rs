@@ -2,15 +2,15 @@
 
 mod program_test;
 
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction},
     program_error::ProgramError,
     sysvar::{clock, fees},
 };
-use solana_program_test::tokio;
+use gemachain_program_test::tokio;
 
 use program_test::*;
-use spl_governance::{
+use gpl_governance::{
     error::GovernanceError,
     instruction::Vote,
     state::enums::{InstructionExecutionStatus, ProposalState},
@@ -280,7 +280,7 @@ async fn test_execute_upgrade_program_instruction() {
         .err()
         .unwrap();
 
-    // solana_bpf_rust_upgradable returns CustomError == 42
+    // gemachain_bpf_rust_upgradable returns CustomError == 42
     assert_eq!(ProgramError::Custom(42), err);
 
     let clock = governance_test.get_clock().await;
@@ -326,7 +326,7 @@ async fn test_execute_upgrade_program_instruction() {
         .err()
         .unwrap();
 
-    // solana_bpf_rust_upgraded returns CustomError == 43
+    // gemachain_bpf_rust_upgraded returns CustomError == 43
     assert_eq!(ProgramError::Custom(43), err);
 
     // --------------------------- !!! Voila  !!! -----------------------------

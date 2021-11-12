@@ -5,14 +5,14 @@ import base64
 import base58
 import struct
 
-from solana.publickey import PublicKey 
-from solana.transaction import Transaction, AccountMeta, TransactionInstruction
-from solana.account import Account 
-from solana.rpc.api import Client
-import solana.rpc.types as types
-from solana.system_program import transfer, TransferParams
-from spl.token._layouts import MINT_LAYOUT, ACCOUNT_LAYOUT
-from spl.token.instructions import (
+from gemachain.publickey import PublicKey 
+from gemachain.transaction import Transaction, AccountMeta, TransactionInstruction
+from gemachain.account import Account 
+from gemachain.rpc.api import Client
+import gemachain.rpc.types as types
+from gemachain.system_program import transfer, TransferParams
+from gpl.token._layouts import MINT_LAYOUT, ACCOUNT_LAYOUT
+from gpl.token.instructions import (
     get_associated_token_address, create_associated_token_account,
     mint_to, MintToParams,
 )
@@ -435,15 +435,15 @@ class BinaryOption():
             try:
                 if amount is None:
                     min_rent_reseponse = client.get_minimum_balance_for_rent_exemption(ACCOUNT_LAYOUT.sizeof())
-                    lamports = min_rent_reseponse["result"]
+                    carats = min_rent_reseponse["result"]
                 else:
-                    lamports = int(amount)
-                msg += f" | Fetched lamports: {lamports * 1e-9} SOL"
+                    carats = int(amount)
+                msg += f" | Fetched carats: {carats * 1e-9} GEMA"
             except Exception as e:
-                msg += " | ERROR: couldn't process lamports" 
+                msg += " | ERROR: couldn't process carats" 
                 raise(e)
             # Generate transaction
-            transfer_ix = transfer(TransferParams(from_pubkey=sender_account.public_key(), to_pubkey=dest_account, lamports=lamports))
+            transfer_ix = transfer(TransferParams(from_pubkey=sender_account.public_key(), to_pubkey=dest_account, carats=carats))
             tx = tx.add(transfer_ix)
             msg += f" | Transferring funds"
             # Send request
@@ -452,7 +452,7 @@ class BinaryOption():
                 return json.dumps(
                     {
                         'status': HTTPStatus.OK,
-                        'msg': f"Successfully sent {lamports * 1e-9} SOL to {to}",
+                        'msg': f"Successfully sent {carats * 1e-9} GEMA to {to}",
                         'tx': response.get('result') if skip_confirmation else response['result']['transaction']['signatures'],
                     }
                 )

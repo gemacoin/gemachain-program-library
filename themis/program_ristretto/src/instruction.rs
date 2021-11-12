@@ -4,7 +4,7 @@ use crate::state::{Policies, User};
 use borsh::{BorshDeserialize, BorshSerialize};
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use elgamal_ristretto::public::PublicKey;
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction},
     program_error::ProgramError,
     pubkey::Pubkey,
@@ -132,12 +132,12 @@ pub fn create_user_account(
     program_id: &Pubkey,
     from: &Pubkey,
     user_pubkey: &Pubkey,
-    lamports: u64,
+    carats: u64,
     public_key: PublicKey,
 ) -> Vec<Instruction> {
     let space = User::default().try_to_vec().unwrap().len() as u64;
     vec![
-        system_instruction::create_account(from, user_pubkey, lamports, space, program_id),
+        system_instruction::create_account(from, user_pubkey, carats, space, program_id),
         initialize_user_account(program_id, user_pubkey, public_key),
     ]
 }
@@ -162,12 +162,12 @@ pub fn create_policies_account(
     program_id: &Pubkey,
     from: &Pubkey,
     policies_pubkey: &Pubkey,
-    lamports: u64,
+    carats: u64,
     num_scalars: u8,
 ) -> Vec<Instruction> {
     let space = Policies::new(num_scalars).try_to_vec().unwrap().len() as u64;
     vec![
-        system_instruction::create_account(from, policies_pubkey, lamports, space, program_id),
+        system_instruction::create_account(from, policies_pubkey, carats, space, program_id),
         initialize_policies_account(program_id, policies_pubkey, num_scalars),
     ]
 }

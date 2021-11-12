@@ -6,7 +6,7 @@ use crate::{
 };
 use curve25519_dalek::{ristretto::RistrettoPoint, scalar::Scalar};
 use elgamal_ristretto::public::PublicKey;
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     program_error::ProgramError,
     pubkey::Pubkey,

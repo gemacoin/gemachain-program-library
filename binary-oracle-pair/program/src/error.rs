@@ -2,7 +2,7 @@
 
 use num_derive::FromPrimitive;
 use num_traits::FromPrimitive;
-use solana_program::{
+use gemachain_program::{
     decode_error::DecodeError, msg, program_error::PrintProgramError, program_error::ProgramError,
 };
 use thiserror::Error;
@@ -28,7 +28,7 @@ pub enum PoolError {
     /// Lamport balance below rent-exempt threshold.
     #[error("Lamport balance below rent-exempt threshold")]
     NotRentExempt,
-    /// Expected an SPL Token mint
+    /// Expected an GPL Token mint
     #[error("Input token mint account is not valid")]
     InvalidTokenMint,
     /// Amount should be more than zero

@@ -1,13 +1,13 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::instruction::AccountMeta;
-use solana_program_test::*;
+use gemachain_program::instruction::AccountMeta;
+use gemachain_program_test::*;
 
 mod program_test;
 
 use program_test::*;
-use solana_sdk::signature::{Keypair, Signer};
-use spl_governance::{error::GovernanceError, instruction::set_governance_delegate};
+use gemachain_sdk::signature::{Keypair, Signer};
+use gpl_governance::{error::GovernanceError, instruction::set_governance_delegate};
 
 #[tokio::test]
 async fn test_set_community_governance_delegate() {

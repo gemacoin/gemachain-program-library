@@ -8,7 +8,7 @@ use crate::{
 };
 use borsh::BorshDeserialize;
 
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     clock::Clock,
     entrypoint::ProgramResult,
@@ -17,7 +17,7 @@ use solana_program::{
     pubkey::Pubkey,
     sysvar::Sysvar,
 };
-use spl_governance::state::{
+use gpl_governance::state::{
     governance::get_governance_data, proposal::get_proposal_data_for_governance,
     token_owner_record::get_token_owner_record_data_for_realm,
 };

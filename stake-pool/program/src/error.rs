@@ -1,7 +1,7 @@
 //! Error types
 
 use num_derive::FromPrimitive;
-use solana_program::{decode_error::DecodeError, program_error::ProgramError};
+use gemachain_program::{decode_error::DecodeError, program_error::ProgramError};
 use thiserror::Error;
 
 /// Errors that may be returned by the StakePool program.
@@ -85,9 +85,9 @@ pub enum StakePoolError {
     /// Pool token supply is not zero on initialization
     #[error("NonZeroPoolTokenSupply")]
     NonZeroPoolTokenSupply,
-    /// The lamports in the validator stake account is not equal to the minimum
-    #[error("StakeLamportsNotEqualToMinimum")]
-    StakeLamportsNotEqualToMinimum,
+    /// The carats in the validator stake account is not equal to the minimum
+    #[error("StakeCaratsNotEqualToMinimum")]
+    StakeCaratsNotEqualToMinimum,
     /// The provided deposit stake account is not delegated to the preferred deposit vote account
     #[error("IncorrectDepositVoteAddress")]
     IncorrectDepositVoteAddress,
@@ -105,7 +105,7 @@ pub enum StakePoolError {
     /// Not enough pool tokens provided to withdraw stake with one lamport
     #[error("WithdrawalTooSmall")]
     WithdrawalTooSmall,
-    /// Not enough lamports provided for deposit to result in one pool token
+    /// Not enough carats provided for deposit to result in one pool token
     #[error("DepositTooSmall")]
     DepositTooSmall,
 
@@ -113,23 +113,23 @@ pub enum StakePoolError {
     /// Provided stake deposit authority does not match the program's
     #[error("InvalidStakeDepositAuthority")]
     InvalidStakeDepositAuthority,
-    /// Provided sol deposit authority does not match the program's
-    #[error("InvalidSolDepositAuthority")]
-    InvalidSolDepositAuthority,
+    /// Provided gema deposit authority does not match the program's
+    #[error("InvalidGemaDepositAuthority")]
+    InvalidGemaDepositAuthority,
     /// Provided preferred validator is invalid
     #[error("InvalidPreferredValidator")]
     InvalidPreferredValidator,
     /// Provided validator stake account already has a transient stake account in use
     #[error("TransientAccountInUse")]
     TransientAccountInUse,
-    /// Provided sol withdraw authority does not match the program's
-    #[error("InvalidSolWithdrawAuthority")]
-    InvalidSolWithdrawAuthority,
+    /// Provided gema withdraw authority does not match the program's
+    #[error("InvalidGemaWithdrawAuthority")]
+    InvalidGemaWithdrawAuthority,
 
     // 35.
-    /// Too much SOL withdrawn from the stake pool's reserve account
-    #[error("SolWithdrawalTooLarge")]
-    SolWithdrawalTooLarge,
+    /// Too much GEMA withdrawn from the stake pool's reserve account
+    #[error("GemaWithdrawalTooLarge")]
+    GemaWithdrawalTooLarge,
 }
 impl From<StakePoolError> for ProgramError {
     fn from(e: StakePoolError) -> Self {

@@ -1,4 +1,4 @@
-//! FIXME copied from the solana stake program
+//! FIXME copied from the gemachain stake program
 
 use {
     borsh::{
@@ -6,7 +6,7 @@ use {
         BorshDeserialize, BorshSchema, BorshSerialize,
     },
     serde_derive::{Deserialize, Serialize},
-    solana_program::{
+    gemachain_program::{
         clock::{Epoch, UnixTimestamp},
         instruction::{AccountMeta, Instruction},
         msg,
@@ -18,7 +18,7 @@ use {
     std::str::FromStr,
 };
 
-solana_program::declare_id!("Stake11111111111111111111111111111111111111");
+gemachain_program::declare_id!("Stake11111111111111111111111111111111111111");
 
 const STAKE_CONFIG: &str = "StakeConfig11111111111111111111111111111111";
 /// Id for stake config account
@@ -26,7 +26,7 @@ pub fn config_id() -> Pubkey {
     Pubkey::from_str(STAKE_CONFIG).unwrap()
 }
 
-/// FIXME copied from solana stake program
+/// FIXME copied from gemachain stake program
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum StakeInstruction {
     /// Initialize a stake with lockup and authorization information
@@ -71,7 +71,7 @@ pub enum StakeInstruction {
     ///   2. `[SIGNER]` Stake authority
     Split(u64),
 
-    /// Withdraw unstaked lamports from the stake account
+    /// Withdraw unstaked carats from the stake account
     ///
     /// # Account references
     ///   0. `[WRITE]` Stake account from which to withdraw
@@ -82,7 +82,7 @@ pub enum StakeInstruction {
     ///   5. Optional: `[SIGNER]` Lockup authority, if before lockup expiration
     ///
     /// The u64 is the portion of the stake account balance to be withdrawn,
-    ///    must be `<= ValidatorStakeAccount.lamports - staked_lamports`.
+    ///    must be `<= ValidatorStakeAccount.carats - staked_carats`.
     Withdraw(u64),
 
     /// Deactivates the stake in the account
@@ -537,7 +537,7 @@ pub fn active_stakes_can_merge(stake: &Stake, source: &Stake) -> Result<(), Prog
 pub fn split_only(
     stake_pubkey: &Pubkey,
     authorized_pubkey: &Pubkey,
-    lamports: u64,
+    carats: u64,
     split_stake_pubkey: &Pubkey,
 ) -> Instruction {
     let account_metas = vec![
@@ -546,7 +546,7 @@ pub fn split_only(
         AccountMeta::new_readonly(*authorized_pubkey, true),
     ];
 
-    Instruction::new_with_bincode(id(), &StakeInstruction::Split(lamports), account_metas)
+    Instruction::new_with_bincode(id(), &StakeInstruction::Split(carats), account_metas)
 }
 
 /// FIXME copied from the stake program
@@ -592,13 +592,13 @@ pub fn create_account(
     stake_pubkey: &Pubkey,
     authorized: &Authorized,
     lockup: &Lockup,
-    lamports: u64,
+    carats: u64,
 ) -> Vec<Instruction> {
     vec![
         system_instruction::create_account(
             from_pubkey,
             stake_pubkey,
-            lamports,
+            carats,
             std::mem::size_of::<StakeState>() as u64,
             &id(),
         ),
@@ -650,7 +650,7 @@ pub fn withdraw(
     stake_pubkey: &Pubkey,
     withdrawer_pubkey: &Pubkey,
     to_pubkey: &Pubkey,
-    lamports: u64,
+    carats: u64,
     custodian_pubkey: Option<&Pubkey>,
 ) -> Instruction {
     let mut account_metas = vec![
@@ -665,12 +665,12 @@ pub fn withdraw(
         account_metas.push(AccountMeta::new_readonly(*custodian_pubkey, true));
     }
 
-    Instruction::new_with_bincode(id(), &StakeInstruction::Withdraw(lamports), account_metas)
+    Instruction::new_with_bincode(id(), &StakeInstruction::Withdraw(carats), account_metas)
 }
 
 #[cfg(test)]
 mod test {
-    use {super::*, bincode::serialize, solana_program::borsh::try_from_slice_unchecked};
+    use {super::*, bincode::serialize, gemachain_program::borsh::try_from_slice_unchecked};
 
     fn check_borsh_deserialization(stake: StakeState) {
         let serialized = serialize(&stake).unwrap();

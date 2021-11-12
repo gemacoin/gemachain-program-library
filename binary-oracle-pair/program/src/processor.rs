@@ -6,7 +6,7 @@ use crate::{
     state::{Decision, Pool, POOL_VERSION},
 };
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     account_info::next_account_info,
     account_info::AccountInfo,
     clock::{Clock, Slot},
@@ -19,7 +19,7 @@ use solana_program::{
     rent::Rent,
     sysvar::Sysvar,
 };
-use spl_token::state::{Account, Mint};
+use gpl_token::state::{Account, Mint};
 
 /// Program state handler.
 pub struct Processor {}
@@ -52,7 +52,7 @@ impl Processor {
             let signers = &[&authority_signature_seeds[..]];
 
             invoke_signed(
-                &spl_token::instruction::transfer(
+                &gpl_token::instruction::transfer(
                     token_program_id.key,
                     source_account.key,
                     destination_account.key,
@@ -71,7 +71,7 @@ impl Processor {
             )
         } else {
             invoke(
-                &spl_token::instruction::transfer(
+                &gpl_token::instruction::transfer(
                     token_program_id.key,
                     source_account.key,
                     destination_account.key,
@@ -105,7 +105,7 @@ impl Processor {
         let signers = &[&authority_signature_seeds[..]];
 
         invoke_signed(
-            &spl_token::instruction::mint_to(
+            &gpl_token::instruction::mint_to(
                 token_program_id.key,
                 mint_account.key,
                 destination_account.key,
@@ -142,7 +142,7 @@ impl Processor {
             let signers = &[&authority_signature_seeds[..]];
 
             invoke_signed(
-                &spl_token::instruction::burn(
+                &gpl_token::instruction::burn(
                     token_program_id.key,
                     source_account.key,
                     mint_account.key,
@@ -161,7 +161,7 @@ impl Processor {
             )
         } else {
             invoke(
-                &spl_token::instruction::burn(
+                &gpl_token::instruction::burn(
                     token_program_id.key,
                     source_account.key,
                     mint_account.key,
@@ -207,7 +207,7 @@ impl Processor {
         }
 
         // Check if pool account is rent-exempt
-        if !rent.is_exempt(pool_account_info.lamports(), pool_account_info.data_len()) {
+        if !rent.is_exempt(pool_account_info.carats(), pool_account_info.data_len()) {
             return Err(PoolError::NotRentExempt.into());
         }
 
@@ -241,7 +241,7 @@ impl Processor {
         }
 
         invoke(
-            &spl_token::instruction::initialize_account(
+            &gpl_token::instruction::initialize_account(
                 token_program_info.key,
                 deposit_account_info.key,
                 deposit_token_mint_info.key,
@@ -258,8 +258,8 @@ impl Processor {
         )?;
 
         invoke(
-            &spl_token::instruction::initialize_mint(
-                &spl_token::id(),
+            &gpl_token::instruction::initialize_mint(
+                &gpl_token::id(),
                 token_pass_mint_info.key,
                 authority_info.key,
                 None,
@@ -274,8 +274,8 @@ impl Processor {
         )?;
 
         invoke(
-            &spl_token::instruction::initialize_mint(
-                &spl_token::id(),
+            &gpl_token::instruction::initialize_mint(
+                &gpl_token::id(),
                 token_fail_mint_info.key,
                 authority_info.key,
                 None,

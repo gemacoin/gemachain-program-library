@@ -2,10 +2,10 @@
 
 mod program_test;
 
-use solana_program_test::tokio;
+use gemachain_program_test::tokio;
 
 use program_test::*;
-use spl_governance::{error::GovernanceError, state::enums::ProposalState};
+use gpl_governance::{error::GovernanceError, state::enums::ProposalState};
 
 #[tokio::test]
 async fn test_sign_off_proposal() {

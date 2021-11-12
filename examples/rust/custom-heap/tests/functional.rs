@@ -1,8 +1,8 @@
 use {
-    solana_program::{instruction::Instruction, pubkey::Pubkey},
-    solana_program_test::*,
-    solana_sdk::{signature::Signer, transaction::Transaction},
-    spl_example_custom_heap::processor::process_instruction,
+    gemachain_program::{instruction::Instruction, pubkey::Pubkey},
+    gemachain_program_test::*,
+    gemachain_sdk::{signature::Signer, transaction::Transaction},
+    gpl_example_custom_heap::processor::process_instruction,
     std::str::FromStr,
 };
 
@@ -10,7 +10,7 @@ use {
 async fn test_custom_heap() {
     let program_id = Pubkey::from_str("CustomHeap111111111111111111111111111111111").unwrap();
     let (mut banks_client, payer, recent_blockhash) = ProgramTest::new(
-        "spl_example_custom_heap",
+        "gpl_example_custom_heap",
         program_id,
         processor!(process_instruction),
     )

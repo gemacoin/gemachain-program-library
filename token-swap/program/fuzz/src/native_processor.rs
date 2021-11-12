@@ -1,13 +1,13 @@
 use crate::native_account_data::NativeAccountData;
 
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, instruction::Instruction,
     program_error::ProgramError, program_stubs, pubkey::Pubkey,
 };
 
 struct TestSyscallStubs {}
 impl program_stubs::SyscallStubs for TestSyscallStubs {
-    fn sol_invoke_signed(
+    fn gema_invoke_signed(
         &self,
         instruction: &Instruction,
         account_infos: &[AccountInfo],
@@ -16,7 +16,7 @@ impl program_stubs::SyscallStubs for TestSyscallStubs {
         let mut new_account_infos = vec![];
 
         // mimic check for token program in accounts
-        if !account_infos.iter().any(|x| *x.key == spl_token::id()) {
+        if !account_infos.iter().any(|x| *x.key == gpl_token::id()) {
             return Err(ProgramError::InvalidAccountData);
         }
 
@@ -26,7 +26,7 @@ impl program_stubs::SyscallStubs for TestSyscallStubs {
                     let mut new_account_info = account_info.clone();
                     for seeds in signers_seeds.iter() {
                         let signer =
-                            Pubkey::create_program_address(seeds, &spl_token_swap::id()).unwrap();
+                            Pubkey::create_program_address(seeds, &gpl_token_swap::id()).unwrap();
                         if *account_info.key == signer {
                             new_account_info.is_signer = true;
                         }
@@ -36,7 +36,7 @@ impl program_stubs::SyscallStubs for TestSyscallStubs {
             }
         }
 
-        spl_token::processor::Processor::process(
+        gpl_token::processor::Processor::process(
             &instruction.program_id,
             &new_account_infos,
             &instruction.data,
@@ -66,14 +66,14 @@ pub fn do_process_instruction(instruction: Instruction, accounts: &[AccountInfo]
         .iter_mut()
         .map(NativeAccountData::as_account_info)
         .collect::<Vec<_>>();
-    let res = if instruction.program_id == spl_token_swap::id() {
-        spl_token_swap::processor::Processor::process(
+    let res = if instruction.program_id == gpl_token_swap::id() {
+        gpl_token_swap::processor::Processor::process(
             &instruction.program_id,
             &account_infos,
             &instruction.data,
         )
     } else {
-        spl_token::processor::Processor::process(
+        gpl_token::processor::Processor::process(
             &instruction.program_id,
             &account_infos,
             &instruction.data,
@@ -91,8 +91,8 @@ pub fn do_process_instruction(instruction: Instruction, accounts: &[AccountInfo]
             for account_meta in account_metas.iter_mut() {
                 if account_info.key == account_meta.0 {
                     let account = &mut account_meta.1;
-                    let mut lamports = account.lamports.borrow_mut();
-                    **lamports = **account_info.lamports.borrow();
+                    let mut carats = account.carats.borrow_mut();
+                    **carats = **account_info.carats.borrow();
                     let mut data = account.data.borrow_mut();
                     data.clone_from_slice(*account_info.data.borrow());
                 }

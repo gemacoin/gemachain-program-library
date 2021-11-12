@@ -1,7 +1,7 @@
 //! Error types
 
 use num_derive::FromPrimitive;
-use solana_program::{decode_error::DecodeError, program_error::ProgramError};
+use gemachain_program::{decode_error::DecodeError, program_error::ProgramError};
 use thiserror::Error;
 
 /// Errors that may be returned by the TokenSwap program.
@@ -21,12 +21,12 @@ pub enum SwapError {
     #[error("Output pool account owner cannot be the program address")]
     InvalidOutputOwner,
     /// The deserialization of the account returned something besides State::Mint.
-    #[error("Deserialized account is not an SPL Token mint")]
+    #[error("Deserialized account is not an GPL Token mint")]
     ExpectedMint,
 
     // 5.
     /// The deserialization of the account returned something besides State::Account.
-    #[error("Deserialized account is not an SPL Token account")]
+    #[error("Deserialized account is not an GPL Token account")]
     ExpectedAccount,
     /// The input token account is empty.
     #[error("Input token account empty")]

@@ -7,7 +7,7 @@ members = [
   "examples/rust/custom-heap",
   "examples/rust/logging",
   "examples/rust/sysvar",
-  "examples/rust/transfer-lamports",
+  "examples/rust/transfer-carats",
   "feature-proposal/program",
   "feature-proposal/cli",
   "governance/program",
@@ -34,7 +34,7 @@ members = [
 exclude = [
   "themis/client_ristretto",
   "themis/program_ristretto",
-  "token/perf-monitor", # TODO: Rework perf-monitor to use solana-program-test, avoiding the need to link directly with the BPF VM
+  "token/perf-monitor", # TODO: Rework perf-monitor to use gemachain-program-test, avoiding the need to link directly with the BPF VM
 ]
 
 [profile.dev]

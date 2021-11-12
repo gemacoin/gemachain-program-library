@@ -1,6 +1,6 @@
 use {
     borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
+    gemachain_program::{
         instruction::{AccountMeta, Instruction},
         program_error::ProgramError,
         pubkey::Pubkey,
@@ -35,8 +35,8 @@ pub enum NameRegistryInstruction {
         /// SHA256 of the (HASH_PREFIX + Name) of the record to create, hashing is done off-chain
         hashed_name: Vec<u8>,
 
-        /// Number of lamports to fund the name record with
-        lamports: u64,
+        /// Number of carats to fund the name record with
+        carats: u64,
 
         /// Number of bytes of memory to allocate in addition to the `NameRecordHeader`
         space: u32,
@@ -72,7 +72,7 @@ pub enum NameRegistryInstruction {
 
     /// Delete a name record.
     ///
-    /// Any lamports remaining in the name record will be transferred to the refund account (#2)
+    /// Any carats remaining in the name record will be transferred to the refund account (#2)
     ///
     /// Accounts expected by this instruction:
     ///   0. `[writeable]` Name record to be deleted

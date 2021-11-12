@@ -1,14 +1,14 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::{instruction::AccountMeta, pubkey::Pubkey};
-use solana_program_test::*;
+use gemachain_program::{instruction::AccountMeta, pubkey::Pubkey};
+use gemachain_program_test::*;
 
 mod program_test;
 
 use program_test::*;
-use solana_sdk::signature::Signer;
+use gemachain_sdk::signature::Signer;
 
-use spl_governance::{
+use gpl_governance::{
     error::GovernanceError,
     instruction::{withdraw_governing_tokens, Vote},
     state::token_owner_record::get_token_owner_record_address,

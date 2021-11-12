@@ -1,14 +1,14 @@
 #![cfg(feature = "test-bpf")]
 mod program_test;
 
-use solana_program_test::*;
+use gemachain_program_test::*;
 
 use program_test::*;
-use solana_sdk::signature::{Keypair, Signer};
-use spl_governance::{
+use gemachain_sdk::signature::{Keypair, Signer};
+use gpl_governance::{
     error::GovernanceError, tools::bpf_loader_upgradeable::get_program_upgrade_authority,
 };
-use spl_governance_test_sdk::tools::ProgramInstructionError;
+use gpl_governance_test_sdk::tools::ProgramInstructionError;
 
 #[tokio::test]
 async fn test_create_program_governance() {

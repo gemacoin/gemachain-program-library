@@ -3,8 +3,8 @@
 use {
     arrayref::array_ref,
     borsh::{BorshDeserialize, BorshSerialize},
-    solana_program::{
-        program_error::ProgramError, program_memory::sol_memmove, program_pack::Pack,
+    gemachain_program::{
+        program_error::ProgramError, program_memory::gema_memmove, program_pack::Pack,
     },
     std::marker::PhantomData,
 };
@@ -49,7 +49,7 @@ impl<'data> BigVec<'data> {
                     // to use this safe code instead:
                     // self.data.copy_within(dst_start_index + gap..start_index, dst_start_index);
                     unsafe {
-                        sol_memmove(
+                        gema_memmove(
                             self.data[dst_start_index..start_index - gap].as_mut_ptr(),
                             self.data[dst_start_index + gap..start_index].as_mut_ptr(),
                             start_index - gap - dst_start_index,
@@ -69,7 +69,7 @@ impl<'data> BigVec<'data> {
             // to use this safe code instead:
             //self.data.copy_within(dst_start_index + gap..data_end_index, dst_start_index);
             unsafe {
-                sol_memmove(
+                gema_memmove(
                     self.data[dst_start_index..data_end_index - gap].as_mut_ptr(),
                     self.data[dst_start_index + gap..data_end_index].as_mut_ptr(),
                     data_end_index - gap - dst_start_index,
@@ -241,7 +241,7 @@ impl<'data, 'vec, T: Pack + 'data> Iterator for IterMut<'data, 'vec, T> {
 mod tests {
     use {
         super::*,
-        solana_program::{program_memory::sol_memcmp, program_pack::Sealed},
+        gemachain_program::{program_memory::gema_memcmp, program_pack::Sealed},
     };
 
     #[derive(Debug, PartialEq)]
@@ -318,7 +318,7 @@ mod tests {
         if a.len() != b.len() {
             false
         } else {
-            sol_memcmp(a, b, a.len()) == 0
+            gema_memcmp(a, b, a.len()) == 0
         }
     }
 

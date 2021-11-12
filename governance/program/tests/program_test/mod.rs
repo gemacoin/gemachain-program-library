@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use solana_program::{
+use gemachain_program::{
     bpf_loader_upgradeable::{self, UpgradeableLoaderState},
     clock::UnixTimestamp,
     instruction::{AccountMeta, Instruction},
@@ -9,11 +9,11 @@ use solana_program::{
     pubkey::Pubkey,
 };
 
-use solana_program_test::*;
+use gemachain_program_test::*;
 
-use solana_sdk::signature::{Keypair, Signer};
+use gemachain_sdk::signature::{Keypair, Signer};
 
-use spl_governance::{
+use gpl_governance::{
     instruction::{
         add_signatory, cancel_proposal, cast_vote, create_account_governance,
         create_mint_governance, create_program_governance, create_proposal, create_realm,
@@ -51,7 +51,7 @@ use spl_governance::{
 pub mod cookies;
 use crate::program_test::cookies::SignatoryRecordCookie;
 
-use spl_governance_test_sdk::{
+use gpl_governance_test_sdk::{
     tools::{clone_keypair, NopOverride},
     ProgramTestBench, TestBenchProgram,
 };
@@ -73,7 +73,7 @@ impl GovernanceProgramTest {
         let program_id = Pubkey::from_str("Governance111111111111111111111111111111111").unwrap();
 
         let program = TestBenchProgram {
-            program_name: "spl_governance",
+            program_name: "gpl_governance",
             program_id,
             process_instruction: processor!(process_instruction),
         };
@@ -790,7 +790,7 @@ impl GovernanceProgramTest {
             min_instruction_hold_up_time: 10,
             max_voting_time: 10,
             vote_threshold_percentage: VoteThresholdPercentage::YesVote(60),
-            vote_weight_source: spl_governance::state::enums::VoteWeightSource::Deposit,
+            vote_weight_source: gpl_governance::state::enums::VoteWeightSource::Deposit,
             proposal_cool_off_time: 0,
         }
     }
@@ -863,8 +863,8 @@ impl GovernanceProgramTest {
 
         let program_data_address = get_program_data_address(&program_keypair.pubkey());
 
-        // Load solana_bpf_rust_upgradeable program taken from solana test programs
-        let path_buf = find_file("solana_bpf_rust_upgradeable.so").unwrap();
+        // Load gemachain_bpf_rust_upgradeable program taken from gemachain test programs
+        let path_buf = find_file("gemachain_bpf_rust_upgradeable.so").unwrap();
         let program_data = read_file(path_buf);
 
         let program_buffer_rent = self
@@ -1553,8 +1553,8 @@ impl GovernanceProgramTest {
             )
             .await;
 
-        let mut instruction = spl_token::instruction::mint_to(
-            &spl_token::id(),
+        let mut instruction = gpl_token::instruction::mint_to(
+            &gpl_token::id(),
             &governed_mint_cookie.address,
             &token_account_keypair.pubkey(),
             &proposal_cookie.account.governance,
@@ -1589,8 +1589,8 @@ impl GovernanceProgramTest {
             )
             .await;
 
-        let mut instruction = spl_token::instruction::transfer(
-            &spl_token::id(),
+        let mut instruction = gpl_token::instruction::transfer(
+            &gpl_token::id(),
             &governed_token_cookie.address,
             &token_account_keypair.pubkey(),
             &proposal_cookie.account.governance,
@@ -1618,8 +1618,8 @@ impl GovernanceProgramTest {
         let program_buffer_keypair = Keypair::new();
         let buffer_authority_keypair = Keypair::new();
 
-        // Load solana_bpf_rust_upgraded program taken from solana test programs
-        let path_buf = find_file("solana_bpf_rust_upgraded.so").unwrap();
+        // Load gemachain_bpf_rust_upgraded program taken from gemachain test programs
+        let path_buf = find_file("gemachain_bpf_rust_upgraded.so").unwrap();
         let program_data = read_file(path_buf);
 
         let program_buffer_rent = self
@@ -1943,12 +1943,12 @@ impl GovernanceProgramTest {
     }
 
     #[allow(dead_code)]
-    pub async fn get_token_account(&mut self, address: &Pubkey) -> spl_token::state::Account {
+    pub async fn get_token_account(&mut self, address: &Pubkey) -> gpl_token::state::Account {
         self.get_packed_account(address).await
     }
 
     #[allow(dead_code)]
-    pub async fn get_mint_account(&mut self, address: &Pubkey) -> spl_token::state::Mint {
+    pub async fn get_mint_account(&mut self, address: &Pubkey) -> gpl_token::state::Mint {
         self.get_packed_account(address).await
     }
 }

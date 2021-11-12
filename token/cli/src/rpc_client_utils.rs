@@ -1,14 +1,14 @@
 // TODO: In v1.8 timeframe delete this module and use `send_and_confirm_messages_with_spinner()`
-//       from the Solana monorepo
+//       from the Gemachain monorepo
 use {
-    solana_client::{
+    gemachain_client::{
         rpc_client::RpcClient,
         rpc_config::RpcSendTransactionConfig,
         rpc_request::MAX_GET_SIGNATURE_STATUSES_QUERY_ITEMS,
         rpc_response::Fees,
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    solana_sdk::{
+    gemachain_sdk::{
         message::Message,
         signers::Signers,
         transaction::{Transaction, TransactionError},
@@ -22,7 +22,7 @@ use {
     },
 };
 
-/// TODO: In v1.8 timeframe switch to using `solana_cli_output::display::new_spinner_progress_bar()`
+/// TODO: In v1.8 timeframe switch to using `gemachain_cli_output::display::new_spinner_progress_bar()`
 fn new_spinner_progress_bar() -> indicatif::ProgressBar {
     let progress_bar = indicatif::ProgressBar::new(42);
     progress_bar.set_style(

@@ -12,7 +12,7 @@ use crate::{
     },
     tools::account::create_and_serialize_account_signed,
 };
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,

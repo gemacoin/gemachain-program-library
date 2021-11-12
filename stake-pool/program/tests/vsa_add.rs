@@ -6,20 +6,20 @@ use {
     bincode::deserialize,
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked,
         hash::Hash,
         instruction::{AccountMeta, Instruction, InstructionError},
         pubkey::Pubkey,
         system_program, sysvar,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
         transport::TransportError,
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error::StakePoolError, find_stake_program_address, id, instruction, stake_program, state,
     },
 };
@@ -92,8 +92,8 @@ async fn success() {
                 status: state::StakeStatus::Active,
                 vote_account_address: validator_stake.vote.pubkey(),
                 last_update_epoch: 0,
-                active_stake_lamports: 0,
-                transient_stake_lamports: 0,
+                active_stake_carats: 0,
+                transient_stake_carats: 0,
                 transient_seed_suffix_start: 0,
                 transient_seed_suffix_end: 0,
             }]

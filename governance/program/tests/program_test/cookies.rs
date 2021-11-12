@@ -1,12 +1,12 @@
-use solana_program::{instruction::Instruction, pubkey::Pubkey};
-use solana_sdk::signature::Keypair;
-use spl_governance::state::{
+use gemachain_program::{instruction::Instruction, pubkey::Pubkey};
+use gemachain_sdk::signature::Keypair;
+use gpl_governance::state::{
     governance::Governance, proposal::Proposal, proposal_instruction::ProposalInstruction,
     realm::Realm, signatory_record::SignatoryRecord, token_owner_record::TokenOwnerRecord,
     vote_record::VoteRecord,
 };
 
-use spl_governance_test_sdk::tools::clone_keypair;
+use gpl_governance_test_sdk::tools::clone_keypair;
 
 pub trait AccountCookie {
     fn get_address(&self) -> Pubkey;

@@ -4,14 +4,14 @@ mod helpers;
 
 use {
     helpers::*,
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         borsh::try_from_slice_unchecked,
         instruction::InstructionError,
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error, id, instruction,
         state::{Fee, FeeType, StakePool},
     },

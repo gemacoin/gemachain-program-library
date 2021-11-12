@@ -3,14 +3,14 @@
 mod helpers;
 
 use helpers::*;
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program_test::*;
+use gemachain_sdk::{
     instruction::InstructionError,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::{Transaction, TransactionError},
 };
-use spl_token_lending::{
+use gpl_token_lending::{
     error::LendingError,
     instruction::init_reserve,
     processor::process_instruction,
@@ -20,8 +20,8 @@ use spl_token_lending::{
 #[tokio::test]
 async fn test_success() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
@@ -30,15 +30,15 @@ async fn test_success() {
 
     let user_accounts_owner = Keypair::new();
     let lending_market = add_lending_market(&mut test);
-    let sol_oracle = add_sol_oracle(&mut test);
+    let gema_oracle = add_gema_oracle(&mut test);
 
     let (mut banks_client, payer, _recent_blockhash) = test.start().await;
 
     const RESERVE_AMOUNT: u64 = 42;
 
-    let sol_user_liquidity_account = create_and_mint_to_token_account(
+    let gema_user_liquidity_account = create_and_mint_to_token_account(
         &mut banks_client,
-        spl_token::native_mint::id(),
+        gpl_token::native_mint::id(),
         None,
         &payer,
         user_accounts_owner.pubkey(),
@@ -46,33 +46,33 @@ async fn test_success() {
     )
     .await;
 
-    let sol_reserve = TestReserve::init(
-        "sol".to_owned(),
+    let gema_reserve = TestReserve::init(
+        "gema".to_owned(),
         &mut banks_client,
         &lending_market,
-        &sol_oracle,
+        &gema_oracle,
         RESERVE_AMOUNT,
         TEST_RESERVE_CONFIG,
-        spl_token::native_mint::id(),
-        sol_user_liquidity_account,
+        gpl_token::native_mint::id(),
+        gema_user_liquidity_account,
         &payer,
         &user_accounts_owner,
     )
     .await
     .unwrap();
 
-    sol_reserve.validate_state(&mut banks_client).await;
+    gema_reserve.validate_state(&mut banks_client).await;
 
-    let sol_liquidity_supply =
-        get_token_balance(&mut banks_client, sol_reserve.liquidity_supply_pubkey).await;
-    assert_eq!(sol_liquidity_supply, RESERVE_AMOUNT);
-    let user_sol_balance =
-        get_token_balance(&mut banks_client, sol_reserve.user_liquidity_pubkey).await;
-    assert_eq!(user_sol_balance, 0);
-    let user_sol_collateral_balance =
-        get_token_balance(&mut banks_client, sol_reserve.user_collateral_pubkey).await;
+    let gema_liquidity_supply =
+        get_token_balance(&mut banks_client, gema_reserve.liquidity_supply_pubkey).await;
+    assert_eq!(gema_liquidity_supply, RESERVE_AMOUNT);
+    let user_gema_balance =
+        get_token_balance(&mut banks_client, gema_reserve.user_liquidity_pubkey).await;
+    assert_eq!(user_gema_balance, 0);
+    let user_gema_collateral_balance =
+        get_token_balance(&mut banks_client, gema_reserve.user_collateral_pubkey).await;
     assert_eq!(
-        user_sol_collateral_balance,
+        user_gema_collateral_balance,
         RESERVE_AMOUNT * INITIAL_COLLATERAL_RATIO
     );
 }
@@ -80,8 +80,8 @@ async fn test_success() {
 #[tokio::test]
 async fn test_already_initialized() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
@@ -109,7 +109,7 @@ async fn test_already_initialized() {
 
     let mut transaction = Transaction::new_with_payer(
         &[init_reserve(
-            spl_token_lending::id(),
+            gpl_token_lending::id(),
             42,
             usdc_test_reserve.config,
             usdc_test_reserve.user_liquidity_pubkey,
@@ -148,22 +148,22 @@ async fn test_already_initialized() {
 #[tokio::test]
 async fn test_invalid_fees() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
     let user_accounts_owner = Keypair::new();
     let lending_market = add_lending_market(&mut test);
-    let sol_oracle = add_sol_oracle(&mut test);
+    let gema_oracle = add_gema_oracle(&mut test);
 
     let (mut banks_client, payer, _recent_blockhash) = test.start().await;
 
     const RESERVE_AMOUNT: u64 = 42;
 
-    let sol_user_liquidity_account = create_and_mint_to_token_account(
+    let gema_user_liquidity_account = create_and_mint_to_token_account(
         &mut banks_client,
-        spl_token::native_mint::id(),
+        gpl_token::native_mint::id(),
         None,
         &payer,
         user_accounts_owner.pubkey(),
@@ -182,14 +182,14 @@ async fn test_invalid_fees() {
 
         assert_eq!(
             TestReserve::init(
-                "sol".to_owned(),
+                "gema".to_owned(),
                 &mut banks_client,
                 &lending_market,
-                &sol_oracle,
+                &gema_oracle,
                 RESERVE_AMOUNT,
                 config,
-                spl_token::native_mint::id(),
-                sol_user_liquidity_account,
+                gpl_token::native_mint::id(),
+                gema_user_liquidity_account,
                 &payer,
                 &user_accounts_owner,
             )
@@ -213,14 +213,14 @@ async fn test_invalid_fees() {
 
         assert_eq!(
             TestReserve::init(
-                "sol".to_owned(),
+                "gema".to_owned(),
                 &mut banks_client,
                 &lending_market,
-                &sol_oracle,
+                &gema_oracle,
                 RESERVE_AMOUNT,
                 config,
-                spl_token::native_mint::id(),
-                sol_user_liquidity_account,
+                gpl_token::native_mint::id(),
+                gema_user_liquidity_account,
                 &payer,
                 &user_accounts_owner,
             )

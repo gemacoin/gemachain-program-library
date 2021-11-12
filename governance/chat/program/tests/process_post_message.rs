@@ -1,10 +1,10 @@
 #![cfg(feature = "test-bpf")]
 
 use program_test::GovernanceChatProgramTest;
-use solana_program_test::tokio;
-use solana_sdk::signature::Keypair;
-use spl_governance::error::GovernanceError;
-use spl_governance_chat::error::GovernanceChatError;
+use gemachain_program_test::tokio;
+use gemachain_sdk::signature::Keypair;
+use gpl_governance::error::GovernanceError;
+use gpl_governance_chat::error::GovernanceChatError;
 
 mod program_test;
 

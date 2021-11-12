@@ -2,7 +2,7 @@
 
 use crate::{state::AcceptanceCriteria, *};
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     instruction::{AccountMeta, Instruction},
     msg,
     program_error::ProgramError,
@@ -24,7 +24,7 @@ pub enum FeatureProposalInstruction {
     /// * A new "acceptance" token account that holds 0 tokens, owned by the program.  Tokens
     ///   transfers to this address are irrevocable and permanent.
     /// * A new feature id account that has been funded and allocated (as described in
-    ///  `solana_program::feature`)
+    ///  `gemachain_program::feature`)
     ///
     /// On successful execution of the instruction, the feature proposer is expected to distribute
     /// the tokens in the distributor token account out to all participating parties.
@@ -45,7 +45,7 @@ pub enum FeatureProposalInstruction {
     /// 4. `[writeable]` Acceptance token account address from `get_acceptance_token_address`
     /// 5. `[writeable]` Feature id account address from `get_feature_id_address`
     /// 6. `[]` System program
-    /// 7. `[]` SPL Token program
+    /// 7. `[]` GPL Token program
     /// 8. `[]` Rent sysvar
     ///
     Propose {
@@ -122,8 +122,8 @@ pub fn propose(
             AccountMeta::new(distributor_token_address, false),
             AccountMeta::new(acceptance_token_address, false),
             AccountMeta::new(feature_id_address, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
-            AccountMeta::new_readonly(spl_token::id(), false),
+            AccountMeta::new_readonly(gemachain_program::system_program::id(), false),
+            AccountMeta::new_readonly(gpl_token::id(), false),
             AccountMeta::new_readonly(sysvar::rent::id(), false),
         ],
         data: FeatureProposalInstruction::Propose {
@@ -145,7 +145,7 @@ pub fn tally(feature_proposal_address: &Pubkey) -> Instruction {
             AccountMeta::new(*feature_proposal_address, false),
             AccountMeta::new_readonly(acceptance_token_address, false),
             AccountMeta::new(feature_id_address, false),
-            AccountMeta::new_readonly(solana_program::system_program::id(), false),
+            AccountMeta::new_readonly(gemachain_program::system_program::id(), false),
             AccountMeta::new_readonly(sysvar::clock::id(), false),
         ],
         data: FeatureProposalInstruction::Tally.pack_into_vec(),
@@ -160,7 +160,7 @@ mod tests {
     fn test_get_packed_len() {
         assert_eq!(
             FeatureProposalInstruction::get_packed_len(),
-            solana_program::borsh::get_packed_len::<FeatureProposalInstruction>()
+            gemachain_program::borsh::get_packed_len::<FeatureProposalInstruction>()
         )
     }
 

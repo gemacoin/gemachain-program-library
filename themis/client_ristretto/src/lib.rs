@@ -4,18 +4,18 @@ use curve25519_dalek::{
 };
 use elgamal_ristretto::{/*ciphertext::Ciphertext,*/ private::SecretKey, public::PublicKey};
 use futures::future::join_all;
-use solana_banks_client::{BanksClient, BanksClientExt};
-use solana_sdk::{
+use gemachain_banks_client::{BanksClient, BanksClientExt};
+use gemachain_sdk::{
     commitment_config::CommitmentLevel,
     message::Message,
-    native_token::sol_to_lamports,
+    native_token::gema_to_carats,
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     system_instruction,
     transaction::Transaction,
     transport,
 };
-use spl_themis_ristretto::{
+use gpl_themis_ristretto::{
     instruction,
     state::generate_keys, // recover_scalar, User},
 };
@@ -68,7 +68,7 @@ async fn run_user_workflow(
         program_id,
         &sender_pubkey,
         &user_pubkey,
-        sol_to_lamports(0.001),
+        gema_to_carats(0.001),
         pk,
     );
     let msg = Message::new(&ixs, Some(&sender_pubkey));
@@ -171,7 +171,7 @@ pub async fn test_e2e(
         program_id,
         &sender_pubkey,
         &policies_pubkey,
-        sol_to_lamports(0.01),
+        gema_to_carats(0.01),
         policies.len() as u8,
     );
     let policies_slice: Vec<_> = policies
@@ -194,7 +194,7 @@ pub async fn test_e2e(
         .await
         .unwrap();
 
-    // Send feepayer_keypairs some SOL
+    // Send feepayer_keypairs some GEMA
     println!("Seeding feepayer accounts...");
     let feepayers: Vec<_> = (0..num_users).map(|_| Keypair::new()).collect();
     let recent_blockhash = client.get_recent_blockhash().await.unwrap();
@@ -203,7 +203,7 @@ pub async fn test_e2e(
         .map(|feepayers| {
             let payments: Vec<_> = feepayers
                 .iter()
-                .map(|keypair| (keypair.pubkey(), sol_to_lamports(0.0011)))
+                .map(|keypair| (keypair.pubkey(), gema_to_carats(0.0011)))
                 .collect();
             let ixs = system_instruction::transfer_many(&sender_pubkey, &payments);
             let msg = Message::new(&ixs, Some(&sender_keypair.pubkey()));
@@ -259,15 +259,15 @@ pub async fn test_e2e(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use solana_banks_client::start_client;
-    use solana_banks_server::banks_server::start_local_server;
-    use solana_runtime::{bank::Bank, bank_forks::BankForks};
-    use solana_sdk::{
+    use gemachain_banks_client::start_client;
+    use gemachain_banks_server::banks_server::start_local_server;
+    use gemachain_runtime::{bank::Bank, bank_forks::BankForks};
+    use gemachain_sdk::{
         account::Account, account_info::AccountInfo, genesis_config::create_genesis_config,
         instruction::InstructionError, keyed_account::KeyedAccount,
         process_instruction::InvokeContext, program_error::ProgramError,
     };
-    use spl_themis_ristretto::processor::process_instruction;
+    use gpl_themis_ristretto::processor::process_instruction;
     use std::{
         collections::HashMap,
         sync::{Arc, RwLock},
@@ -307,14 +307,14 @@ mod tests {
             .map(|ka| (*ka.unsigned_key(), ka.account.borrow().clone()))
             .collect();
 
-        // Create shared references to each account's lamports/data/owner
+        // Create shared references to each account's carats/data/owner
         let account_refs: HashMap<_, _> = accounts
             .iter_mut()
             .map(|(key, account)| {
                 (
                     *key,
                     (
-                        Rc::new(RefCell::new(&mut account.lamports)),
+                        Rc::new(RefCell::new(&mut account.carats)),
                         Rc::new(RefCell::new(&mut account.data[..])),
                         &account.owner,
                     ),
@@ -327,12 +327,12 @@ mod tests {
             .iter()
             .map(|keyed_account| {
                 let key = keyed_account.unsigned_key();
-                let (lamports, data, owner) = &account_refs[key];
+                let (carats, data, owner) = &account_refs[key];
                 AccountInfo {
                     key,
                     is_signer: keyed_account.signer_key().is_some(),
                     is_writable: keyed_account.is_writable(),
-                    lamports: lamports.clone(),
+                    carats: carats.clone(),
                     data: data.clone(),
                     owner,
                     executable: keyed_account.executable().unwrap(),
@@ -348,8 +348,8 @@ mod tests {
         for keyed_account in keyed_accounts {
             let mut account = keyed_account.account.borrow_mut();
             let key = keyed_account.unsigned_key();
-            let (lamports, data, _owner) = &account_refs[key];
-            account.lamports = **lamports.borrow();
+            let (carats, data, _owner) = &account_refs[key];
+            account.carats = **carats.borrow();
             account.data = data.borrow().to_vec();
         }
 
@@ -358,7 +358,7 @@ mod tests {
 
     #[test]
     fn test_local_e2e_2ads() {
-        let (genesis_config, sender_keypair) = create_genesis_config(sol_to_lamports(9_000_000.0));
+        let (genesis_config, sender_keypair) = create_genesis_config(gema_to_carats(9_000_000.0));
         let mut bank = Bank::new(&genesis_config);
         let program_id = Keypair::new().pubkey();
         bank.add_builtin("Themis", program_id, process_instruction_native);

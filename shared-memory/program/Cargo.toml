@@ -1,9 +1,9 @@
 [package]
-name = "spl-shared-memory"
+name = "gpl-shared-memory"
 version = "2.0.6"
-description = "Solana Program Library Shared-memory"
-authors = ["Solana Maintainers <maintainers@solana.foundation>"]
-repository = "https://github.com/solana-labs/solana-program-library"
+description = "Gemachain Program Library Shared-memory"
+authors = ["Gemachain Maintainers <maintainers@gemachain.foundation>"]
+repository = "https://github.com/gemachain/gemachain-program-library"
 license = "Apache-2.0"
 edition = "2018"
 
@@ -12,11 +12,11 @@ test-bpf = []
 
 [dependencies]
 arrayref = "0.3.6"
-solana-program = "=1.8.0"
+gemachain-program = "=1.8.2"
 
 [dev-dependencies]
-solana-program-test = "=1.8.0"
-solana-sdk = "=1.8.0"
+gemachain-program-test = "=1.8.2"
+gemachain-sdk = "=1.8.2"
 
 [lib]
 crate-type = ["cdylib", "lib"]

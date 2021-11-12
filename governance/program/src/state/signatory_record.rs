@@ -1,7 +1,7 @@
 //! Signatory Record
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::IsInitialized,
     pubkey::Pubkey,
 };

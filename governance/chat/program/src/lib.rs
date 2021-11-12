@@ -9,4 +9,4 @@ pub mod state;
 pub mod tools;
 
 // Export current sdk types for downstream users building with a different sdk version
-pub use solana_program;
+pub use gemachain_program;

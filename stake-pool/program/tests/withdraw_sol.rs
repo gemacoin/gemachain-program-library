@@ -4,16 +4,16 @@ mod helpers;
 
 use {
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked, instruction::InstructionError, pubkey::Pubkey,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::Transaction,
         transaction::TransactionError,
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error::StakePoolError,
         id,
         instruction::{self, FundingType},
@@ -51,7 +51,7 @@ async fn setup() -> (ProgramTestContext, StakePoolAccounts, Keypair, Pubkey, u64
     .unwrap();
 
     let error = stake_pool_accounts
-        .deposit_sol(
+        .deposit_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
@@ -88,15 +88,15 @@ async fn success() {
         try_from_slice_unchecked::<state::StakePool>(pre_stake_pool.data.as_slice()).unwrap();
 
     // Save reserve state before withdrawing
-    let pre_reserve_lamports = get_account(
+    let pre_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
+    .carats;
 
     let error = stake_pool_accounts
-        .withdraw_sol(
+        .withdraw_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
@@ -119,8 +119,8 @@ async fn success() {
     let amount_withdrawn_minus_fee =
         pool_tokens - stake_pool_accounts.calculate_withdrawal_fee(pool_tokens);
     assert_eq!(
-        post_stake_pool.total_lamports,
-        pre_stake_pool.total_lamports - amount_withdrawn_minus_fee
+        post_stake_pool.total_carats,
+        pre_stake_pool.total_carats - amount_withdrawn_minus_fee
     );
     assert_eq!(
         post_stake_pool.pool_token_supply,
@@ -133,15 +133,15 @@ async fn success() {
     assert_eq!(user_token_balance, 0);
 
     // Check reserve
-    let post_reserve_lamports = get_account(
+    let post_reserve_carats = get_account(
         &mut context.banks_client,
         &stake_pool_accounts.reserve_stake.pubkey(),
     )
     .await
-    .lamports;
+    .carats;
     assert_eq!(
-        post_reserve_lamports,
-        pre_reserve_lamports - amount_withdrawn_minus_fee
+        post_reserve_carats,
+        pre_reserve_carats - amount_withdrawn_minus_fee
     );
 }
 
@@ -153,7 +153,7 @@ async fn fail_with_wrong_withdraw_authority() {
     stake_pool_accounts.withdraw_authority = Pubkey::new_unique();
 
     let error = stake_pool_accounts
-        .withdraw_sol(
+        .withdraw_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
@@ -205,7 +205,7 @@ async fn fail_overdraw_reserve() {
 
     // try to withdraw one lamport, will overdraw
     let error = stake_pool_accounts
-        .withdraw_sol(
+        .withdraw_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
@@ -222,23 +222,23 @@ async fn fail_overdraw_reserve() {
         error,
         TransactionError::InstructionError(
             0,
-            InstructionError::Custom(StakePoolError::SolWithdrawalTooLarge as u32)
+            InstructionError::Custom(StakePoolError::GemaWithdrawalTooLarge as u32)
         )
     );
 }
 
 #[tokio::test]
-async fn success_with_sol_withdraw_authority() {
+async fn success_with_gema_withdraw_authority() {
     let (mut context, stake_pool_accounts, user, pool_token_account, pool_tokens) = setup().await;
-    let sol_withdraw_authority = Keypair::new();
+    let gema_withdraw_authority = Keypair::new();
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::set_funding_authority(
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            Some(&sol_withdraw_authority.pubkey()),
-            FundingType::SolWithdraw,
+            Some(&gema_withdraw_authority.pubkey()),
+            FundingType::GemaWithdraw,
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -251,31 +251,31 @@ async fn success_with_sol_withdraw_authority() {
         .unwrap();
 
     let error = stake_pool_accounts
-        .withdraw_sol(
+        .withdraw_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
             &user,
             &pool_token_account,
             pool_tokens,
-            Some(&sol_withdraw_authority),
+            Some(&gema_withdraw_authority),
         )
         .await;
     assert!(error.is_none());
 }
 
 #[tokio::test]
-async fn fail_without_sol_withdraw_authority_signature() {
+async fn fail_without_gema_withdraw_authority_signature() {
     let (mut context, stake_pool_accounts, user, pool_token_account, pool_tokens) = setup().await;
-    let sol_withdraw_authority = Keypair::new();
+    let gema_withdraw_authority = Keypair::new();
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::set_funding_authority(
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            Some(&sol_withdraw_authority.pubkey()),
-            FundingType::SolWithdraw,
+            Some(&gema_withdraw_authority.pubkey()),
+            FundingType::GemaWithdraw,
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -289,7 +289,7 @@ async fn fail_without_sol_withdraw_authority_signature() {
 
     let wrong_withdrawer = Keypair::new();
     let error = stake_pool_accounts
-        .withdraw_sol(
+        .withdraw_gema(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
@@ -306,7 +306,7 @@ async fn fail_without_sol_withdraw_authority_signature() {
         error,
         TransactionError::InstructionError(
             0,
-            InstructionError::Custom(StakePoolError::InvalidSolWithdrawAuthority as u32)
+            InstructionError::Custom(StakePoolError::InvalidGemaWithdrawAuthority as u32)
         )
     );
 }

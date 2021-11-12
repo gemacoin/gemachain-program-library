@@ -7,7 +7,7 @@ use crate::{
     PROGRAM_AUTHORITY_SEED,
 };
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo,
     clock::UnixTimestamp,
     instruction::{AccountMeta, Instruction},
@@ -180,7 +180,7 @@ mod test {
 
     use std::str::FromStr;
 
-    use solana_program::bpf_loader_upgradeable;
+    use gemachain_program::bpf_loader_upgradeable;
 
     use super::*;
 

@@ -5,7 +5,7 @@ mod helpers;
 use {
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::{get_instance_packed_len, get_packed_len, try_from_slice_unchecked},
         hash::Hash,
         instruction::{AccountMeta, Instruction},
@@ -13,12 +13,12 @@ use {
         pubkey::Pubkey,
         system_instruction, sysvar,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         instruction::InstructionError, signature::Keypair, signature::Signer,
         transaction::Transaction, transaction::TransactionError, transport::TransportError,
     },
-    spl_stake_pool::{error, id, instruction, stake_program, state},
+    gpl_stake_pool::{error, id, instruction, stake_program, state},
 };
 
 async fn create_required_accounts(
@@ -250,7 +250,7 @@ async fn fail_with_wrong_max_validators() {
                 &stake_pool_accounts.reserve_stake.pubkey(),
                 &stake_pool_accounts.pool_mint.pubkey(),
                 &stake_pool_accounts.pool_fee_account.pubkey(),
-                &spl_token::id(),
+                &gpl_token::id(),
                 None,
                 stake_pool_accounts.epoch_fee,
                 stake_pool_accounts.withdrawal_fee,
@@ -329,8 +329,8 @@ async fn fail_with_wrong_mint_authority() {
         &stake_pool_accounts.withdrawal_fee,
         &stake_pool_accounts.deposit_fee,
         stake_pool_accounts.referral_fee,
-        &stake_pool_accounts.sol_deposit_fee,
-        stake_pool_accounts.sol_referral_fee,
+        &stake_pool_accounts.gema_deposit_fee,
+        stake_pool_accounts.gema_referral_fee,
         stake_pool_accounts.max_validators,
     )
     .await
@@ -365,7 +365,7 @@ async fn fail_with_freeze_authority() {
     // create mint with freeze authority
     let wrong_mint = Keypair::new();
     let rent = banks_client.get_rent().await.unwrap();
-    let mint_rent = rent.minimum_balance(spl_token::state::Mint::LEN);
+    let mint_rent = rent.minimum_balance(gpl_token::state::Mint::LEN);
 
     let transaction = Transaction::new_signed_with_payer(
         &[
@@ -373,11 +373,11 @@ async fn fail_with_freeze_authority() {
                 &payer.pubkey(),
                 &wrong_mint.pubkey(),
                 mint_rent,
-                spl_token::state::Mint::LEN as u64,
-                &spl_token::id(),
+                gpl_token::state::Mint::LEN as u64,
+                &gpl_token::id(),
             ),
-            spl_token::instruction::initialize_mint(
-                &spl_token::id(),
+            gpl_token::instruction::initialize_mint(
+                &gpl_token::id(),
                 &wrong_mint.pubkey(),
                 &stake_pool_accounts.withdraw_authority,
                 Some(&stake_pool_accounts.withdraw_authority),
@@ -419,8 +419,8 @@ async fn fail_with_freeze_authority() {
         &stake_pool_accounts.withdrawal_fee,
         &stake_pool_accounts.deposit_fee,
         stake_pool_accounts.referral_fee,
-        &stake_pool_accounts.sol_deposit_fee,
-        stake_pool_accounts.sol_referral_fee,
+        &stake_pool_accounts.gema_deposit_fee,
+        stake_pool_accounts.gema_referral_fee,
         stake_pool_accounts.max_validators,
     )
     .await
@@ -456,13 +456,13 @@ async fn fail_with_wrong_token_program_id() {
 
     let rent = banks_client.get_rent().await.unwrap();
 
-    let account_rent = rent.minimum_balance(spl_token::state::Account::LEN);
+    let account_rent = rent.minimum_balance(gpl_token::state::Account::LEN);
     let mut transaction = Transaction::new_with_payer(
         &[system_instruction::create_account(
             &payer.pubkey(),
             &stake_pool_accounts.pool_fee_account.pubkey(),
             account_rent,
-            spl_token::state::Account::LEN as u64,
+            gpl_token::state::Account::LEN as u64,
             &wrong_token_program.pubkey(),
         )],
         Some(&payer.pubkey()),
@@ -556,14 +556,14 @@ async fn fail_with_wrong_fee_account() {
     .await
     .unwrap();
     let rent = banks_client.get_rent().await.unwrap();
-    let account_rent = rent.minimum_balance(spl_token::state::Account::LEN);
+    let account_rent = rent.minimum_balance(gpl_token::state::Account::LEN);
 
     let mut transaction = Transaction::new_with_payer(
         &[system_instruction::create_account(
             &payer.pubkey(),
             &stake_pool_accounts.pool_fee_account.pubkey(),
             account_rent,
-            spl_token::state::Account::LEN as u64,
+            gpl_token::state::Account::LEN as u64,
             &Keypair::new().pubkey(),
         )],
         Some(&payer.pubkey()),
@@ -590,8 +590,8 @@ async fn fail_with_wrong_fee_account() {
         &stake_pool_accounts.withdrawal_fee,
         &stake_pool_accounts.deposit_fee,
         stake_pool_accounts.referral_fee,
-        &stake_pool_accounts.sol_deposit_fee,
-        stake_pool_accounts.sol_referral_fee,
+        &stake_pool_accounts.gema_deposit_fee,
+        stake_pool_accounts.gema_referral_fee,
         stake_pool_accounts.max_validators,
     )
     .await
@@ -677,7 +677,7 @@ async fn fail_with_not_rent_exempt_pool() {
                 &stake_pool_accounts.reserve_stake.pubkey(),
                 &stake_pool_accounts.pool_mint.pubkey(),
                 &stake_pool_accounts.pool_fee_account.pubkey(),
-                &spl_token::id(),
+                &gpl_token::id(),
                 None,
                 stake_pool_accounts.epoch_fee,
                 stake_pool_accounts.withdrawal_fee,
@@ -754,7 +754,7 @@ async fn fail_with_not_rent_exempt_validator_list() {
                 &stake_pool_accounts.reserve_stake.pubkey(),
                 &stake_pool_accounts.pool_mint.pubkey(),
                 &stake_pool_accounts.pool_fee_account.pubkey(),
-                &spl_token::id(),
+                &gpl_token::id(),
                 None,
                 stake_pool_accounts.epoch_fee,
                 stake_pool_accounts.withdrawal_fee,
@@ -827,7 +827,7 @@ async fn fail_without_manager_signature() {
         AccountMeta::new_readonly(stake_pool_accounts.pool_fee_account.pubkey(), false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
     ];
     let stake_pool_init_instruction = Instruction {
         program_id: id(),
@@ -938,8 +938,8 @@ async fn fail_with_pre_minted_pool_tokens() {
         &stake_pool_accounts.withdrawal_fee,
         &stake_pool_accounts.deposit_fee,
         stake_pool_accounts.referral_fee,
-        &stake_pool_accounts.sol_deposit_fee,
-        stake_pool_accounts.sol_referral_fee,
+        &stake_pool_accounts.gema_deposit_fee,
+        stake_pool_accounts.gema_referral_fee,
         stake_pool_accounts.max_validators,
     )
     .await
@@ -1004,8 +1004,8 @@ async fn fail_with_bad_reserve() {
             &stake_pool_accounts.withdrawal_fee,
             &stake_pool_accounts.deposit_fee,
             stake_pool_accounts.referral_fee,
-            &stake_pool_accounts.sol_deposit_fee,
-            stake_pool_accounts.sol_referral_fee,
+            &stake_pool_accounts.gema_deposit_fee,
+            stake_pool_accounts.gema_referral_fee,
             stake_pool_accounts.max_validators,
         )
         .await
@@ -1054,8 +1054,8 @@ async fn fail_with_bad_reserve() {
             &stake_pool_accounts.withdrawal_fee,
             &stake_pool_accounts.deposit_fee,
             stake_pool_accounts.referral_fee,
-            &stake_pool_accounts.sol_deposit_fee,
-            stake_pool_accounts.sol_referral_fee,
+            &stake_pool_accounts.gema_deposit_fee,
+            stake_pool_accounts.gema_referral_fee,
             stake_pool_accounts.max_validators,
         )
         .await
@@ -1107,8 +1107,8 @@ async fn fail_with_bad_reserve() {
             &stake_pool_accounts.withdrawal_fee,
             &stake_pool_accounts.deposit_fee,
             stake_pool_accounts.referral_fee,
-            &stake_pool_accounts.sol_deposit_fee,
-            stake_pool_accounts.sol_referral_fee,
+            &stake_pool_accounts.gema_deposit_fee,
+            stake_pool_accounts.gema_referral_fee,
             stake_pool_accounts.max_validators,
         )
         .await
@@ -1128,13 +1128,13 @@ async fn fail_with_bad_reserve() {
     {
         let bad_stake = Keypair::new();
         let rent = banks_client.get_rent().await.unwrap();
-        let lamports = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
+        let carats = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
 
         let transaction = Transaction::new_signed_with_payer(
             &[system_instruction::create_account(
                 &payer.pubkey(),
                 &bad_stake.pubkey(),
-                lamports,
+                carats,
                 std::mem::size_of::<stake_program::StakeState>() as u64,
                 &stake_program::id(),
             )],
@@ -1160,8 +1160,8 @@ async fn fail_with_bad_reserve() {
             &stake_pool_accounts.withdrawal_fee,
             &stake_pool_accounts.deposit_fee,
             stake_pool_accounts.referral_fee,
-            &stake_pool_accounts.sol_deposit_fee,
-            stake_pool_accounts.sol_referral_fee,
+            &stake_pool_accounts.gema_deposit_fee,
+            stake_pool_accounts.gema_referral_fee,
             stake_pool_accounts.max_validators,
         )
         .await

@@ -1,7 +1,7 @@
 /**
  * @brief A program demonstrating the implementation of a custom heap
  */
-#include <solana_sdk.h>
+#include <gemachain_sdk.h>
 
 /// Start address of the memory region used for program heap.
 #define HEAP_START_ADDRESS_ (uint64_t)0x300000000
@@ -37,15 +37,15 @@ void dealloc(BumpAllocator *self, void *ptr) {
 }
 
 extern uint64_t entrypoint(const uint8_t *input) {
-  SolAccountInfo accounts[2];
-  SolParameters params = (SolParameters){.ka = accounts};
+  GemaAccountInfo accounts[2];
+  GemaParameters params = (GemaParameters){.ka = accounts};
 
-  if (!sol_deserialize(input, &params, SOL_ARRAY_SIZE(accounts))) {
+  if (!gema_deserialize(input, &params, GEMA_ARRAY_SIZE(accounts))) {
     return ERROR_INVALID_ARGUMENT;
   }
 
   BumpAllocator heap = {HEAP_START_ADDRESS_, HEAP_LENGTH_};
-  sol_assert(0 != alloc(&heap, 1, sizeof(uint64_t)));
+  gema_assert(0 != alloc(&heap, 1, sizeof(uint64_t)));
 
   return SUCCESS;
 }

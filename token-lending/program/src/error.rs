@@ -1,7 +1,7 @@
 //! Error types
 
 use num_derive::FromPrimitive;
-use solana_program::{decode_error::DecodeError, program_error::ProgramError};
+use gemachain_program::{decode_error::DecodeError, program_error::ProgramError};
 use thiserror::Error;
 
 /// Errors that may be returned by the TokenLending program.
@@ -31,13 +31,13 @@ pub enum LendingError {
     /// The owner of the account input isn't set to the correct token program id.
     #[error("Input token account is not owned by the correct token program id")]
     InvalidTokenOwner,
-    /// Expected an SPL Token account
+    /// Expected an GPL Token account
     #[error("Input token account is not valid")]
     InvalidTokenAccount,
-    /// Expected an SPL Token mint
+    /// Expected an GPL Token mint
     #[error("Input token mint account is not valid")]
     InvalidTokenMint,
-    /// Expected a different SPL Token program
+    /// Expected a different GPL Token program
     #[error("Input token program account is not valid")]
     InvalidTokenProgram,
 

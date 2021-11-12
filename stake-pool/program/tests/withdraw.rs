@@ -6,23 +6,23 @@ use {
     bincode::deserialize,
     borsh::BorshSerialize,
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked,
         hash::Hash,
         instruction::{AccountMeta, Instruction, InstructionError},
         pubkey::Pubkey,
         sysvar,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
         transport::TransportError,
     },
-    spl_stake_pool::{
-        error::StakePoolError, id, instruction, minimum_stake_lamports, stake_program, state,
+    gpl_stake_pool::{
+        error::StakePoolError, id, instruction, minimum_stake_carats, stake_program, state,
     },
-    spl_token::error::TokenError,
+    gpl_token::error::TokenError,
 };
 
 async fn setup() -> (
@@ -135,9 +135,9 @@ async fn _success(test_type: SuccessTestType) {
         try_from_slice_unchecked::<state::StakePool>(stake_pool_before.data.as_slice()).unwrap();
 
     // Check user recipient stake account balance
-    let initial_stake_lamports = get_account(&mut banks_client, &user_stake_recipient.pubkey())
+    let initial_stake_carats = get_account(&mut banks_client, &user_stake_recipient.pubkey())
         .await
-        .lamports;
+        .carats;
 
     // Save validator stake account record before withdrawal
     let validator_list = get_account(
@@ -175,7 +175,7 @@ async fn _success(test_type: SuccessTestType) {
     .unwrap();
 
     if let SuccessTestType::UninitializedManagerFee = test_type {
-        transfer_spl_tokens(
+        transfer_gpl_tokens(
             &mut banks_client,
             &payer,
             &recent_blockhash,
@@ -236,7 +236,7 @@ async fn _success(test_type: SuccessTestType) {
     let stake_pool = get_account(&mut banks_client, &stake_pool_accounts.stake_pool.pubkey()).await;
     let stake_pool =
         try_from_slice_unchecked::<state::StakePool>(stake_pool.data.as_slice()).unwrap();
-    // first and only deposit, lamports:pool 1:1
+    // first and only deposit, carats:pool 1:1
     let tokens_withdrawal_fee = match test_type {
         SuccessTestType::Success => {
             stake_pool_accounts.calculate_withdrawal_fee(tokens_to_withdraw)
@@ -245,8 +245,8 @@ async fn _success(test_type: SuccessTestType) {
     };
     let tokens_burnt = tokens_to_withdraw - tokens_withdrawal_fee;
     assert_eq!(
-        stake_pool.total_lamports,
-        stake_pool_before.total_lamports - tokens_burnt
+        stake_pool.total_carats,
+        stake_pool_before.total_carats - tokens_burnt
     );
     assert_eq!(
         stake_pool.pool_token_supply,
@@ -278,12 +278,12 @@ async fn _success(test_type: SuccessTestType) {
         .find(&validator_stake_account.vote.pubkey())
         .unwrap();
     assert_eq!(
-        validator_stake_item.stake_lamports(),
-        validator_stake_item_before.stake_lamports() - tokens_burnt
+        validator_stake_item.stake_carats(),
+        validator_stake_item_before.stake_carats() - tokens_burnt
     );
     assert_eq!(
-        validator_stake_item.active_stake_lamports,
-        validator_stake_item.stake_lamports(),
+        validator_stake_item.active_stake_carats,
+        validator_stake_item.stake_carats(),
     );
 
     // Check tokens used
@@ -301,16 +301,16 @@ async fn _success(test_type: SuccessTestType) {
         deserialize::<stake_program::StakeState>(&validator_stake_account.data).unwrap();
     let meta = stake_state.meta().unwrap();
     assert_eq!(
-        validator_stake_account.lamports - minimum_stake_lamports(meta),
-        validator_stake_item.active_stake_lamports
+        validator_stake_account.carats - minimum_stake_carats(meta),
+        validator_stake_item.active_stake_carats
     );
 
     // Check user recipient stake account balance
     let user_stake_recipient_account =
         get_account(&mut banks_client, &user_stake_recipient.pubkey()).await;
     assert_eq!(
-        user_stake_recipient_account.lamports,
-        initial_stake_lamports + tokens_burnt
+        user_stake_recipient_account.carats,
+        initial_stake_carats + tokens_burnt
     );
 }
 
@@ -343,7 +343,7 @@ async fn fail_with_wrong_stake_program() {
         AccountMeta::new(stake_pool_accounts.pool_fee_account.pubkey(), false),
         AccountMeta::new(stake_pool_accounts.pool_mint.pubkey(), false),
         AccountMeta::new_readonly(sysvar::clock::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(wrong_stake_program, false),
     ];
     let instruction = Instruction {
@@ -826,7 +826,7 @@ async fn fail_overdraw_validator() {
         error,
         TransactionError::InstructionError(
             0,
-            InstructionError::Custom(StakePoolError::StakeLamportsNotEqualToMinimum as u32)
+            InstructionError::Custom(StakePoolError::StakeCaratsNotEqualToMinimum as u32)
         ),
     );
 }
@@ -835,13 +835,13 @@ async fn fail_overdraw_validator() {
 async fn success_with_reserve() {
     let mut context = program_test().start_with_context().await;
     let stake_pool_accounts = StakePoolAccounts::new();
-    let initial_reserve_lamports = 1;
+    let initial_reserve_carats = 1;
     stake_pool_accounts
         .initialize_stake_pool(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
-            initial_reserve_lamports,
+            initial_reserve_carats,
         )
         .await
         .unwrap();
@@ -854,7 +854,7 @@ async fn success_with_reserve() {
     )
     .await;
 
-    let deposit_lamports = TEST_STAKE_AMOUNT;
+    let deposit_carats = TEST_STAKE_AMOUNT;
     let rent = context.banks_client.get_rent().await.unwrap();
     let stake_rent = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
 
@@ -864,7 +864,7 @@ async fn success_with_reserve() {
         &context.last_blockhash,
         &stake_pool_accounts,
         &validator_stake,
-        deposit_lamports,
+        deposit_carats,
     )
     .await
     .unwrap();
@@ -877,7 +877,7 @@ async fn success_with_reserve() {
             &context.last_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            deposit_lamports - 1,
+            deposit_carats - 1,
             validator_stake.transient_stake_seed,
         )
         .await;
@@ -917,7 +917,7 @@ async fn success_with_reserve() {
     // Withdraw directly from reserve, fail because some stake left
     let withdraw_destination = Keypair::new();
     let withdraw_destination_authority = Pubkey::new_unique();
-    let initial_stake_lamports = create_blank_stake_account(
+    let initial_stake_carats = create_blank_stake_account(
         &mut context.banks_client,
         &context.payer,
         &context.last_blockhash,
@@ -943,7 +943,7 @@ async fn success_with_reserve() {
         error,
         TransactionError::InstructionError(
             0,
-            InstructionError::Custom(StakePoolError::StakeLamportsNotEqualToMinimum as u32)
+            InstructionError::Custom(StakePoolError::StakeCaratsNotEqualToMinimum as u32)
         )
     );
 
@@ -993,13 +993,13 @@ async fn success_with_reserve() {
         .await;
     assert!(error.is_none());
 
-    // first and only deposit, lamports:pool 1:1
+    // first and only deposit, carats:pool 1:1
     let tokens_deposit_fee =
-        stake_pool_accounts.calculate_deposit_fee(deposit_info.stake_lamports + stake_rent);
+        stake_pool_accounts.calculate_deposit_fee(deposit_info.stake_carats + stake_rent);
     let tokens_withdrawal_fee =
         stake_pool_accounts.calculate_withdrawal_fee(deposit_info.pool_tokens);
     assert_eq!(
-        deposit_info.stake_lamports + stake_rent - tokens_deposit_fee,
+        deposit_info.stake_carats + stake_rent - tokens_deposit_fee,
         deposit_info.pool_tokens,
     );
 
@@ -1022,19 +1022,19 @@ async fn success_with_reserve() {
     let meta = stake_state.meta().unwrap();
     // TODO: these numbers dont add up even with +tokens_deposit_fee
     assert_eq!(
-        initial_reserve_lamports
+        initial_reserve_carats
             + meta.rent_exempt_reserve
             + tokens_withdrawal_fee
             + tokens_deposit_fee,
-        reserve_stake_account.lamports
+        reserve_stake_account.carats
     );
 
     // Check user recipient stake account balance
     let user_stake_recipient_account =
         get_account(&mut context.banks_client, &withdraw_destination.pubkey()).await;
     assert_eq!(
-        user_stake_recipient_account.lamports,
-        initial_stake_lamports + deposit_info.stake_lamports + stake_rent
+        user_stake_recipient_account.carats,
+        initial_stake_carats + deposit_info.stake_carats + stake_rent
             - tokens_withdrawal_fee
             - tokens_deposit_fee
     );
@@ -1182,13 +1182,13 @@ async fn fail_with_wrong_preferred_withdraw() {
 async fn success_withdraw_from_transient() {
     let mut context = program_test().start_with_context().await;
     let stake_pool_accounts = StakePoolAccounts::new();
-    let initial_reserve_lamports = 1;
+    let initial_reserve_carats = 1;
     stake_pool_accounts
         .initialize_stake_pool(
             &mut context.banks_client,
             &context.payer,
             &context.last_blockhash,
-            initial_reserve_lamports,
+            initial_reserve_carats,
         )
         .await
         .unwrap();
@@ -1220,7 +1220,7 @@ async fn success_withdraw_from_transient() {
     )
     .await;
 
-    let deposit_lamports = TEST_STAKE_AMOUNT;
+    let deposit_carats = TEST_STAKE_AMOUNT;
     let rent = context.banks_client.get_rent().await.unwrap();
     let stake_rent = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
 
@@ -1230,7 +1230,7 @@ async fn success_withdraw_from_transient() {
         &context.last_blockhash,
         &stake_pool_accounts,
         &validator_stake,
-        deposit_lamports,
+        deposit_carats,
     )
     .await
     .unwrap();
@@ -1264,7 +1264,7 @@ async fn success_withdraw_from_transient() {
 
     let withdraw_destination = Keypair::new();
     let withdraw_destination_authority = Pubkey::new_unique();
-    let _initial_stake_lamports = create_blank_stake_account(
+    let _initial_stake_carats = create_blank_stake_account(
         &mut context.banks_client,
         &context.payer,
         &context.last_blockhash,
@@ -1325,7 +1325,7 @@ async fn success_withdraw_from_transient() {
             &context.last_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            deposit_lamports - 1,
+            deposit_carats - 1,
             validator_stake.transient_stake_seed,
         )
         .await;
@@ -1364,7 +1364,7 @@ async fn success_withdraw_all_fee_tokens() {
     ) = setup().await;
 
     // move tokens to fee account
-    transfer_spl_tokens(
+    transfer_gpl_tokens(
         &mut banks_client,
         &payer,
         &recent_blockhash,

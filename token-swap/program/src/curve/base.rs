@@ -1,6 +1,6 @@
 //! Base curve implementation
 
-use solana_program::{
+use gemachain_program::{
     program_error::ProgramError,
     program_pack::{Pack, Sealed},
 };
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn constant_product_trade_fee() {
-        // calculation on https://github.com/solana-labs/solana-program-library/issues/341
+        // calculation on https://github.com/gemachain/gemachain-program-library/issues/341
         let swap_source_amount = 1000;
         let swap_destination_amount = 50000;
         let trade_fee_numerator = 1;
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn constant_product_owner_fee() {
-        // calculation on https://github.com/solana-labs/solana-program-library/issues/341
+        // calculation on https://github.com/gemachain/gemachain-program-library/issues/341
         let swap_source_amount = 1000;
         let swap_destination_amount = 50000;
         let trade_fee_numerator = 0;

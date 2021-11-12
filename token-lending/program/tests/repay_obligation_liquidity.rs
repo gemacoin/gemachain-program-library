@@ -3,15 +3,15 @@
 mod helpers;
 
 use helpers::*;
-use solana_program_test::*;
-use solana_sdk::{
+use gemachain_program_test::*;
+use gemachain_sdk::{
     pubkey::Pubkey,
     signature::{Keypair, Signer},
     transaction::Transaction,
 };
-use spl_token::instruction::approve;
-use spl_token_lending::instruction::refresh_obligation;
-use spl_token_lending::{
+use gpl_token::instruction::approve;
+use gpl_token_lending::instruction::refresh_obligation;
+use gpl_token_lending::{
     instruction::repay_obligation_liquidity, processor::process_instruction,
     state::INITIAL_COLLATERAL_RATIO,
 };
@@ -19,17 +19,17 @@ use spl_token_lending::{
 #[tokio::test]
 async fn test_success() {
     let mut test = ProgramTest::new(
-        "spl_token_lending",
-        spl_token_lending::id(),
+        "gpl_token_lending",
+        gpl_token_lending::id(),
         processor!(process_instruction),
     );
 
     // limit to track compute unit increase
     test.set_bpf_compute_max_units(36_000);
 
-    const SOL_DEPOSIT_AMOUNT_LAMPORTS: u64 = 100 * LAMPORTS_TO_SOL * INITIAL_COLLATERAL_RATIO;
+    const GEMA_DEPOSIT_AMOUNT_CARATS: u64 = 100 * CARATS_TO_GEMA * INITIAL_COLLATERAL_RATIO;
     const USDC_BORROW_AMOUNT_FRACTIONAL: u64 = 1_000 * FRACTIONAL_TO_USDC;
-    const SOL_RESERVE_COLLATERAL_LAMPORTS: u64 = 2 * SOL_DEPOSIT_AMOUNT_LAMPORTS;
+    const GEMA_RESERVE_COLLATERAL_CARATS: u64 = 2 * GEMA_DEPOSIT_AMOUNT_CARATS;
     const USDC_RESERVE_LIQUIDITY_FRACTIONAL: u64 = 2 * USDC_BORROW_AMOUNT_FRACTIONAL;
 
     let user_accounts_owner = Keypair::new();
@@ -39,15 +39,15 @@ async fn test_success() {
     let mut reserve_config = TEST_RESERVE_CONFIG;
     reserve_config.loan_to_value_ratio = 50;
 
-    let sol_oracle = add_sol_oracle(&mut test);
-    let sol_test_reserve = add_reserve(
+    let gema_oracle = add_gema_oracle(&mut test);
+    let gema_test_reserve = add_reserve(
         &mut test,
         &lending_market,
-        &sol_oracle,
+        &gema_oracle,
         &user_accounts_owner,
         AddReserveArgs {
-            collateral_amount: SOL_RESERVE_COLLATERAL_LAMPORTS,
-            liquidity_mint_pubkey: spl_token::native_mint::id(),
+            collateral_amount: GEMA_RESERVE_COLLATERAL_CARATS,
+            liquidity_mint_pubkey: gpl_token::native_mint::id(),
             liquidity_mint_decimals: 9,
             config: reserve_config,
             mark_fresh: true,
@@ -79,7 +79,7 @@ async fn test_success() {
         &lending_market,
         &user_accounts_owner,
         AddObligationArgs {
-            deposits: &[(&sol_test_reserve, SOL_DEPOSIT_AMOUNT_LAMPORTS)],
+            deposits: &[(&gema_test_reserve, GEMA_DEPOSIT_AMOUNT_CARATS)],
             borrows: &[(&usdc_test_reserve, USDC_BORROW_AMOUNT_FRACTIONAL)],
             ..AddObligationArgs::default()
         },
@@ -95,7 +95,7 @@ async fn test_success() {
     let mut transaction = Transaction::new_with_payer(
         &[
             approve(
-                &spl_token::id(),
+                &gpl_token::id(),
                 &usdc_test_reserve.user_liquidity_pubkey,
                 &user_transfer_authority.pubkey(),
                 &user_accounts_owner.pubkey(),
@@ -104,12 +104,12 @@ async fn test_success() {
             )
             .unwrap(),
             refresh_obligation(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 test_obligation.pubkey,
-                vec![sol_test_reserve.pubkey, usdc_test_reserve.pubkey],
+                vec![gema_test_reserve.pubkey, usdc_test_reserve.pubkey],
             ),
             repay_obligation_liquidity(
-                spl_token_lending::id(),
+                gpl_token_lending::id(),
                 USDC_BORROW_AMOUNT_FRACTIONAL,
                 usdc_test_reserve.user_liquidity_pubkey,
                 usdc_test_reserve.liquidity_supply_pubkey,

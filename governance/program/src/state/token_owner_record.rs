@@ -8,7 +8,7 @@ use crate::{
 };
 
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, program_error::ProgramError, program_pack::IsInitialized,
     pubkey::Pubkey,
 };
@@ -27,7 +27,7 @@ pub struct TokenOwnerRecord {
     /// Governing Token Mint the TokenOwnerRecord holds deposit for
     pub governing_token_mint: Pubkey,
 
-    /// The owner (either single or multisig) of the deposited governing SPL Tokens
+    /// The owner (either single or multisig) of the deposited governing GPL Tokens
     /// This is who can authorize a withdrawal of the tokens
     pub governing_token_owner: Pubkey,
 
@@ -247,7 +247,7 @@ pub fn get_token_owner_record_data_for_proposal_owner(
 
 #[cfg(test)]
 mod test {
-    use solana_program::borsh::{get_packed_len, try_from_slice_unchecked};
+    use gemachain_program::borsh::{get_packed_len, try_from_slice_unchecked};
 
     use super::*;
 

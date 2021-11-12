@@ -15,11 +15,11 @@ use {
         error::SwapError,
     },
     arrayref::{array_mut_ref, array_ref},
-    solana_program::{
+    gemachain_program::{
         program_error::ProgramError,
         program_pack::{IsInitialized, Pack, Sealed},
     },
-    spl_math::precise_number::PreciseNumber,
+    gpl_math::precise_number::PreciseNumber,
 };
 
 /// Offset curve, uses ConstantProduct under the hood, but adds an offset to

@@ -2,7 +2,7 @@
 
 pub mod account;
 
-pub mod spl_token;
+pub mod gpl_token;
 
 pub mod bpf_loader_upgradeable;
 

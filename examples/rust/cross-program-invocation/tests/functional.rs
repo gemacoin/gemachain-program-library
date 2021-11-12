@@ -2,15 +2,15 @@
 #![cfg(feature = "test-bpf")]
 
 use {
-    solana_program::{
+    gemachain_program::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         rent::Rent,
         system_program,
     },
-    solana_program_test::*,
-    solana_sdk::{account::Account, signature::Signer, transaction::Transaction},
-    spl_example_cross_program_invocation::processor::{process_instruction, SIZE},
+    gemachain_program_test::*,
+    gemachain_sdk::{account::Account, signature::Signer, transaction::Transaction},
+    gpl_example_cross_program_invocation::processor::{process_instruction, SIZE},
     std::str::FromStr,
 };
 
@@ -20,14 +20,14 @@ async fn test_cross_program_invocation() {
     let (allocated_pubkey, bump_seed) =
         Pubkey::find_program_address(&[b"You pass butter"], &program_id);
     let mut program_test = ProgramTest::new(
-        "spl_example_cross_program_invocation",
+        "gpl_example_cross_program_invocation",
         program_id,
         processor!(process_instruction),
     );
     program_test.add_account(
         allocated_pubkey,
         Account {
-            lamports: Rent::default().minimum_balance(SIZE),
+            carats: Rent::default().minimum_balance(SIZE),
             ..Account::default()
         },
     );

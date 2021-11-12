@@ -1,7 +1,7 @@
 //! General purpose account utility functions
 
 use borsh::{BorshDeserialize, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, borsh::try_from_slice_unchecked, msg, program::invoke_signed,
     program_error::ProgramError, program_pack::IsInitialized, pubkey::Pubkey, rent::Rent,
     system_instruction::create_account,
@@ -127,15 +127,15 @@ pub fn assert_is_valid_account<T: BorshDeserialize + PartialEq>(
     Ok(())
 }
 
-/// Disposes account by transferring its lamports to the beneficiary account and zeros its data
-// After transaction completes the runtime would remove the account with no lamports
+/// Disposes account by transferring its carats to the beneficiary account and zeros its data
+// After transaction completes the runtime would remove the account with no carats
 pub fn dispose_account(account_info: &AccountInfo, beneficiary_info: &AccountInfo) {
-    let account_lamports = account_info.lamports();
-    **account_info.lamports.borrow_mut() = 0;
+    let account_carats = account_info.carats();
+    **account_info.carats.borrow_mut() = 0;
 
-    **beneficiary_info.lamports.borrow_mut() = beneficiary_info
-        .lamports()
-        .checked_add(account_lamports)
+    **beneficiary_info.carats.borrow_mut() = beneficiary_info
+        .carats()
+        .checked_add(account_carats)
         .unwrap();
 
     let mut account_data = account_info.data.borrow_mut();

@@ -5,7 +5,7 @@ use {
         error::StakePoolError,
         find_deposit_authority_program_address,
         instruction::{FundingType, PreferredValidatorType, StakePoolInstruction},
-        minimum_reserve_lamports, minimum_stake_lamports, stake_program,
+        minimum_reserve_carats, minimum_stake_carats, stake_program,
         state::{
             AccountType, Fee, FeeType, StakePool, StakeStatus, ValidatorList, ValidatorListHeader,
             ValidatorStakeInfo,
@@ -14,7 +14,7 @@ use {
     },
     borsh::{BorshDeserialize, BorshSerialize},
     num_traits::FromPrimitive,
-    solana_program::{
+    gemachain_program::{
         account_info::next_account_info,
         account_info::AccountInfo,
         borsh::try_from_slice_unchecked,
@@ -31,7 +31,7 @@ use {
         system_instruction, system_program,
         sysvar::Sysvar,
     },
-    spl_token::state::Mint,
+    gpl_token::state::Mint,
 };
 
 /// Deserialize the stake state from AccountInfo
@@ -136,7 +136,7 @@ fn check_account_owner(
     }
 }
 
-/// Create a transient stake account without transferring lamports
+/// Create a transient stake account without transferring carats
 fn create_transient_stake_account<'a>(
     transient_stake_account_info: AccountInfo<'a>,
     transient_stake_account_signer_seeds: &[&[u8]],
@@ -361,7 +361,7 @@ impl Processor {
         )
     }
 
-    /// Issue stake_program::withdraw instruction to move additional lamports
+    /// Issue stake_program::withdraw instruction to move additional carats
     #[allow(clippy::too_many_arguments)]
     fn stake_withdraw<'a>(
         stake_pool: &Pubkey,
@@ -373,7 +373,7 @@ impl Processor {
         clock: AccountInfo<'a>,
         stake_history: AccountInfo<'a>,
         stake_program_info: AccountInfo<'a>,
-        lamports: u64,
+        carats: u64,
     ) -> Result<(), ProgramError> {
         let me_bytes = stake_pool.to_bytes();
         let authority_signature_seeds = [&me_bytes[..32], authority_type, &[bump_seed]];
@@ -384,7 +384,7 @@ impl Processor {
             source_account.key,
             authority.key,
             destination_account.key,
-            lamports,
+            carats,
             custodian_pubkey,
         );
 
@@ -402,7 +402,7 @@ impl Processor {
         )
     }
 
-    /// Issue a spl_token `Burn` instruction.
+    /// Issue a gpl_token `Burn` instruction.
     #[allow(clippy::too_many_arguments)]
     fn token_burn<'a>(
         token_program: AccountInfo<'a>,
@@ -411,7 +411,7 @@ impl Processor {
         authority: AccountInfo<'a>,
         amount: u64,
     ) -> Result<(), ProgramError> {
-        let ix = spl_token::instruction::burn(
+        let ix = gpl_token::instruction::burn(
             token_program.key,
             burn_account.key,
             mint.key,
@@ -423,7 +423,7 @@ impl Processor {
         invoke(&ix, &[burn_account, mint, authority, token_program])
     }
 
-    /// Issue a spl_token `MintTo` instruction.
+    /// Issue a gpl_token `MintTo` instruction.
     #[allow(clippy::too_many_arguments)]
     fn token_mint_to<'a>(
         stake_pool: &Pubkey,
@@ -439,7 +439,7 @@ impl Processor {
         let authority_signature_seeds = [&me_bytes[..32], authority_type, &[bump_seed]];
         let signers = &[&authority_signature_seeds[..]];
 
-        let ix = spl_token::instruction::mint_to(
+        let ix = gpl_token::instruction::mint_to(
             token_program.key,
             mint.key,
             destination.key,
@@ -451,7 +451,7 @@ impl Processor {
         invoke_signed(&ix, &[mint, destination, authority, token_program], signers)
     }
 
-    /// Issue a spl_token `Transfer` instruction.
+    /// Issue a gpl_token `Transfer` instruction.
     #[allow(clippy::too_many_arguments)]
     fn token_transfer<'a>(
         token_program: AccountInfo<'a>,
@@ -460,7 +460,7 @@ impl Processor {
         authority: AccountInfo<'a>,
         amount: u64,
     ) -> Result<(), ProgramError> {
-        let ix = spl_token::instruction::transfer(
+        let ix = gpl_token::instruction::transfer(
             token_program.key,
             source.key,
             destination.key,
@@ -471,13 +471,13 @@ impl Processor {
         invoke(&ix, &[source, destination, authority, token_program])
     }
 
-    fn sol_transfer<'a>(
+    fn gema_transfer<'a>(
         source: AccountInfo<'a>,
         destination: AccountInfo<'a>,
         system_program: AccountInfo<'a>,
         amount: u64,
     ) -> Result<(), ProgramError> {
-        let ix = solana_program::system_instruction::transfer(source.key, destination.key, amount);
+        let ix = gemachain_program::system_instruction::transfer(source.key, destination.key, amount);
         invoke(&ix, &[source, destination, system_program])
     }
 
@@ -543,13 +543,13 @@ impl Processor {
         validator_list.header.max_validators = max_validators;
         validator_list.validators.clear();
 
-        if !rent.is_exempt(stake_pool_info.lamports(), stake_pool_info.data_len()) {
+        if !rent.is_exempt(stake_pool_info.carats(), stake_pool_info.data_len()) {
             msg!("Stake pool not rent-exempt");
             return Err(ProgramError::AccountNotRentExempt);
         }
 
         if !rent.is_exempt(
-            validator_list_info.lamports(),
+            validator_list_info.carats(),
             validator_list_info.data_len(),
         ) {
             msg!("Validator stake list not rent-exempt");
@@ -574,7 +574,7 @@ impl Processor {
         }
 
         if *pool_mint_info.key
-            != spl_token::state::Account::unpack_from_slice(&manager_fee_info.data.borrow())?.mint
+            != gpl_token::state::Account::unpack_from_slice(&manager_fee_info.data.borrow())?.mint
         {
             return Err(StakePoolError::WrongAccountMint.into());
         }
@@ -607,7 +607,7 @@ impl Processor {
         let stake_state = try_from_slice_unchecked::<stake_program::StakeState>(
             &reserve_stake_info.data.borrow(),
         )?;
-        let total_lamports = if let stake_program::StakeState::Initialized(meta) = stake_state {
+        let total_carats = if let stake_program::StakeState::Initialized(meta) = stake_state {
             if meta.lockup != stake_program::Lockup::default() {
                 msg!("Reserve stake account has some lockup");
                 return Err(StakePoolError::WrongStakeState.into());
@@ -631,8 +631,8 @@ impl Processor {
                 return Err(StakePoolError::WrongStakeState.into());
             }
             reserve_stake_info
-                .lamports()
-                .checked_sub(minimum_reserve_lamports(&meta))
+                .carats()
+                .checked_sub(minimum_reserve_carats(&meta))
                 .ok_or(StakePoolError::CalculationFailure)?
         } else {
             msg!("Reserve stake account not in intialized state");
@@ -652,7 +652,7 @@ impl Processor {
         stake_pool.manager_fee_account = *manager_fee_info.key;
         stake_pool.token_program_id = *token_program_info.key;
         stake_pool.last_update_epoch = Clock::get()?.epoch;
-        stake_pool.total_lamports = total_lamports;
+        stake_pool.total_carats = total_carats;
         stake_pool.epoch_fee = epoch_fee;
         stake_pool.next_epoch_fee = None;
         stake_pool.preferred_deposit_validator_vote_address = None;
@@ -661,11 +661,11 @@ impl Processor {
         stake_pool.stake_withdrawal_fee = withdrawal_fee;
         stake_pool.next_stake_withdrawal_fee = None;
         stake_pool.stake_referral_fee = referral_fee;
-        stake_pool.sol_deposit_authority = None;
-        stake_pool.sol_deposit_fee = deposit_fee;
-        stake_pool.sol_referral_fee = referral_fee;
-        stake_pool.sol_withdraw_authority = None;
-        stake_pool.sol_withdrawal_fee = withdrawal_fee;
+        stake_pool.gema_deposit_authority = None;
+        stake_pool.gema_deposit_fee = deposit_fee;
+        stake_pool.gema_referral_fee = referral_fee;
+        stake_pool.gema_withdraw_authority = None;
+        stake_pool.gema_withdrawal_fee = withdrawal_fee;
         stake_pool.next_stake_withdrawal_fee = None;
 
         stake_pool
@@ -752,7 +752,7 @@ impl Processor {
         ];
 
         // Fund the stake account with the minimum + rent-exempt balance
-        let required_lamports = MINIMUM_ACTIVE_STAKE
+        let required_carats = MINIMUM_ACTIVE_STAKE
             + rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
 
         // Create new stake account
@@ -760,7 +760,7 @@ impl Processor {
             &system_instruction::create_account(
                 funder_info.key,
                 stake_info.key,
-                required_lamports,
+                required_carats,
                 std::mem::size_of::<stake_program::StakeState>() as u64,
                 &stake_program::id(),
             ),
@@ -799,8 +799,8 @@ impl Processor {
         validator_list.push(ValidatorStakeInfo {
             status: StakeStatus::Active,
             vote_account_address: *validator_vote_info.key,
-            active_stake_lamports: 0,
-            transient_stake_lamports: 0,
+            active_stake_carats: 0,
+            transient_stake_carats: 0,
             last_update_epoch: clock.epoch,
             transient_seed_suffix_start: 0,
             transient_seed_suffix_end: 0,
@@ -879,27 +879,27 @@ impl Processor {
         }
         let mut validator_stake_info = maybe_validator_stake_info.unwrap();
 
-        let stake_lamports = **stake_account_info.lamports.borrow();
-        let required_lamports = minimum_stake_lamports(&meta);
-        if stake_lamports != required_lamports {
+        let stake_carats = **stake_account_info.carats.borrow();
+        let required_carats = minimum_stake_carats(&meta);
+        if stake_carats != required_carats {
             msg!(
-                "Attempting to remove validator account with {} lamports, must have {} lamports",
-                stake_lamports,
-                required_lamports
+                "Attempting to remove validator account with {} carats, must have {} carats",
+                stake_carats,
+                required_carats
             );
-            return Err(StakePoolError::StakeLamportsNotEqualToMinimum.into());
+            return Err(StakePoolError::StakeCaratsNotEqualToMinimum.into());
         }
 
         if stake.delegation.stake != MINIMUM_ACTIVE_STAKE {
             msg!(
-                "Error: attempting to remove stake with delegation of {} lamports, must have {} lamports",
+                "Error: attempting to remove stake with delegation of {} carats, must have {} carats",
                 stake.delegation.stake,
                 MINIMUM_ACTIVE_STAKE
             );
-            return Err(StakePoolError::StakeLamportsNotEqualToMinimum.into());
+            return Err(StakePoolError::StakeCaratsNotEqualToMinimum.into());
         }
 
-        let new_status = if validator_stake_info.transient_stake_lamports > 0 {
+        let new_status = if validator_stake_info.transient_stake_carats > 0 {
             check_transient_stake_address(
                 program_id,
                 stake_pool_info.key,
@@ -939,7 +939,7 @@ impl Processor {
             withdraw_authority_info.clone(),
             AUTHORITY_WITHDRAW,
             stake_pool.stake_withdraw_bump_seed,
-            stake_account_info.lamports(),
+            stake_account_info.carats(),
             destination_stake_account_info.clone(),
         )?;
 
@@ -972,7 +972,7 @@ impl Processor {
     fn process_decrease_validator_stake(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
-        lamports: u64,
+        carats: u64,
         transient_stake_seed: u64,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
@@ -1040,7 +1040,7 @@ impl Processor {
             return Err(StakePoolError::ValidatorNotFound.into());
         }
         let mut validator_stake_info = maybe_validator_stake_info.unwrap();
-        if validator_stake_info.transient_stake_lamports > 0 {
+        if validator_stake_info.transient_stake_carats > 0 {
             return Err(StakePoolError::TransientAccountInUse.into());
         }
 
@@ -1060,11 +1060,11 @@ impl Processor {
         ];
 
         let stake_rent = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
-        if lamports <= stake_rent {
+        if carats <= stake_rent {
             msg!(
-                "Need more than {} lamports for transient stake to be rent-exempt, {} provided",
+                "Need more than {} carats for transient stake to be rent-exempt, {} provided",
                 stake_rent,
-                lamports
+                carats
             );
             return Err(ProgramError::AccountNotRentExempt);
         }
@@ -1082,7 +1082,7 @@ impl Processor {
             withdraw_authority_info.clone(),
             AUTHORITY_WITHDRAW,
             stake_pool.stake_withdraw_bump_seed,
-            lamports,
+            carats,
             transient_stake_account_info.clone(),
         )?;
 
@@ -1096,11 +1096,11 @@ impl Processor {
             stake_pool.stake_withdraw_bump_seed,
         )?;
 
-        validator_stake_info.active_stake_lamports = validator_stake_info
-            .active_stake_lamports
-            .checked_sub(lamports)
+        validator_stake_info.active_stake_carats = validator_stake_info
+            .active_stake_carats
+            .checked_sub(carats)
             .ok_or(StakePoolError::CalculationFailure)?;
-        validator_stake_info.transient_stake_lamports = lamports;
+        validator_stake_info.transient_stake_carats = carats;
         validator_stake_info.transient_seed_suffix_start = transient_stake_seed;
 
         Ok(())
@@ -1111,7 +1111,7 @@ impl Processor {
     fn process_increase_validator_stake(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
-        lamports: u64,
+        carats: u64,
         transient_stake_seed: u64,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
@@ -1177,7 +1177,7 @@ impl Processor {
             return Err(StakePoolError::ValidatorNotFound.into());
         }
         let mut validator_stake_info = maybe_validator_stake_info.unwrap();
-        if validator_stake_info.transient_stake_lamports > 0 {
+        if validator_stake_info.transient_stake_carats > 0 {
             return Err(StakePoolError::TransientAccountInUse.into());
         }
 
@@ -1202,30 +1202,30 @@ impl Processor {
         }
 
         let stake_rent = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
-        if lamports < MINIMUM_ACTIVE_STAKE {
+        if carats < MINIMUM_ACTIVE_STAKE {
             msg!(
-                "Need more than {} lamports for transient stake to be rent-exempt and mergeable, {} provided",
+                "Need more than {} carats for transient stake to be rent-exempt and mergeable, {} provided",
                 MINIMUM_ACTIVE_STAKE,
-                lamports
+                carats
             );
             return Err(ProgramError::AccountNotRentExempt);
         }
 
         // the stake account rent exemption is withdrawn after the merge, so
-        let total_lamports = lamports.saturating_add(stake_rent);
+        let total_carats = carats.saturating_add(stake_rent);
 
         if reserve_stake_account_info
-            .lamports()
-            .saturating_sub(total_lamports)
+            .carats()
+            .saturating_sub(total_carats)
             <= stake_rent
         {
             let max_split_amount = reserve_stake_account_info
-                .lamports()
+                .carats()
                 .saturating_sub(2 * stake_rent);
             msg!(
-                "Reserve stake does not have enough lamports for increase, must be less than {}, {} requested",
+                "Reserve stake does not have enough carats for increase, must be less than {}, {} requested",
                 max_split_amount,
-                lamports
+                carats
             );
             return Err(ProgramError::InsufficientFunds);
         }
@@ -1243,7 +1243,7 @@ impl Processor {
             withdraw_authority_info.clone(),
             AUTHORITY_WITHDRAW,
             stake_pool.stake_withdraw_bump_seed,
-            total_lamports,
+            total_carats,
             transient_stake_account_info.clone(),
         )?;
 
@@ -1260,7 +1260,7 @@ impl Processor {
             stake_pool.stake_withdraw_bump_seed,
         )?;
 
-        validator_stake_info.transient_stake_lamports = total_lamports;
+        validator_stake_info.transient_stake_carats = total_carats;
         validator_stake_info.transient_seed_suffix_start = transient_stake_seed;
 
         Ok(())
@@ -1404,8 +1404,8 @@ impl Processor {
                 continue;
             };
 
-            let mut active_stake_lamports = 0;
-            let mut transient_stake_lamports = 0;
+            let mut active_stake_carats = 0;
+            let mut transient_stake_carats = 0;
             let validator_stake_state = try_from_slice_unchecked::<stake_program::StakeState>(
                 &validator_stake_info.data.borrow(),
             )
@@ -1417,8 +1417,8 @@ impl Processor {
 
             // Possible merge situations for transient stake
             //  * active -> merge into validator stake
-            //  * activating -> nothing, just account its lamports
-            //  * deactivating -> nothing, just account its lamports
+            //  * activating -> nothing, just account its carats
+            //  * deactivating -> nothing, just account its carats
             //  * inactive -> merge into reserve stake
             //  * not a stake -> ignore
             match transient_stake_state {
@@ -1428,7 +1428,7 @@ impl Processor {
                         && meta.authorized.withdrawer == *withdraw_authority_info.key
                     {
                         if no_merge {
-                            transient_stake_lamports = transient_stake_info.lamports();
+                            transient_stake_carats = transient_stake_info.carats();
                         } else {
                             // merge into reserve
                             Self::stake_merge(
@@ -1459,7 +1459,7 @@ impl Processor {
                             .rent_exempt_reserve
                             .saturating_add(stake.delegation.stake);
                         if no_merge {
-                            transient_stake_lamports = account_stake;
+                            transient_stake_carats = account_stake;
                         } else if stake.delegation.deactivation_epoch < clock.epoch {
                             // deactivated, merge into reserve
                             Self::stake_merge(
@@ -1485,8 +1485,8 @@ impl Processor {
                                 if stake_program::active_stakes_can_merge(&stake, &validator_stake)
                                     .is_ok()
                                 {
-                                    let additional_lamports = transient_stake_info
-                                        .lamports()
+                                    let additional_carats = transient_stake_info
+                                        .carats()
                                         .saturating_sub(stake.delegation.stake);
                                     Self::stake_merge(
                                         stake_pool_info.key,
@@ -1502,7 +1502,7 @@ impl Processor {
 
                                     // post merge of two active stakes, withdraw
                                     // the extra back to the reserve
-                                    if additional_lamports > 0 {
+                                    if additional_carats > 0 {
                                         Self::stake_withdraw(
                                             stake_pool_info.key,
                                             validator_stake_info.clone(),
@@ -1513,20 +1513,20 @@ impl Processor {
                                             clock_info.clone(),
                                             stake_history_info.clone(),
                                             stake_program_info.clone(),
-                                            additional_lamports,
+                                            additional_carats,
                                         )?;
                                     }
                                 } else {
                                     msg!("Stake activating or just active, not ready to merge");
-                                    transient_stake_lamports = account_stake;
+                                    transient_stake_carats = account_stake;
                                 }
                             } else {
                                 msg!("Transient stake is activating or active, but validator stake is not, need to add the validator stake account on {} back into the stake pool", stake.delegation.voter_pubkey);
-                                transient_stake_lamports = account_stake;
+                                transient_stake_carats = account_stake;
                             }
                         } else {
                             msg!("Transient stake not ready to be merged anywhere");
-                            transient_stake_lamports = account_stake;
+                            transient_stake_carats = account_stake;
                         }
                     }
                 }
@@ -1545,7 +1545,7 @@ impl Processor {
             match validator_stake_state {
                 Some(stake_program::StakeState::Stake(_, stake)) => {
                     if validator_stake_record.status == StakeStatus::Active {
-                        active_stake_lamports = stake
+                        active_stake_carats = stake
                             .delegation
                             .stake
                             .checked_sub(MINIMUM_ACTIVE_STAKE)
@@ -1563,8 +1563,8 @@ impl Processor {
             }
 
             validator_stake_record.last_update_epoch = clock.epoch;
-            validator_stake_record.active_stake_lamports = active_stake_lamports;
-            validator_stake_record.transient_stake_lamports = transient_stake_lamports;
+            validator_stake_record.active_stake_carats = active_stake_carats;
+            validator_stake_record.transient_stake_carats = transient_stake_carats;
         }
 
         Ok(())
@@ -1613,16 +1613,16 @@ impl Processor {
             return Err(StakePoolError::InvalidState.into());
         }
 
-        let previous_lamports = stake_pool.total_lamports;
+        let previous_carats = stake_pool.total_carats;
         let previous_pool_token_supply = stake_pool.pool_token_supply;
         let reserve_stake = try_from_slice_unchecked::<stake_program::StakeState>(
             &reserve_stake_info.data.borrow(),
         )?;
-        let mut total_lamports = if let stake_program::StakeState::Initialized(meta) = reserve_stake
+        let mut total_carats = if let stake_program::StakeState::Initialized(meta) = reserve_stake
         {
             reserve_stake_info
-                .lamports()
-                .checked_sub(minimum_reserve_lamports(&meta))
+                .carats()
+                .checked_sub(minimum_reserve_carats(&meta))
                 .ok_or(StakePoolError::CalculationFailure)?
         } else {
             msg!("Reserve stake account in unknown state, aborting");
@@ -1632,17 +1632,17 @@ impl Processor {
             if validator_stake_record.last_update_epoch < clock.epoch {
                 return Err(StakePoolError::StakeListOutOfDate.into());
             }
-            total_lamports = total_lamports
-                .checked_add(validator_stake_record.stake_lamports())
+            total_carats = total_carats
+                .checked_add(validator_stake_record.stake_carats())
                 .ok_or(StakePoolError::CalculationFailure)?;
         }
 
-        let reward_lamports = total_lamports.saturating_sub(previous_lamports);
+        let reward_carats = total_carats.saturating_sub(previous_carats);
 
         // If the manager fee info is invalid, they don't deserve to receive the fee.
         let fee = if stake_pool.check_manager_fee_info(manager_fee_info).is_ok() {
             stake_pool
-                .calc_epoch_fee_amount(reward_lamports)
+                .calc_epoch_fee_amount(reward_carats)
                 .ok_or(StakePoolError::CalculationFailure)?
         } else {
             0
@@ -1670,15 +1670,15 @@ impl Processor {
                 stake_pool.stake_withdrawal_fee = fee;
                 stake_pool.next_stake_withdrawal_fee = None;
             }
-            if let Some(fee) = stake_pool.next_sol_withdrawal_fee {
-                stake_pool.sol_withdrawal_fee = fee;
-                stake_pool.next_sol_withdrawal_fee = None;
+            if let Some(fee) = stake_pool.next_gema_withdrawal_fee {
+                stake_pool.gema_withdrawal_fee = fee;
+                stake_pool.next_gema_withdrawal_fee = None;
             }
             stake_pool.last_update_epoch = clock.epoch;
-            stake_pool.last_epoch_total_lamports = previous_lamports;
+            stake_pool.last_epoch_total_carats = previous_carats;
             stake_pool.last_epoch_pool_token_supply = previous_pool_token_supply;
         }
-        stake_pool.total_lamports = total_lamports;
+        stake_pool.total_carats = total_carats;
 
         let pool_mint = Mint::unpack_from_slice(&pool_mint_info.data.borrow())?;
         stake_pool.pool_token_supply = pool_mint.supply;
@@ -1782,7 +1782,7 @@ impl Processor {
         }
 
         let (_, validator_stake) = get_stake_state(validator_stake_account_info)?;
-        let pre_all_validator_lamports = validator_stake_account_info.lamports();
+        let pre_all_validator_carats = validator_stake_account_info.carats();
         let vote_account_address = validator_stake.delegation.voter_pubkey;
         check_validator_stake_address(
             program_id,
@@ -1861,26 +1861,26 @@ impl Processor {
         )?;
 
         let (_, post_validator_stake) = get_stake_state(validator_stake_account_info)?;
-        let post_all_validator_lamports = validator_stake_account_info.lamports();
+        let post_all_validator_carats = validator_stake_account_info.carats();
         msg!("Stake post merge {}", post_validator_stake.delegation.stake);
 
-        let all_deposit_lamports = post_all_validator_lamports
-            .checked_sub(pre_all_validator_lamports)
+        let all_deposit_carats = post_all_validator_carats
+            .checked_sub(pre_all_validator_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
-        let stake_deposit_lamports = post_validator_stake
+        let stake_deposit_carats = post_validator_stake
             .delegation
             .stake
             .checked_sub(validator_stake.delegation.stake)
             .ok_or(StakePoolError::CalculationFailure)?;
-        let additional_lamports = all_deposit_lamports
-            .checked_sub(stake_deposit_lamports)
+        let additional_carats = all_deposit_carats
+            .checked_sub(stake_deposit_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
-        let credited_additional_lamports = additional_lamports.min(unactivated_stake_rent);
-        let credited_deposit_lamports =
-            stake_deposit_lamports.saturating_add(credited_additional_lamports);
+        let credited_additional_carats = additional_carats.min(unactivated_stake_rent);
+        let credited_deposit_carats =
+            stake_deposit_carats.saturating_add(credited_additional_carats);
 
         let new_pool_tokens = stake_pool
-            .calc_pool_tokens_for_deposit(credited_deposit_lamports)
+            .calc_pool_tokens_for_deposit(credited_deposit_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
 
         let pool_tokens_stake_deposit_fee = stake_pool
@@ -1948,9 +1948,9 @@ impl Processor {
             )?;
         }
 
-        // withdraw additional lamports to the reserve
+        // withdraw additional carats to the reserve
 
-        if additional_lamports > 0 {
+        if additional_carats > 0 {
             Self::stake_withdraw(
                 stake_pool_info.key,
                 validator_stake_account_info.clone(),
@@ -1961,7 +1961,7 @@ impl Processor {
                 clock_info.clone(),
                 stake_history_info.clone(),
                 stake_program_info.clone(),
-                additional_lamports,
+                additional_carats,
             )?;
         }
 
@@ -1969,15 +1969,15 @@ impl Processor {
             .pool_token_supply
             .checked_add(new_pool_tokens)
             .ok_or(StakePoolError::CalculationFailure)?;
-        // We treat the extra lamports as though they were
+        // We treat the extra carats as though they were
         // transferred directly to the reserve stake account.
-        stake_pool.total_lamports = stake_pool
-            .total_lamports
-            .checked_add(all_deposit_lamports)
+        stake_pool.total_carats = stake_pool
+            .total_carats
+            .checked_add(all_deposit_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
         stake_pool.serialize(&mut *stake_pool_info.data.borrow_mut())?;
 
-        validator_stake_info.active_stake_lamports = post_validator_stake
+        validator_stake_info.active_stake_carats = post_validator_stake
             .delegation
             .stake
             .checked_sub(MINIMUM_ACTIVE_STAKE)
@@ -1986,25 +1986,25 @@ impl Processor {
         Ok(())
     }
 
-    /// Processes [DepositSol](enum.Instruction.html).
+    /// Processes [DepositGema](enum.Instruction.html).
     #[inline(never)] // needed to avoid stack size violation
-    fn process_deposit_sol(
+    fn process_deposit_gema(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
-        deposit_lamports: u64,
+        deposit_carats: u64,
     ) -> ProgramResult {
         let account_info_iter = &mut accounts.iter();
         let stake_pool_info = next_account_info(account_info_iter)?;
         let withdraw_authority_info = next_account_info(account_info_iter)?;
         let reserve_stake_account_info = next_account_info(account_info_iter)?;
-        let from_user_lamports_info = next_account_info(account_info_iter)?;
+        let from_user_carats_info = next_account_info(account_info_iter)?;
         let dest_user_pool_info = next_account_info(account_info_iter)?;
         let manager_fee_info = next_account_info(account_info_iter)?;
         let referrer_fee_info = next_account_info(account_info_iter)?;
         let pool_mint_info = next_account_info(account_info_iter)?;
         let system_program_info = next_account_info(account_info_iter)?;
         let token_program_info = next_account_info(account_info_iter)?;
-        let sol_deposit_authority_info = next_account_info(account_info_iter);
+        let gema_deposit_authority_info = next_account_info(account_info_iter);
 
         let clock = Clock::get()?;
 
@@ -2019,7 +2019,7 @@ impl Processor {
             program_id,
             stake_pool_info.key,
         )?;
-        stake_pool.check_sol_deposit_authority(sol_deposit_authority_info)?;
+        stake_pool.check_gema_deposit_authority(gema_deposit_authority_info)?;
         stake_pool.check_mint(pool_mint_info)?;
         stake_pool.check_reserve_stake(reserve_stake_account_info)?;
 
@@ -2032,27 +2032,27 @@ impl Processor {
             return Err(StakePoolError::InvalidFeeAccount.into());
         }
 
-        // We want this to hold to ensure that deposit_sol mints pool tokens
+        // We want this to hold to ensure that deposit_gema mints pool tokens
         // at the right price
         if stake_pool.last_update_epoch < clock.epoch {
             return Err(StakePoolError::StakeListAndPoolOutOfDate.into());
         }
 
         let new_pool_tokens = stake_pool
-            .calc_pool_tokens_for_deposit(deposit_lamports)
+            .calc_pool_tokens_for_deposit(deposit_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
 
-        let pool_tokens_sol_deposit_fee = stake_pool
-            .calc_pool_tokens_sol_deposit_fee(new_pool_tokens)
+        let pool_tokens_gema_deposit_fee = stake_pool
+            .calc_pool_tokens_gema_deposit_fee(new_pool_tokens)
             .ok_or(StakePoolError::CalculationFailure)?;
         let pool_tokens_user = new_pool_tokens
-            .checked_sub(pool_tokens_sol_deposit_fee)
+            .checked_sub(pool_tokens_gema_deposit_fee)
             .ok_or(StakePoolError::CalculationFailure)?;
 
         let pool_tokens_referral_fee = stake_pool
-            .calc_pool_tokens_sol_referral_fee(pool_tokens_sol_deposit_fee)
+            .calc_pool_tokens_gema_referral_fee(pool_tokens_gema_deposit_fee)
             .ok_or(StakePoolError::CalculationFailure)?;
-        let pool_tokens_manager_deposit_fee = pool_tokens_sol_deposit_fee
+        let pool_tokens_manager_deposit_fee = pool_tokens_gema_deposit_fee
             .checked_sub(pool_tokens_referral_fee)
             .ok_or(StakePoolError::CalculationFailure)?;
 
@@ -2068,11 +2068,11 @@ impl Processor {
             return Err(StakePoolError::DepositTooSmall.into());
         }
 
-        Self::sol_transfer(
-            from_user_lamports_info.clone(),
+        Self::gema_transfer(
+            from_user_carats_info.clone(),
             reserve_stake_account_info.clone(),
             system_program_info.clone(),
-            deposit_lamports,
+            deposit_carats,
         )?;
 
         if pool_tokens_user > 0 {
@@ -2118,9 +2118,9 @@ impl Processor {
             .pool_token_supply
             .checked_add(new_pool_tokens)
             .ok_or(StakePoolError::CalculationFailure)?;
-        stake_pool.total_lamports = stake_pool
-            .total_lamports
-            .checked_add(deposit_lamports)
+        stake_pool.total_carats = stake_pool
+            .total_carats
+            .checked_add(deposit_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
         stake_pool.serialize(&mut *stake_pool_info.data.borrow_mut())?;
 
@@ -2199,18 +2199,18 @@ impl Processor {
             .checked_sub(pool_tokens_fee)
             .ok_or(StakePoolError::CalculationFailure)?;
 
-        let withdraw_lamports = stake_pool
-            .calc_lamports_withdraw_amount(pool_tokens_burnt)
+        let withdraw_carats = stake_pool
+            .calc_carats_withdraw_amount(pool_tokens_burnt)
             .ok_or(StakePoolError::CalculationFailure)?;
 
-        if withdraw_lamports == 0 {
+        if withdraw_carats == 0 {
             return Err(StakePoolError::WithdrawalTooSmall.into());
         }
 
         let has_active_stake = validator_list
             .find::<ValidatorStakeInfo>(
                 &0u64.to_le_bytes(),
-                ValidatorStakeInfo::active_lamports_not_equal,
+                ValidatorStakeInfo::active_carats_not_equal,
             )
             .is_some();
 
@@ -2219,12 +2219,12 @@ impl Processor {
             let has_transient_stake = validator_list
                 .find::<ValidatorStakeInfo>(
                     &0u64.to_le_bytes(),
-                    ValidatorStakeInfo::transient_lamports_not_equal,
+                    ValidatorStakeInfo::transient_carats_not_equal,
                 )
                 .is_some();
             if has_transient_stake || has_active_stake {
-                msg!("Error withdrawing from reserve: validator stake accounts have lamports available, please use those first.");
-                return Err(StakePoolError::StakeLamportsNotEqualToMinimum.into());
+                msg!("Error withdrawing from reserve: validator stake accounts have carats available, please use those first.");
+                return Err(StakePoolError::StakeCaratsNotEqualToMinimum.into());
             }
 
             // check that reserve has enough (should never fail, but who knows?)
@@ -2233,9 +2233,9 @@ impl Processor {
             )?;
             let meta = stake_state.meta().ok_or(StakePoolError::WrongStakeState)?;
             stake_split_from
-                .lamports()
-                .checked_sub(minimum_reserve_lamports(meta))
-                .ok_or(StakePoolError::StakeLamportsNotEqualToMinimum)?;
+                .carats()
+                .checked_sub(minimum_reserve_carats(meta))
+                .ok_or(StakePoolError::StakeCaratsNotEqualToMinimum)?;
             None
         } else {
             let (_, stake) = get_stake_state(stake_split_from)?;
@@ -2251,9 +2251,9 @@ impl Processor {
                     )
                     .ok_or(StakePoolError::ValidatorNotFound)?;
                 if preferred_withdraw_validator != vote_account_address
-                    && preferred_validator_info.active_stake_lamports > 0
+                    && preferred_validator_info.active_stake_carats > 0
                 {
-                    msg!("Validator vote address {} is preferred for withdrawals, it currently has {} lamports available. Please withdraw those before using other validator stake accounts.", preferred_withdraw_validator, preferred_validator_info.active_stake_lamports);
+                    msg!("Validator vote address {} is preferred for withdrawals, it currently has {} carats available. Please withdraw those before using other validator stake accounts.", preferred_withdraw_validator, preferred_validator_info.active_stake_carats);
                     return Err(StakePoolError::IncorrectWithdrawVoteAddress.into());
                 }
             }
@@ -2291,10 +2291,10 @@ impl Processor {
                 return Err(StakePoolError::ValidatorNotFound.into());
             }
 
-            let remaining_lamports = stake.delegation.stake.saturating_sub(withdraw_lamports);
-            if remaining_lamports < MINIMUM_ACTIVE_STAKE {
-                msg!("Attempting to withdraw {} lamports from validator account with {} stake lamports, {} must remain", withdraw_lamports, stake.delegation.stake, MINIMUM_ACTIVE_STAKE);
-                return Err(StakePoolError::StakeLamportsNotEqualToMinimum.into());
+            let remaining_carats = stake.delegation.stake.saturating_sub(withdraw_carats);
+            if remaining_carats < MINIMUM_ACTIVE_STAKE {
+                msg!("Attempting to withdraw {} carats from validator account with {} stake carats, {} must remain", withdraw_carats, stake.delegation.stake, MINIMUM_ACTIVE_STAKE);
+                return Err(StakePoolError::StakeCaratsNotEqualToMinimum.into());
             }
             Some((validator_stake_info, withdrawing_from_transient_stake))
         };
@@ -2313,7 +2313,7 @@ impl Processor {
             withdraw_authority_info.clone(),
             AUTHORITY_WITHDRAW,
             stake_pool.stake_withdraw_bump_seed,
-            withdraw_lamports,
+            withdraw_carats,
             stake_split_to.clone(),
         )?;
 
@@ -2342,9 +2342,9 @@ impl Processor {
             .pool_token_supply
             .checked_sub(pool_tokens_burnt)
             .ok_or(StakePoolError::CalculationFailure)?;
-        stake_pool.total_lamports = stake_pool
-            .total_lamports
-            .checked_sub(withdraw_lamports)
+        stake_pool.total_carats = stake_pool
+            .total_carats
+            .checked_sub(withdraw_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
         stake_pool.serialize(&mut *stake_pool_info.data.borrow_mut())?;
 
@@ -2352,14 +2352,14 @@ impl Processor {
             validator_list_item_info
         {
             if withdrawing_from_transient_stake_account {
-                validator_list_item.transient_stake_lamports = validator_list_item
-                    .transient_stake_lamports
-                    .checked_sub(withdraw_lamports)
+                validator_list_item.transient_stake_carats = validator_list_item
+                    .transient_stake_carats
+                    .checked_sub(withdraw_carats)
                     .ok_or(StakePoolError::CalculationFailure)?;
             } else {
-                validator_list_item.active_stake_lamports = validator_list_item
-                    .active_stake_lamports
-                    .checked_sub(withdraw_lamports)
+                validator_list_item.active_stake_carats = validator_list_item
+                    .active_stake_carats
+                    .checked_sub(withdraw_carats)
                     .ok_or(StakePoolError::CalculationFailure)?;
             }
         }
@@ -2367,9 +2367,9 @@ impl Processor {
         Ok(())
     }
 
-    /// Processes [WithdrawSol](enum.Instruction.html).
+    /// Processes [WithdrawGema](enum.Instruction.html).
     #[inline(never)] // needed to avoid stack size violation
-    fn process_withdraw_sol(
+    fn process_withdraw_gema(
         program_id: &Pubkey,
         accounts: &[AccountInfo],
         pool_tokens: u64,
@@ -2380,14 +2380,14 @@ impl Processor {
         let user_transfer_authority_info = next_account_info(account_info_iter)?;
         let burn_from_pool_info = next_account_info(account_info_iter)?;
         let reserve_stake_info = next_account_info(account_info_iter)?;
-        let destination_lamports_info = next_account_info(account_info_iter)?;
+        let destination_carats_info = next_account_info(account_info_iter)?;
         let manager_fee_info = next_account_info(account_info_iter)?;
         let pool_mint_info = next_account_info(account_info_iter)?;
         let clock_info = next_account_info(account_info_iter)?;
         let stake_history_info = next_account_info(account_info_iter)?;
         let stake_program_info = next_account_info(account_info_iter)?;
         let token_program_info = next_account_info(account_info_iter)?;
-        let sol_withdraw_authority_info = next_account_info(account_info_iter);
+        let gema_withdraw_authority_info = next_account_info(account_info_iter);
 
         check_account_owner(stake_pool_info, program_id)?;
         let mut stake_pool = try_from_slice_unchecked::<StakePool>(&stake_pool_info.data.borrow())?;
@@ -2400,7 +2400,7 @@ impl Processor {
             program_id,
             stake_pool_info.key,
         )?;
-        stake_pool.check_sol_withdraw_authority(sol_withdraw_authority_info)?;
+        stake_pool.check_gema_withdraw_authority(gema_withdraw_authority_info)?;
         stake_pool.check_mint(pool_mint_info)?;
         stake_pool.check_reserve_stake(reserve_stake_info)?;
 
@@ -2413,7 +2413,7 @@ impl Processor {
             return Err(StakePoolError::InvalidFeeAccount.into());
         }
 
-        // We want this to hold to ensure that withdraw_sol burns pool tokens
+        // We want this to hold to ensure that withdraw_gema burns pool tokens
         // at the right price
         if stake_pool.last_update_epoch < Clock::get()?.epoch {
             return Err(StakePoolError::StakeListAndPoolOutOfDate.into());
@@ -2427,35 +2427,35 @@ impl Processor {
             0
         } else {
             stake_pool
-                .calc_pool_tokens_sol_withdrawal_fee(pool_tokens)
+                .calc_pool_tokens_gema_withdrawal_fee(pool_tokens)
                 .ok_or(StakePoolError::CalculationFailure)?
         };
         let pool_tokens_burnt = pool_tokens
             .checked_sub(pool_tokens_fee)
             .ok_or(StakePoolError::CalculationFailure)?;
 
-        let withdraw_lamports = stake_pool
-            .calc_lamports_withdraw_amount(pool_tokens_burnt)
+        let withdraw_carats = stake_pool
+            .calc_carats_withdraw_amount(pool_tokens_burnt)
             .ok_or(StakePoolError::CalculationFailure)?;
 
-        if withdraw_lamports == 0 {
+        if withdraw_carats == 0 {
             return Err(StakePoolError::WithdrawalTooSmall.into());
         }
 
-        let new_reserve_lamports = reserve_stake_info
-            .lamports()
-            .saturating_sub(withdraw_lamports);
+        let new_reserve_carats = reserve_stake_info
+            .carats()
+            .saturating_sub(withdraw_carats);
         let stake_state = try_from_slice_unchecked::<stake_program::StakeState>(
             &reserve_stake_info.data.borrow(),
         )?;
         if let stake_program::StakeState::Initialized(meta) = stake_state {
-            let minimum_reserve_lamports = minimum_reserve_lamports(&meta);
-            if new_reserve_lamports < minimum_reserve_lamports {
-                msg!("Attempting to withdraw {} lamports, maximum possible SOL withdrawal is {} lamports",
-                    withdraw_lamports,
-                    reserve_stake_info.lamports().saturating_sub(minimum_reserve_lamports)
+            let minimum_reserve_carats = minimum_reserve_carats(&meta);
+            if new_reserve_carats < minimum_reserve_carats {
+                msg!("Attempting to withdraw {} carats, maximum possible GEMA withdrawal is {} carats",
+                    withdraw_carats,
+                    reserve_stake_info.carats().saturating_sub(minimum_reserve_carats)
                 );
-                return Err(StakePoolError::SolWithdrawalTooLarge.into());
+                return Err(StakePoolError::GemaWithdrawalTooLarge.into());
             }
         } else {
             msg!("Reserve stake account not in intialized state");
@@ -2486,20 +2486,20 @@ impl Processor {
             withdraw_authority_info.clone(),
             AUTHORITY_WITHDRAW,
             stake_pool.stake_withdraw_bump_seed,
-            destination_lamports_info.clone(),
+            destination_carats_info.clone(),
             clock_info.clone(),
             stake_history_info.clone(),
             stake_program_info.clone(),
-            withdraw_lamports,
+            withdraw_carats,
         )?;
 
         stake_pool.pool_token_supply = stake_pool
             .pool_token_supply
             .checked_sub(pool_tokens_burnt)
             .ok_or(StakePoolError::CalculationFailure)?;
-        stake_pool.total_lamports = stake_pool
-            .total_lamports
-            .checked_sub(withdraw_lamports)
+        stake_pool.total_carats = stake_pool
+            .total_carats
+            .checked_sub(withdraw_carats)
             .ok_or(StakePoolError::CalculationFailure)?;
         stake_pool.serialize(&mut *stake_pool_info.data.borrow_mut())?;
 
@@ -2529,7 +2529,7 @@ impl Processor {
         }
 
         if stake_pool.pool_mint
-            != spl_token::state::Account::unpack_from_slice(&new_manager_fee_info.data.borrow())?
+            != gpl_token::state::Account::unpack_from_slice(&new_manager_fee_info.data.borrow())?
                 .mint
         {
             return Err(StakePoolError::WrongAccountMint.into());
@@ -2621,8 +2621,8 @@ impl Processor {
                     find_deposit_authority_program_address(program_id, stake_pool_info.key).0,
                 );
             }
-            FundingType::SolDeposit => stake_pool.sol_deposit_authority = new_authority,
-            FundingType::SolWithdraw => stake_pool.sol_withdraw_authority = new_authority,
+            FundingType::GemaDeposit => stake_pool.gema_deposit_authority = new_authority,
+            FundingType::GemaWithdraw => stake_pool.gema_withdraw_authority = new_authority,
         }
         stake_pool.serialize(&mut *stake_pool_info.data.borrow_mut())?;
         Ok(())
@@ -2659,26 +2659,26 @@ impl Processor {
                 Self::process_remove_validator_from_pool(program_id, accounts)
             }
             StakePoolInstruction::DecreaseValidatorStake {
-                lamports,
+                carats,
                 transient_stake_seed,
             } => {
                 msg!("Instruction: DecreaseValidatorStake");
                 Self::process_decrease_validator_stake(
                     program_id,
                     accounts,
-                    lamports,
+                    carats,
                     transient_stake_seed,
                 )
             }
             StakePoolInstruction::IncreaseValidatorStake {
-                lamports,
+                carats,
                 transient_stake_seed,
             } => {
                 msg!("Instruction: IncreaseValidatorStake");
                 Self::process_increase_validator_stake(
                     program_id,
                     accounts,
-                    lamports,
+                    carats,
                     transient_stake_seed,
                 )
             }
@@ -2738,13 +2738,13 @@ impl Processor {
                 msg!("Instruction: SetFundingAuthority");
                 Self::process_set_funding_authority(program_id, accounts, funding_type)
             }
-            StakePoolInstruction::DepositSol(lamports) => {
-                msg!("Instruction: DepositSol");
-                Self::process_deposit_sol(program_id, accounts, lamports)
+            StakePoolInstruction::DepositGema(carats) => {
+                msg!("Instruction: DepositGema");
+                Self::process_deposit_gema(program_id, accounts, carats)
             }
-            StakePoolInstruction::WithdrawSol(pool_tokens) => {
-                msg!("Instruction: WithdrawSol");
-                Self::process_withdraw_sol(program_id, accounts, pool_tokens)
+            StakePoolInstruction::WithdrawGema(pool_tokens) => {
+                msg!("Instruction: WithdrawGema");
+                Self::process_withdraw_gema(program_id, accounts, pool_tokens)
             }
         }
     }
@@ -2781,19 +2781,19 @@ impl PrintProgramError for StakePoolError {
             StakePoolError::UnexpectedValidatorListAccountSize=> msg!("Error: The size of the given validator stake list does match the expected amount"),
             StakePoolError::WrongStaker=> msg!("Error: Wrong pool staker account"),
             StakePoolError::NonZeroPoolTokenSupply => msg!("Error: Pool token supply is not zero on initialization"),
-            StakePoolError::StakeLamportsNotEqualToMinimum => msg!("Error: The lamports in the validator stake account is not equal to the minimum"),
+            StakePoolError::StakeCaratsNotEqualToMinimum => msg!("Error: The carats in the validator stake account is not equal to the minimum"),
             StakePoolError::IncorrectDepositVoteAddress => msg!("Error: The provided deposit stake account is not delegated to the preferred deposit vote account"),
             StakePoolError::IncorrectWithdrawVoteAddress => msg!("Error: The provided withdraw stake account is not the preferred deposit vote account"),
             StakePoolError::InvalidMintFreezeAuthority => msg!("Error: The mint has an invalid freeze authority"),
             StakePoolError::FeeIncreaseTooHigh => msg!("Error: The fee cannot increase by a factor exceeding the stipulated ratio"),
             StakePoolError::WithdrawalTooSmall => msg!("Error: Not enough pool tokens provided to withdraw 1-lamport stake"),
-            StakePoolError::DepositTooSmall => msg!("Error: Not enough lamports provided for deposit to result in one pool token"),
+            StakePoolError::DepositTooSmall => msg!("Error: Not enough carats provided for deposit to result in one pool token"),
             StakePoolError::InvalidStakeDepositAuthority => msg!("Error: Provided stake deposit authority does not match the program's"),
-            StakePoolError::InvalidSolDepositAuthority => msg!("Error: Provided sol deposit authority does not match the program's"),
+            StakePoolError::InvalidGemaDepositAuthority => msg!("Error: Provided gema deposit authority does not match the program's"),
             StakePoolError::InvalidPreferredValidator => msg!("Error: Provided preferred validator is invalid"),
             StakePoolError::TransientAccountInUse => msg!("Error: Provided validator stake account already has a transient stake account in use"),
-            StakePoolError::InvalidSolWithdrawAuthority => msg!("Error: Provided sol withdraw authority does not match the program's"),
-            StakePoolError::SolWithdrawalTooLarge => msg!("Error: Too much SOL withdrawn from the stake pool's reserve account"),
+            StakePoolError::InvalidGemaWithdrawAuthority => msg!("Error: Provided gema withdraw authority does not match the program's"),
+            StakePoolError::GemaWithdrawalTooLarge => msg!("Error: Too much GEMA withdrawn from the stake pool's reserve account"),
         }
     }
 }

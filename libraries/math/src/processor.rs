@@ -3,8 +3,8 @@
 use {
     crate::{approximations::sqrt, instruction::MathInstruction, precise_number::PreciseNumber},
     borsh::BorshDeserialize,
-    solana_program::{
-        account_info::AccountInfo, entrypoint::ProgramResult, log::sol_log_compute_units, msg,
+    gemachain_program::{
+        account_info::AccountInfo, entrypoint::ProgramResult, log::gema_log_compute_units, msg,
         pubkey::Pubkey,
     },
 };
@@ -44,25 +44,25 @@ pub fn process_instruction(
         MathInstruction::PreciseSquareRoot { radicand } => {
             msg!("Calculating square root using PreciseNumber");
             let radicand = PreciseNumber::new(radicand as u128).unwrap();
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = radicand.sqrt().unwrap().to_imprecise().unwrap() as u64;
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result);
             Ok(())
         }
         MathInstruction::SquareRootU64 { radicand } => {
             msg!("Calculating u64 square root");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = sqrt(radicand).unwrap();
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result);
             Ok(())
         }
         MathInstruction::SquareRootU128 { radicand } => {
             msg!("Calculating u128 square root");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = sqrt(radicand).unwrap();
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result);
             Ok(())
         }
@@ -71,17 +71,17 @@ pub fn process_instruction(
             multiplier,
         } => {
             msg!("Calculating U64 Multiply");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = u64_multiply(multiplicand, multiplier);
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result);
             Ok(())
         }
         MathInstruction::U64Divide { dividend, divisor } => {
             msg!("Calculating U64 Divide");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = u64_divide(dividend, divisor);
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result);
             Ok(())
         }
@@ -90,17 +90,17 @@ pub fn process_instruction(
             multiplier,
         } => {
             msg!("Calculating f32 Multiply");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = f32_multiply(multiplicand, multiplier);
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result as u64);
             Ok(())
         }
         MathInstruction::F32Divide { dividend, divisor } => {
             msg!("Calculating f32 Divide");
-            sol_log_compute_units();
+            gema_log_compute_units();
             let result = f32_divide(dividend, divisor);
-            sol_log_compute_units();
+            gema_log_compute_units();
             msg!("{}", result as u64);
             Ok(())
         }

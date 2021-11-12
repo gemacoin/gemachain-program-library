@@ -1,12 +1,12 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::pubkey::Pubkey;
-use solana_program_test::*;
+use gemachain_program::pubkey::Pubkey;
+use gemachain_program_test::*;
 
 mod program_test;
 
 use program_test::*;
-use spl_governance::{
+use gpl_governance::{
     error::GovernanceError,
     state::{enums::MintMaxVoteWeightSource, realm::RealmConfigArgs},
 };

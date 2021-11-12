@@ -5,13 +5,13 @@ mod helpers;
 use {
     bincode::deserialize,
     helpers::*,
-    solana_program::{clock::Epoch, hash::Hash, instruction::InstructionError, pubkey::Pubkey},
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program::{clock::Epoch, hash::Hash, instruction::InstructionError, pubkey::Pubkey},
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error::StakePoolError, find_transient_stake_program_address, id, instruction, stake_program,
     },
 };
@@ -51,7 +51,7 @@ async fn setup() -> (
     .await
     .unwrap();
 
-    let lamports = deposit_info.stake_lamports / 2;
+    let carats = deposit_info.stake_carats / 2;
 
     (
         banks_client,
@@ -60,7 +60,7 @@ async fn setup() -> (
         stake_pool_accounts,
         validator_stake_account,
         deposit_info,
-        lamports,
+        carats,
     )
 }
 
@@ -73,7 +73,7 @@ async fn success() {
         stake_pool_accounts,
         validator_stake,
         _deposit_info,
-        decrease_lamports,
+        decrease_carats,
     ) = setup().await;
 
     // Save validator stake
@@ -94,7 +94,7 @@ async fn success() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            decrease_lamports,
+            decrease_carats,
             validator_stake.transient_stake_seed,
         )
         .await;
@@ -106,8 +106,8 @@ async fn success() {
     let validator_stake_state =
         deserialize::<stake_program::StakeState>(&validator_stake_account.data).unwrap();
     assert_eq!(
-        pre_validator_stake_account.lamports - decrease_lamports,
-        validator_stake_account.lamports
+        pre_validator_stake_account.carats - decrease_carats,
+        validator_stake_account.carats
     );
     assert_eq!(
         validator_stake_state
@@ -122,7 +122,7 @@ async fn success() {
         get_account(&mut banks_client, &validator_stake.transient_stake_account).await;
     let transient_stake_state =
         deserialize::<stake_program::StakeState>(&transient_stake_account.data).unwrap();
-    assert_eq!(transient_stake_account.lamports, decrease_lamports);
+    assert_eq!(transient_stake_account.carats, decrease_carats);
     assert_ne!(
         transient_stake_state
             .delegation()
@@ -141,7 +141,7 @@ async fn fail_with_wrong_withdraw_authority() {
         stake_pool_accounts,
         validator_stake,
         _deposit_info,
-        decrease_lamports,
+        decrease_carats,
     ) = setup().await;
 
     let wrong_authority = Pubkey::new_unique();
@@ -155,7 +155,7 @@ async fn fail_with_wrong_withdraw_authority() {
             &stake_pool_accounts.validator_list.pubkey(),
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            decrease_lamports,
+            decrease_carats,
             validator_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -187,7 +187,7 @@ async fn fail_with_wrong_validator_list() {
         mut stake_pool_accounts,
         validator_stake,
         _deposit_info,
-        decrease_lamports,
+        decrease_carats,
     ) = setup().await;
 
     stake_pool_accounts.validator_list = Keypair::new();
@@ -201,7 +201,7 @@ async fn fail_with_wrong_validator_list() {
             &stake_pool_accounts.validator_list.pubkey(),
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            decrease_lamports,
+            decrease_carats,
             validator_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -233,7 +233,7 @@ async fn fail_with_unknown_validator() {
         stake_pool_accounts,
         _validator_stake,
         _deposit_info,
-        decrease_lamports,
+        decrease_carats,
     ) = setup().await;
 
     let unknown_stake = create_unknown_validator_stake(
@@ -253,7 +253,7 @@ async fn fail_with_unknown_validator() {
             &stake_pool_accounts.validator_list.pubkey(),
             &unknown_stake.stake_account,
             &unknown_stake.transient_stake_account,
-            decrease_lamports,
+            decrease_carats,
             unknown_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -285,7 +285,7 @@ async fn fail_decrease_twice() {
         stake_pool_accounts,
         validator_stake,
         _deposit_info,
-        decrease_lamports,
+        decrease_carats,
     ) = setup().await;
 
     let error = stake_pool_accounts
@@ -295,7 +295,7 @@ async fn fail_decrease_twice() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            decrease_lamports / 3,
+            decrease_carats / 3,
             validator_stake.transient_stake_seed,
         )
         .await;
@@ -316,7 +316,7 @@ async fn fail_decrease_twice() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &transient_stake_address,
-            decrease_lamports / 2,
+            decrease_carats / 2,
             transient_stake_seed,
         )
         .await
@@ -340,11 +340,11 @@ async fn fail_with_small_lamport_amount() {
         stake_pool_accounts,
         validator_stake,
         _deposit_info,
-        _decrease_lamports,
+        _decrease_carats,
     ) = setup().await;
 
     let rent = banks_client.get_rent().await.unwrap();
-    let lamports = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
+    let carats = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
 
     let error = stake_pool_accounts
         .decrease_validator_stake(
@@ -353,7 +353,7 @@ async fn fail_with_small_lamport_amount() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            lamports,
+            carats,
             validator_stake.transient_stake_seed,
         )
         .await
@@ -375,7 +375,7 @@ async fn fail_overdraw_validator() {
         stake_pool_accounts,
         validator_stake,
         deposit_info,
-        _decrease_lamports,
+        _decrease_carats,
     ) = setup().await;
 
     let error = stake_pool_accounts
@@ -385,7 +385,7 @@ async fn fail_overdraw_validator() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &validator_stake.transient_stake_account,
-            deposit_info.stake_lamports * 1_000_000,
+            deposit_info.stake_carats * 1_000_000,
             validator_stake.transient_stake_seed,
         )
         .await

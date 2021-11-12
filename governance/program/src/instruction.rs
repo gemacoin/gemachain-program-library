@@ -17,7 +17,7 @@ use crate::{
     tools::bpf_loader_upgradeable::get_program_data_address,
 };
 use borsh::{BorshDeserialize, BorshSchema, BorshSerialize};
-use solana_program::{
+use gemachain_program::{
     bpf_loader_upgradeable,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
@@ -48,7 +48,7 @@ pub enum GovernanceInstruction {
     ///     The account will be created with the Realm PDA as its owner
     /// 4. `[signer]` Payer
     /// 5. `[]` System
-    /// 6. `[]` SPL Token
+    /// 6. `[]` GPL Token
     /// 7. `[]` Sysvar Rent
     /// 8. `[]` Council Token Mint - optional
     /// 9. `[writable]` Council Token Holding account - optional unless council is used. PDA seeds: ['governance',realm,council_mint]
@@ -75,7 +75,7 @@ pub enum GovernanceInstruction {
     ///  5. `[writable]` Token Owner Record account. PDA seeds: ['governance',realm, governing_token_mint, governing_token_owner]
     ///  6. `[signer]` Payer
     ///  7. `[]` System
-    ///  8. `[]` SPL Token
+    ///  8. `[]` GPL Token
     ///  9. `[]` Sysvar Rent
     DepositGoverningTokens {},
 
@@ -88,7 +88,7 @@ pub enum GovernanceInstruction {
     ///  2. `[writable]` Governing Token Destination account. All tokens will be transferred to this account
     ///  3. `[signer]` Governing Token Owner account
     ///  4. `[writable]` Token Owner  Record account. PDA seeds: ['governance',realm, governing_token_mint, governing_token_owner]
-    ///  5. `[]` SPL Token
+    ///  5. `[]` GPL Token
     WithdrawGoverningTokens {},
 
     /// Sets Governance Delegate for the given Realm and Governing Token Mint (Community or Council)
@@ -189,7 +189,7 @@ pub enum GovernanceInstruction {
     ///   1. `[]` TokenOwnerRecord account of the Proposal owner
     ///   2. `[signer]` Governance Authority (Token Owner or Governance Delegate)
     ///   3. `[writable]` Signatory Record Account
-    ///   4. `[writable]` Beneficiary Account which would receive lamports from the disposed Signatory Record Account
+    ///   4. `[writable]` Beneficiary Account which would receive carats from the disposed Signatory Record Account
     RemoveSignatory {
         #[allow(dead_code)]
         /// Signatory to remove from the Proposal
@@ -227,7 +227,7 @@ pub enum GovernanceInstruction {
     ///   1. `[]` TokenOwnerRecord account of the Proposal owner
     ///   2. `[signer]` Governance Authority (Token Owner or Governance Delegate)
     ///   3. `[writable]` ProposalInstruction account
-    ///   4. `[writable]` Beneficiary Account which would receive lamports from the disposed ProposalInstruction account
+    ///   4. `[writable]` Beneficiary Account which would receive carats from the disposed ProposalInstruction account
     RemoveInstruction,
 
     /// Cancels Proposal by changing its state to Canceled
@@ -291,7 +291,7 @@ pub enum GovernanceInstruction {
     ///   4. `[]` Governing Token Mint
     ///   5. `[signer]` Optional Governance Authority (Token Owner or Governance Delegate)
     ///       It's required only when Proposal is still being voted on
-    ///   6. `[writable]` Optional Beneficiary account which would receive lamports when VoteRecord Account is disposed
+    ///   6. `[writable]` Optional Beneficiary account which would receive carats when VoteRecord Account is disposed
     ///       It's required only when Proposal is still being voted on
     RelinquishVote,
 
@@ -314,7 +314,7 @@ pub enum GovernanceInstruction {
     ///   3. `[signer]` Current Mint Authority
     ///   4. `[]` Governing TokenOwnerRecord account    
     ///   5. `[signer]` Payer
-    ///   6. `[]` SPL Token program
+    ///   6. `[]` GPL Token program
     ///   7. `[]` System program
     ///   8. `[]` Sysvar Rent
     CreateMintGovernance {
@@ -337,7 +337,7 @@ pub enum GovernanceInstruction {
     ///   3. `[signer]` Current Token account
     ///   4. `[]` Governing TokenOwnerRecord account        
     ///   5. `[signer]` Payer
-    ///   6. `[]` SPL Token program
+    ///   6. `[]` GPL Token program
     ///   7. `[]` System program
     ///   8. `[]` Sysvar Rent
     CreateTokenGovernance {
@@ -425,7 +425,7 @@ pub fn create_realm(
         AccountMeta::new(community_token_holding_address, false),
         AccountMeta::new_readonly(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
@@ -487,7 +487,7 @@ pub fn deposit_governing_tokens(
         AccountMeta::new(token_owner_record_address, false),
         AccountMeta::new_readonly(*payer, true),
         AccountMeta::new_readonly(system_program::id(), false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
 
@@ -526,7 +526,7 @@ pub fn withdraw_governing_tokens(
         AccountMeta::new(*governing_token_destination, false),
         AccountMeta::new_readonly(*governing_token_owner, true),
         AccountMeta::new(token_owner_record_address, false),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
     ];
 
     let instruction = GovernanceInstruction::WithdrawGoverningTokens {};
@@ -671,7 +671,7 @@ pub fn create_mint_governance(
         AccountMeta::new_readonly(*governed_mint_authority, true),
         AccountMeta::new_readonly(*token_owner_record, false),
         AccountMeta::new_readonly(*payer, true),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];
@@ -711,7 +711,7 @@ pub fn create_token_governance(
         AccountMeta::new_readonly(*governed_token_owner, true),
         AccountMeta::new_readonly(*token_owner_record, false),
         AccountMeta::new_readonly(*payer, true),
-        AccountMeta::new_readonly(spl_token::id(), false),
+        AccountMeta::new_readonly(gpl_token::id(), false),
         AccountMeta::new_readonly(system_program::id(), false),
         AccountMeta::new_readonly(sysvar::rent::id(), false),
     ];

@@ -1,6 +1,6 @@
 //! Program instruction processor
 
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     pubkey::Pubkey,
@@ -20,10 +20,10 @@ pub fn process_instruction(
     let source_info = next_account_info(account_info_iter)?;
     let destination_info = next_account_info(account_info_iter)?;
 
-    // Withdraw five lamports from the source
-    **source_info.try_borrow_mut_lamports()? -= 5;
-    // Deposit five lamports into the destination
-    **destination_info.try_borrow_mut_lamports()? += 5;
+    // Withdraw five carats from the source
+    **source_info.try_borrow_mut_carats()? -= 5;
+    // Deposit five carats into the destination
+    **destination_info.try_borrow_mut_carats()? += 5;
 
     Ok(())
 }

@@ -6,7 +6,7 @@ use crate::{
     state::{Account, AccountState, Mint, Multisig},
 };
 use num_traits::FromPrimitive;
-use solana_program::{
+use gemachain_program::{
     account_info::{next_account_info, AccountInfo},
     decode_error::DecodeError,
     entrypoint::ProgramResult,
@@ -42,7 +42,7 @@ impl Processor {
             return Err(TokenError::AlreadyInUse.into());
         }
 
-        if !rent.is_exempt(mint_info.lamports(), mint_data_len) {
+        if !rent.is_exempt(mint_info.carats(), mint_data_len) {
             return Err(TokenError::NotRentExempt.into());
         }
 
@@ -101,7 +101,7 @@ impl Processor {
             return Err(TokenError::AlreadyInUse.into());
         }
 
-        if !rent.is_exempt(new_account_info.lamports(), new_account_info_data_len) {
+        if !rent.is_exempt(new_account_info.carats(), new_account_info_data_len) {
             return Err(TokenError::NotRentExempt.into());
         }
 
@@ -119,7 +119,7 @@ impl Processor {
             let rent_exempt_reserve = rent.minimum_balance(new_account_info_data_len);
             account.is_native = COption::Some(rent_exempt_reserve);
             account.amount = new_account_info
-                .lamports()
+                .carats()
                 .checked_sub(rent_exempt_reserve)
                 .ok_or(TokenError::Overflow)?;
         } else {
@@ -166,7 +166,7 @@ impl Processor {
             return Err(TokenError::AlreadyInUse.into());
         }
 
-        if !rent.is_exempt(multisig_info.lamports(), multisig_info_data_len) {
+        if !rent.is_exempt(multisig_info.carats(), multisig_info_data_len) {
             return Err(TokenError::NotRentExempt.into());
         }
 
@@ -290,13 +290,13 @@ impl Processor {
             .ok_or(TokenError::Overflow)?;
 
         if source_account.is_native() {
-            let source_starting_lamports = source_account_info.lamports();
-            **source_account_info.lamports.borrow_mut() = source_starting_lamports
+            let source_starting_carats = source_account_info.carats();
+            **source_account_info.carats.borrow_mut() = source_starting_carats
                 .checked_sub(amount)
                 .ok_or(TokenError::Overflow)?;
 
-            let dest_starting_lamports = dest_account_info.lamports();
-            **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
+            let dest_starting_carats = dest_account_info.carats();
+            **dest_account_info.carats.borrow_mut() = dest_starting_carats
                 .checked_add(amount)
                 .ok_or(TokenError::Overflow)?;
         }
@@ -641,12 +641,12 @@ impl Processor {
             account_info_iter.as_slice(),
         )?;
 
-        let dest_starting_lamports = dest_account_info.lamports();
-        **dest_account_info.lamports.borrow_mut() = dest_starting_lamports
-            .checked_add(source_account_info.lamports())
+        let dest_starting_carats = dest_account_info.carats();
+        **dest_account_info.carats.borrow_mut() = dest_starting_carats
+            .checked_add(source_account_info.carats())
             .ok_or(TokenError::Overflow)?;
 
-        **source_account_info.lamports.borrow_mut() = 0;
+        **source_account_info.carats.borrow_mut() = 0;
         source_account.amount = 0;
 
         Account::pack(source_account, &mut source_account_info.data.borrow_mut())?;
@@ -711,7 +711,7 @@ impl Processor {
 
         if let COption::Some(rent_exempt_reserve) = native_account.is_native {
             let new_amount = native_account_info
-                .lamports()
+                .carats()
                 .checked_sub(rent_exempt_reserve)
                 .ok_or(TokenError::Overflow)?;
             if new_amount < native_account.amount {
@@ -915,19 +915,19 @@ impl PrintProgramError for TokenError {
 mod tests {
     use super::*;
     use crate::instruction::*;
-    use solana_program::{
+    use gemachain_program::{
         account_info::IntoAccountInfo, clock::Epoch, instruction::Instruction, program_error,
         sysvar::rent,
     };
-    use solana_sdk::account::{
-        create_account_for_test, create_is_signer_account_infos, Account as SolanaAccount,
+    use gemachain_sdk::account::{
+        create_account_for_test, create_is_signer_account_infos, Account as GemachainAccount,
     };
 
     struct SyscallStubs {}
-    impl solana_sdk::program_stubs::SyscallStubs for SyscallStubs {
-        fn sol_log(&self, _message: &str) {}
+    impl gemachain_sdk::program_stubs::SyscallStubs for SyscallStubs {
+        fn gema_log(&self, _message: &str) {}
 
-        fn sol_invoke_signed(
+        fn gema_invoke_signed(
             &self,
             _instruction: &Instruction,
             _account_infos: &[AccountInfo],
@@ -936,37 +936,37 @@ mod tests {
             Err(ProgramError::Custom(42)) // Not supported
         }
 
-        fn sol_get_clock_sysvar(&self, _var_addr: *mut u8) -> u64 {
+        fn gema_get_clock_sysvar(&self, _var_addr: *mut u8) -> u64 {
             program_error::UNSUPPORTED_SYSVAR
         }
 
-        fn sol_get_epoch_schedule_sysvar(&self, _var_addr: *mut u8) -> u64 {
+        fn gema_get_epoch_schedule_sysvar(&self, _var_addr: *mut u8) -> u64 {
             program_error::UNSUPPORTED_SYSVAR
         }
 
         #[allow(deprecated)]
-        fn sol_get_fees_sysvar(&self, _var_addr: *mut u8) -> u64 {
+        fn gema_get_fees_sysvar(&self, _var_addr: *mut u8) -> u64 {
             program_error::UNSUPPORTED_SYSVAR
         }
 
-        fn sol_get_rent_sysvar(&self, var_addr: *mut u8) -> u64 {
+        fn gema_get_rent_sysvar(&self, var_addr: *mut u8) -> u64 {
             unsafe {
                 *(var_addr as *mut _ as *mut Rent) = Rent::default();
             }
-            solana_program::entrypoint::SUCCESS
+            gemachain_program::entrypoint::SUCCESS
         }
     }
 
     fn do_process_instruction(
         instruction: Instruction,
-        accounts: Vec<&mut SolanaAccount>,
+        accounts: Vec<&mut GemachainAccount>,
     ) -> ProgramResult {
         {
             use std::sync::Once;
             static ONCE: Once = Once::new();
 
             ONCE.call_once(|| {
-                solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
+                gemachain_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
             });
         }
 
@@ -992,7 +992,7 @@ mod tests {
         TokenError::MintMismatch.into()
     }
 
-    fn rent_sysvar() -> SolanaAccount {
+    fn rent_sysvar() -> GemachainAccount {
         create_account_for_test(&Rent::default())
     }
 
@@ -1140,10 +1140,10 @@ mod tests {
         let program_id = crate::id();
         let owner_key = Pubkey::new_unique();
         let mint_key = Pubkey::new_unique();
-        let mut mint_account = SolanaAccount::new(42, Mint::get_packed_len(), &program_id);
+        let mut mint_account = GemachainAccount::new(42, Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let mut mint2_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // mint is not rent exempt
@@ -1155,7 +1155,7 @@ mod tests {
             )
         );
 
-        mint_account.lamports = mint_minimum_balance();
+        mint_account.carats = mint_minimum_balance();
 
         // create new mint
         do_process_instruction(
@@ -1188,10 +1188,10 @@ mod tests {
         let program_id = crate::id();
         let owner_key = Pubkey::new_unique();
         let mint_key = Pubkey::new_unique();
-        let mut mint_account = SolanaAccount::new(42, Mint::get_packed_len(), &program_id);
+        let mut mint_account = GemachainAccount::new(42, Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let mut mint2_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
 
         // mint is not rent exempt
         assert_eq!(
@@ -1202,7 +1202,7 @@ mod tests {
             )
         );
 
-        mint_account.lamports = mint_minimum_balance();
+        mint_account.carats = mint_minimum_balance();
 
         // create new mint
         do_process_instruction(
@@ -1234,12 +1234,12 @@ mod tests {
     fn test_initialize_mint_account() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(42, Account::get_packed_len(), &program_id);
+        let mut account_account = GemachainAccount::new(42, Account::get_packed_len(), &program_id);
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // account is not rent exempt
@@ -1256,7 +1256,7 @@ mod tests {
             )
         );
 
-        account_account.lamports = account_minimum_balance();
+        account_account.carats = account_minimum_balance();
 
         // mint is not valid (not initialized)
         assert_eq!(
@@ -1310,46 +1310,46 @@ mod tests {
     fn test_transfer_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let mut account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let mut account2_info: AccountInfo = (&account2_key, false, &mut account2_account).into();
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_info: AccountInfo = (&account3_key, false, &mut account3_account).into();
         let account4_key = Pubkey::new_unique();
-        let mut account4_account = SolanaAccount::new(
+        let mut account4_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account4_info: AccountInfo = (&account4_key, true, &mut account4_account).into();
         let multisig_key = Pubkey::new_unique();
-        let mut multisig_account = SolanaAccount::new(
+        let mut multisig_account = GemachainAccount::new(
             multisig_minimum_balance(),
             Multisig::get_packed_len(),
             &program_id,
         );
         let multisig_info: AccountInfo = (&multisig_key, true, &mut multisig_account).into();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, false, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -1617,38 +1617,38 @@ mod tests {
     fn test_transfer() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
+        let mut delegate_account = GemachainAccount::default();
         let mismatch_key = Pubkey::new_unique();
-        let mut mismatch_account = SolanaAccount::new(
+        let mut mismatch_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let mut rent_sysvar = rent_sysvar();
 
@@ -2038,32 +2038,32 @@ mod tests {
     fn test_self_transfer() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
+        let mut delegate_account = GemachainAccount::default();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create mint
@@ -2568,16 +2568,16 @@ mod tests {
     fn test_mintable_token_with_zero_supply() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create mint-able token with zero supply
@@ -2667,39 +2667,39 @@ mod tests {
     fn test_approve_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_info: AccountInfo = (&account2_key, false, &mut account2_account).into();
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_info: AccountInfo = (&account3_key, true, &mut account3_account).into();
         let multisig_key = Pubkey::new_unique();
-        let mut multisig_account = SolanaAccount::new(
+        let mut multisig_account = GemachainAccount::new(
             multisig_minimum_balance(),
             Multisig::get_packed_len(),
             &program_id,
         );
         let multisig_info: AccountInfo = (&multisig_key, true, &mut multisig_account).into();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, false, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -2878,26 +2878,26 @@ mod tests {
     fn test_approve() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
+        let mut delegate_account = GemachainAccount::default();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create mint
@@ -3083,7 +3083,7 @@ mod tests {
     fn test_set_authority_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
@@ -3092,7 +3092,7 @@ mod tests {
         let owner_key = Pubkey::new_unique();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, true, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -3186,29 +3186,29 @@ mod tests {
     fn test_set_authority() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let owner3_key = Pubkey::new_unique();
-        let mut owner3_account = SolanaAccount::default();
+        let mut owner3_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let mut mint2_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create new mint with owner
@@ -3568,18 +3568,18 @@ mod tests {
     fn test_mint_to_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, true, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -3664,39 +3664,39 @@ mod tests {
     fn test_mint_to() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let mismatch_key = Pubkey::new_unique();
-        let mut mismatch_account = SolanaAccount::new(
+        let mut mismatch_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let uninitialized_key = Pubkey::new_unique();
-        let mut uninitialized_account = SolanaAccount::new(
+        let mut uninitialized_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
@@ -3867,18 +3867,18 @@ mod tests {
     fn test_burn_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner_info: AccountInfo = (&owner_key, true, &mut owner_account).into();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, true, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -4067,38 +4067,38 @@ mod tests {
     fn test_burn() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
+        let mut delegate_account = GemachainAccount::default();
         let mismatch_key = Pubkey::new_unique();
-        let mut mismatch_account = SolanaAccount::new(
+        let mut mismatch_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint2_key = Pubkey::new_unique();
         let mut rent_sysvar = rent_sysvar();
 
@@ -4333,32 +4333,32 @@ mod tests {
         let program_id = crate::id();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let account_key = Pubkey::new_unique();
-        let mut account = SolanaAccount::new(
+        let mut account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let multisig_key = Pubkey::new_unique();
-        let mut multisig_account = SolanaAccount::new(42, Multisig::get_packed_len(), &program_id);
+        let mut multisig_account = GemachainAccount::new(42, Multisig::get_packed_len(), &program_id);
         let multisig_delegate_key = Pubkey::new_unique();
-        let mut multisig_delegate_account = SolanaAccount::new(
+        let mut multisig_delegate_account = GemachainAccount::new(
             multisig_minimum_balance(),
             Multisig::get_packed_len(),
             &program_id,
         );
         let signer_keys = vec![Pubkey::new_unique(); MAX_SIGNERS];
         let signer_key_refs: Vec<&Pubkey> = signer_keys.iter().collect();
-        let mut signer_accounts = vec![SolanaAccount::new(0, 0, &program_id); MAX_SIGNERS];
+        let mut signer_accounts = vec![GemachainAccount::new(0, 0, &program_id); MAX_SIGNERS];
         let mut rent_sysvar = rent_sysvar();
 
         // multisig is not rent exempt
@@ -4375,7 +4375,7 @@ mod tests {
             )
         );
 
-        multisig_account.lamports = multisig_minimum_balance();
+        multisig_account.carats = multisig_minimum_balance();
         let mut multisig_account2 = multisig_account.clone();
 
         // single signer
@@ -4635,14 +4635,14 @@ mod tests {
 
         // freeze account
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let mint2_key = Pubkey::new_unique();
         let mut mint2_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         do_process_instruction(
             initialize_mint(
                 &program_id,
@@ -4752,14 +4752,14 @@ mod tests {
         for signer_key in signer_keys.iter_mut().take(MAX_SIGNERS) {
             *signer_key = Pubkey::new_unique();
         }
-        let mut signer_lamports = 0;
+        let mut signer_carats = 0;
         let mut signer_data = vec![];
         let mut signers = vec![
             AccountInfo::new(
                 &owner_key,
                 true,
                 false,
-                &mut signer_lamports,
+                &mut signer_carats,
                 &mut signer_data,
                 &program_id,
                 false,
@@ -4770,7 +4770,7 @@ mod tests {
         for (signer, key) in signers.iter_mut().zip(&signer_keys) {
             signer.key = key;
         }
-        let mut lamports = 0;
+        let mut carats = 0;
         let mut data = vec![0; Multisig::get_packed_len()];
         let mut multisig = Multisig::unpack_unchecked(&data).unwrap();
         multisig.m = MAX_SIGNERS as u8;
@@ -4782,7 +4782,7 @@ mod tests {
             &owner_key,
             false,
             false,
-            &mut lamports,
+            &mut carats,
             &mut data,
             &program_id,
             false,
@@ -4877,14 +4877,14 @@ mod tests {
 
         // 11:11, single signer signs multiple times
         {
-            let mut signer_lamports = 0;
+            let mut signer_carats = 0;
             let mut signer_data = vec![];
             let signers = vec![
                 AccountInfo::new(
                     &signer_keys[5],
                     true,
                     false,
-                    &mut signer_lamports,
+                    &mut signer_carats,
                     &mut signer_data,
                     &program_id,
                     false,
@@ -4908,14 +4908,14 @@ mod tests {
     fn test_close_account_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account1_info: AccountInfo = (&account1_key, true, &mut account1_account).into();
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
@@ -4924,7 +4924,7 @@ mod tests {
         let owner_key = Pubkey::new_unique();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, false, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -4995,29 +4995,29 @@ mod tests {
         let program_id = crate::id();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance() + 42,
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mut rent_sysvar = rent_sysvar();
 
         // uninitialized
@@ -5095,7 +5095,7 @@ mod tests {
                 ],
             )
         );
-        assert_eq!(account_account.lamports, account_minimum_balance());
+        assert_eq!(account_account.carats, account_minimum_balance());
 
         // empty account
         do_process_instruction(
@@ -5127,20 +5127,20 @@ mod tests {
             ],
         )
         .unwrap();
-        assert_eq!(account_account.lamports, 0);
-        assert_eq!(account3_account.lamports, 2 * account_minimum_balance());
+        assert_eq!(account_account.carats, 0);
+        assert_eq!(account3_account.carats, 2 * account_minimum_balance());
         let account = Account::unpack_unchecked(&account_account.data).unwrap();
         assert_eq!(account.amount, 0);
 
         // fund and initialize new non-native account to test close authority
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::new(
+        let mut owner2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
@@ -5155,7 +5155,7 @@ mod tests {
             ],
         )
         .unwrap();
-        account_account.lamports = 2;
+        account_account.carats = 2;
 
         do_process_instruction(
             set_authority(
@@ -5194,8 +5194,8 @@ mod tests {
             ],
         )
         .unwrap();
-        assert_eq!(account_account.lamports, 0);
-        assert_eq!(account3_account.lamports, 2 * account_minimum_balance() + 2);
+        assert_eq!(account_account.carats, 0);
+        assert_eq!(account3_account.carats, 2 * account_minimum_balance() + 2);
         let account = Account::unpack_unchecked(&account_account.data).unwrap();
         assert_eq!(account.amount, 0);
 
@@ -5211,10 +5211,10 @@ mod tests {
         .unwrap();
         let account = Account::unpack_unchecked(&account2_account.data).unwrap();
         assert!(account.is_native());
-        assert_eq!(account_account.lamports, 0);
+        assert_eq!(account_account.carats, 0);
         assert_eq!(account.amount, 0);
         assert_eq!(
-            account3_account.lamports,
+            account3_account.carats,
             3 * account_minimum_balance() + 2 + 42
         );
     }
@@ -5223,25 +5223,25 @@ mod tests {
     fn test_native_token() {
         let program_id = crate::id();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance() + 40,
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account3_key = Pubkey::new_unique();
-        let mut account3_account = SolanaAccount::new(account_minimum_balance(), 0, &program_id);
+        let mut account3_account = GemachainAccount::new(account_minimum_balance(), 0, &program_id);
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let owner3_key = Pubkey::new_unique();
         let mut rent_sysvar = rent_sysvar();
 
@@ -5307,7 +5307,7 @@ mod tests {
         // burn unsupported
         let bogus_mint_key = Pubkey::new_unique();
         let mut bogus_mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         do_process_instruction(
             initialize_mint(&program_id, &bogus_mint_key, &owner_key, None, 2).unwrap(),
             vec![&mut bogus_mint_account, &mut rent_sysvar],
@@ -5373,11 +5373,11 @@ mod tests {
             ],
         )
         .unwrap();
-        assert_eq!(account_account.lamports, account_minimum_balance());
+        assert_eq!(account_account.carats, account_minimum_balance());
         let account = Account::unpack_unchecked(&account_account.data).unwrap();
         assert!(account.is_native());
         assert_eq!(account.amount, 0);
-        assert_eq!(account2_account.lamports, account_minimum_balance() + 40);
+        assert_eq!(account2_account.carats, account_minimum_balance() + 40);
         let account = Account::unpack_unchecked(&account2_account.data).unwrap();
         assert!(account.is_native());
         assert_eq!(account.amount, 40);
@@ -5428,8 +5428,8 @@ mod tests {
             ],
         )
         .unwrap();
-        assert_eq!(account_account.lamports, 0);
-        assert_eq!(account3_account.lamports, 2 * account_minimum_balance());
+        assert_eq!(account_account.carats, 0);
+        assert_eq!(account3_account.carats, 2 * account_minimum_balance());
         let account = Account::unpack_unchecked(&account_account.data).unwrap();
         assert!(account.is_native());
         assert_eq!(account.amount, 0);
@@ -5439,26 +5439,26 @@ mod tests {
     fn test_overflow() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_owner_key = Pubkey::new_unique();
-        let mut mint_owner_account = SolanaAccount::default();
+        let mut mint_owner_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create new mint with owner
@@ -5616,22 +5616,22 @@ mod tests {
     fn test_frozen() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account2_key = Pubkey::new_unique();
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create new mint and fund first account
@@ -5727,7 +5727,7 @@ mod tests {
         account.state = AccountState::Frozen;
         Account::pack(account, &mut account_account.data).unwrap();
         let delegate_key = Pubkey::new_unique();
-        let mut delegate_account = SolanaAccount::default();
+        let mut delegate_account = GemachainAccount::default();
         assert_eq!(
             Err(TokenError::AccountFrozen.into()),
             do_process_instruction(
@@ -5802,7 +5802,7 @@ mod tests {
     fn test_freeze_thaw_dups() {
         let program_id = crate::id();
         let account1_key = Pubkey::new_unique();
-        let mut account1_account = SolanaAccount::new(
+        let mut account1_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
@@ -5811,7 +5811,7 @@ mod tests {
         let owner_key = Pubkey::new_unique();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mint_info: AccountInfo = (&mint_key, true, &mut mint_account).into();
         let rent_key = rent::id();
         let mut rent_sysvar = rent_sysvar();
@@ -5866,20 +5866,20 @@ mod tests {
     fn test_freeze_account() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let account_owner_key = Pubkey::new_unique();
-        let mut account_owner_account = SolanaAccount::default();
+        let mut account_owner_account = GemachainAccount::default();
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let owner2_key = Pubkey::new_unique();
-        let mut owner2_account = SolanaAccount::default();
+        let mut owner2_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create new mint with owner different from account owner
@@ -5979,26 +5979,26 @@ mod tests {
     fn test_initialize_account2_and_3() {
         let program_id = crate::id();
         let account_key = Pubkey::new_unique();
-        let mut account_account = SolanaAccount::new(
+        let mut account_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
-        let mut account2_account = SolanaAccount::new(
+        let mut account2_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
-        let mut account3_account = SolanaAccount::new(
+        let mut account3_account = GemachainAccount::new(
             account_minimum_balance(),
             Account::get_packed_len(),
             &program_id,
         );
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let mut rent_sysvar = rent_sysvar();
 
         // create mint
@@ -6041,23 +6041,23 @@ mod tests {
         let program_id = crate::id();
         let mint_key = Pubkey::new_unique();
         let mut mint_account =
-            SolanaAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
+            GemachainAccount::new(mint_minimum_balance(), Mint::get_packed_len(), &program_id);
         let native_account_key = Pubkey::new_unique();
-        let lamports = 40;
-        let mut native_account = SolanaAccount::new(
-            account_minimum_balance() + lamports,
+        let carats = 40;
+        let mut native_account = GemachainAccount::new(
+            account_minimum_balance() + carats,
             Account::get_packed_len(),
             &program_id,
         );
         let non_native_account_key = Pubkey::new_unique();
-        let mut non_native_account = SolanaAccount::new(
+        let mut non_native_account = GemachainAccount::new(
             account_minimum_balance() + 50,
             Account::get_packed_len(),
             &program_id,
         );
 
         let owner_key = Pubkey::new_unique();
-        let mut owner_account = SolanaAccount::default();
+        let mut owner_account = GemachainAccount::default();
         let mut rent_sysvar = rent_sysvar();
 
         // initialize non-native mint
@@ -6121,7 +6121,7 @@ mod tests {
         .unwrap();
         let account = Account::unpack_unchecked(&native_account.data).unwrap();
         assert!(account.is_native());
-        assert_eq!(account.amount, lamports);
+        assert_eq!(account.amount, carats);
 
         // sync, no change
         do_process_instruction(
@@ -6130,11 +6130,11 @@ mod tests {
         )
         .unwrap();
         let account = Account::unpack_unchecked(&native_account.data).unwrap();
-        assert_eq!(account.amount, lamports);
+        assert_eq!(account.amount, carats);
 
-        // transfer sol
-        let new_lamports = lamports + 50;
-        native_account.lamports = account_minimum_balance() + new_lamports;
+        // transfer gema
+        let new_carats = carats + 50;
+        native_account.carats = account_minimum_balance() + new_carats;
 
         // success sync
         do_process_instruction(
@@ -6143,10 +6143,10 @@ mod tests {
         )
         .unwrap();
         let account = Account::unpack_unchecked(&native_account.data).unwrap();
-        assert_eq!(account.amount, new_lamports);
+        assert_eq!(account.amount, new_carats);
 
-        // reduce sol
-        native_account.lamports -= 1;
+        // reduce gema
+        native_account.carats -= 1;
 
         // fail sync
         assert_eq!(

@@ -3,7 +3,7 @@
 use crate::curve::{base::SwapCurve, fees::Fees};
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use enum_dispatch::enum_dispatch;
-use solana_program::{
+use gemachain_program::{
     program_error::ProgramError,
     program_pack::{IsInitialized, Pack, Sealed},
     pubkey::Pubkey,

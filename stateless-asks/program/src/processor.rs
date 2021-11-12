@@ -1,12 +1,12 @@
 //! Program state processor
 
-use solana_program::program_option::COption;
+use gemachain_program::program_option::COption;
 
 use crate::instruction::StatelessOfferInstruction;
 use crate::validation_utils::{assert_is_ata, assert_keys_equal};
 use {
     borsh::BorshDeserialize,
-    solana_program::{
+    gemachain_program::{
         account_info::next_account_info,
         account_info::AccountInfo,
         entrypoint::ProgramResult,
@@ -56,8 +56,8 @@ fn process_accept_offer(
     let taker_src_mint = next_account_info(account_info_iter)?;
     let transfer_authority = next_account_info(account_info_iter)?;
     let token_program_info = next_account_info(account_info_iter)?;
-    let maker_src_token_account: spl_token::state::Account =
-        spl_token::state::Account::unpack(&maker_src_account.data.borrow())?;
+    let maker_src_token_account: gpl_token::state::Account =
+        gpl_token::state::Account::unpack(&maker_src_account.data.borrow())?;
     msg!("Processed Accounts");
     // Ensure that the delegated amount is exactly equal to the maker_size
     msg!(
@@ -91,7 +91,7 @@ fn process_accept_offer(
         return Err(ProgramError::InvalidAccountData);
     }
     msg!("Delegate matches");
-    assert_keys_equal(spl_token::id(), *token_program_info.key)?;
+    assert_keys_equal(gpl_token::id(), *token_program_info.key)?;
     msg!("start");
     // Both of these transfers will fail if the `transfer_authority` is the delegate of these ATA's
     // One consideration is that the taker can get tricked in the case that the maker size is greater than
@@ -106,7 +106,7 @@ fn process_accept_offer(
         taker_wallet.key
     );
     invoke_signed(
-        &spl_token::instruction::transfer(
+        &gpl_token::instruction::transfer(
             token_program_info.key,
             maker_src_account.key,
             taker_dst_account.key,
@@ -123,9 +123,9 @@ fn process_accept_offer(
         &[seeds],
     )?;
     msg!("done tx from maker to taker {}", maker_size);
-    if *taker_src_mint.key == spl_token::native_mint::id() {
+    if *taker_src_mint.key == gpl_token::native_mint::id() {
         msg!(
-            "Transferring lamports from {} to {}",
+            "Transferring carats from {} to {}",
             taker_wallet.key,
             maker_wallet.key
         );
@@ -151,7 +151,7 @@ fn process_accept_offer(
             maker_wallet.key
         );
         invoke(
-            &spl_token::instruction::transfer(
+            &gpl_token::instruction::transfer(
                 token_program_info.key,
                 taker_src_account.key,
                 maker_dst_account.key,

@@ -4,15 +4,15 @@ mod helpers;
 
 use {
     helpers::*,
-    solana_program::{
+    gemachain_program::{
         borsh::try_from_slice_unchecked, instruction::InstructionError, pubkey::Pubkey,
     },
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::TransactionError,
     },
-    spl_stake_pool::{error::StakePoolError, state::StakePool},
+    gpl_stake_pool::{error::StakePoolError, state::StakePool},
 };
 
 async fn setup() -> (
@@ -83,7 +83,7 @@ async fn success() {
     )
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
-    assert_eq!(pre_balance, stake_pool.total_lamports);
+    assert_eq!(pre_balance, stake_pool.total_carats);
 
     let pre_token_supply = get_token_supply(
         &mut context.banks_client,
@@ -138,7 +138,7 @@ async fn success() {
     )
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
-    assert_eq!(post_balance, stake_pool.total_lamports);
+    assert_eq!(post_balance, stake_pool.total_carats);
 
     let post_fee = get_token_balance(
         &mut context.banks_client,
@@ -153,21 +153,21 @@ async fn success() {
     let actual_fee = post_fee - pre_fee;
     assert_eq!(pool_token_supply - pre_token_supply, actual_fee);
 
-    let expected_fee_lamports = (post_balance - pre_balance) * stake_pool.epoch_fee.numerator
+    let expected_fee_carats = (post_balance - pre_balance) * stake_pool.epoch_fee.numerator
         / stake_pool.epoch_fee.denominator;
-    let actual_fee_lamports = stake_pool.calc_pool_tokens_for_deposit(actual_fee).unwrap();
-    assert_eq!(actual_fee_lamports, expected_fee_lamports);
+    let actual_fee_carats = stake_pool.calc_pool_tokens_for_deposit(actual_fee).unwrap();
+    assert_eq!(actual_fee_carats, expected_fee_carats);
 
-    let expected_fee = expected_fee_lamports * pool_token_supply / post_balance;
+    let expected_fee = expected_fee_carats * pool_token_supply / post_balance;
     assert_eq!(expected_fee, actual_fee);
 
     assert_eq!(pool_token_supply, stake_pool.pool_token_supply);
     assert_eq!(pre_token_supply, stake_pool.last_epoch_pool_token_supply);
-    assert_eq!(pre_balance, stake_pool.last_epoch_total_lamports);
+    assert_eq!(pre_balance, stake_pool.last_epoch_total_carats);
 }
 
 #[tokio::test]
-async fn success_ignoring_extra_lamports() {
+async fn success_ignoring_extra_carats() {
     let (mut context, stake_pool_accounts, stake_accounts) = setup().await;
 
     let pre_balance = get_validator_list_sum(
@@ -182,7 +182,7 @@ async fn success_ignoring_extra_lamports() {
     )
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
-    assert_eq!(pre_balance, stake_pool.total_lamports);
+    assert_eq!(pre_balance, stake_pool.total_carats);
 
     let pre_token_supply = get_token_supply(
         &mut context.banks_client,

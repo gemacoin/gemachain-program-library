@@ -51,7 +51,7 @@ use process_set_realm_config::*;
 use process_sign_off_proposal::*;
 use process_withdraw_governing_tokens::*;
 
-use solana_program::{
+use gemachain_program::{
     account_info::AccountInfo, entrypoint::ProgramResult, msg, program_error::ProgramError,
     pubkey::Pubkey,
 };

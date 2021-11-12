@@ -1,8 +1,8 @@
 use crate::{get_associated_token_address, output::CliTokenAccount};
 use serde::{Deserialize, Serialize};
-use solana_account_decoder::{parse_token::TokenAccountType, UiAccountData};
-use solana_client::rpc_response::RpcKeyedAccount;
-use solana_sdk::pubkey::Pubkey;
+use gemachain_account_decoder::{parse_token::TokenAccountType, UiAccountData};
+use gemachain_client::rpc_response::RpcKeyedAccount;
+use gemachain_sdk::pubkey::Pubkey;
 use std::{
     collections::{btree_map::Entry, BTreeMap},
     str::FromStr,
@@ -28,7 +28,7 @@ pub(crate) fn sort_and_parse_token_accounts(
         let address = keyed_account.pubkey;
 
         if let UiAccountData::Json(parsed_account) = keyed_account.account.data {
-            if parsed_account.program != "spl-token" {
+            if parsed_account.program != "gpl-token" {
                 unsupported_accounts.push(UnsupportedAccount {
                     address,
                     err: format!("Unsupported account program: {}", parsed_account.program),

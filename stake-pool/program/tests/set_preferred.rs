@@ -4,16 +4,16 @@ mod helpers;
 
 use {
     helpers::*,
-    solana_program::hash::Hash,
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program::hash::Hash,
+    gemachain_program_test::*,
+    gemachain_sdk::{
         borsh::try_from_slice_unchecked,
         instruction::InstructionError,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error, find_transient_stake_program_address, id,
         instruction::{self, PreferredValidatorType},
         state::StakePool,

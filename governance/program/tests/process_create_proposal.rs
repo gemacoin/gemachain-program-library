@@ -1,13 +1,13 @@
 #![cfg(feature = "test-bpf")]
 
-use solana_program::{instruction::AccountMeta, pubkey::Pubkey};
-use solana_program_test::*;
+use gemachain_program::{instruction::AccountMeta, pubkey::Pubkey};
+use gemachain_program_test::*;
 
 mod program_test;
 
 use program_test::*;
-use solana_sdk::signature::Keypair;
-use spl_governance::error::GovernanceError;
+use gemachain_sdk::signature::Keypair;
+use gpl_governance::error::GovernanceError;
 
 #[tokio::test]
 async fn test_create_community_proposal() {

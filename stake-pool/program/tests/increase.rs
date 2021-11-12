@@ -5,13 +5,13 @@ mod helpers;
 use {
     bincode::deserialize,
     helpers::*,
-    solana_program::{clock::Epoch, hash::Hash, instruction::InstructionError, pubkey::Pubkey},
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program::{clock::Epoch, hash::Hash, instruction::InstructionError, pubkey::Pubkey},
+    gemachain_program_test::*,
+    gemachain_sdk::{
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error::StakePoolError, find_transient_stake_program_address, id, instruction,
         stake_program, MINIMUM_ACTIVE_STAKE,
     },
@@ -27,13 +27,13 @@ async fn setup() -> (
 ) {
     let (mut banks_client, payer, recent_blockhash) = program_test().start().await;
     let stake_pool_accounts = StakePoolAccounts::new();
-    let reserve_lamports = 100_000_000_000;
+    let reserve_carats = 100_000_000_000;
     stake_pool_accounts
         .initialize_stake_pool(
             &mut banks_client,
             &payer,
             &recent_blockhash,
-            reserve_lamports,
+            reserve_carats,
         )
         .await
         .unwrap();
@@ -63,7 +63,7 @@ async fn setup() -> (
         recent_blockhash,
         stake_pool_accounts,
         validator_stake_account,
-        reserve_lamports,
+        reserve_carats,
     )
 }
 
@@ -75,7 +75,7 @@ async fn success() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     // Save reserve stake
@@ -94,7 +94,7 @@ async fn success() {
 
     let rent = banks_client.get_rent().await.unwrap();
     let stake_rent = rent.minimum_balance(std::mem::size_of::<stake_program::StakeState>());
-    let increase_amount = reserve_lamports - stake_rent - 1;
+    let increase_amount = reserve_carats - stake_rent - 1;
     let error = stake_pool_accounts
         .increase_validator_stake(
             &mut banks_client,
@@ -117,8 +117,8 @@ async fn success() {
     let reserve_stake_state =
         deserialize::<stake_program::StakeState>(&reserve_stake_account.data).unwrap();
     assert_eq!(
-        pre_reserve_stake_account.lamports - increase_amount - stake_rent,
-        reserve_stake_account.lamports
+        pre_reserve_stake_account.carats - increase_amount - stake_rent,
+        reserve_stake_account.carats
     );
     assert!(reserve_stake_state.delegation().is_none());
 
@@ -128,7 +128,7 @@ async fn success() {
     let transient_stake_state =
         deserialize::<stake_program::StakeState>(&transient_stake_account.data).unwrap();
     assert_eq!(
-        transient_stake_account.lamports,
+        transient_stake_account.carats,
         increase_amount + stake_rent
     );
     assert_ne!(
@@ -145,7 +145,7 @@ async fn fail_with_wrong_withdraw_authority() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     let wrong_authority = Pubkey::new_unique();
@@ -160,7 +160,7 @@ async fn fail_with_wrong_withdraw_authority() {
             &stake_pool_accounts.reserve_stake.pubkey(),
             &validator_stake.transient_stake_account,
             &validator_stake.vote.pubkey(),
-            reserve_lamports / 2,
+            reserve_carats / 2,
             validator_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -191,7 +191,7 @@ async fn fail_with_wrong_validator_list() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     let wrong_validator_list = Pubkey::new_unique();
@@ -206,7 +206,7 @@ async fn fail_with_wrong_validator_list() {
             &stake_pool_accounts.reserve_stake.pubkey(),
             &validator_stake.transient_stake_account,
             &validator_stake.vote.pubkey(),
-            reserve_lamports / 2,
+            reserve_carats / 2,
             validator_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -237,7 +237,7 @@ async fn fail_with_unknown_validator() {
         recent_blockhash,
         stake_pool_accounts,
         _validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     let unknown_stake = create_unknown_validator_stake(
@@ -258,7 +258,7 @@ async fn fail_with_unknown_validator() {
             &stake_pool_accounts.reserve_stake.pubkey(),
             &unknown_stake.transient_stake_account,
             &unknown_stake.vote.pubkey(),
-            reserve_lamports / 2,
+            reserve_carats / 2,
             unknown_stake.transient_stake_seed,
         )],
         Some(&payer.pubkey()),
@@ -289,7 +289,7 @@ async fn fail_increase_twice() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     let error = stake_pool_accounts
@@ -299,7 +299,7 @@ async fn fail_increase_twice() {
             &recent_blockhash,
             &validator_stake.transient_stake_account,
             &validator_stake.vote.pubkey(),
-            reserve_lamports / 3,
+            reserve_carats / 3,
             validator_stake.transient_stake_seed,
         )
         .await;
@@ -320,7 +320,7 @@ async fn fail_increase_twice() {
             &recent_blockhash,
             &validator_stake.stake_account,
             &transient_stake_address,
-            reserve_lamports / 4,
+            reserve_carats / 4,
             transient_stake_seed,
         )
         .await
@@ -343,7 +343,7 @@ async fn fail_with_small_lamport_amount() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        _reserve_lamports,
+        _reserve_carats,
     ) = setup().await;
 
     let error = stake_pool_accounts
@@ -374,7 +374,7 @@ async fn fail_overdraw_reserve() {
         recent_blockhash,
         stake_pool_accounts,
         validator_stake,
-        reserve_lamports,
+        reserve_carats,
     ) = setup().await;
 
     let error = stake_pool_accounts
@@ -384,7 +384,7 @@ async fn fail_overdraw_reserve() {
             &recent_blockhash,
             &validator_stake.transient_stake_account,
             &validator_stake.vote.pubkey(),
-            reserve_lamports,
+            reserve_carats,
             validator_stake.transient_stake_seed,
         )
         .await

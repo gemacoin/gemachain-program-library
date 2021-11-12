@@ -4,14 +4,14 @@ mod helpers;
 
 use {
     helpers::*,
-    solana_program_test::*,
-    solana_sdk::{
+    gemachain_program_test::*,
+    gemachain_sdk::{
         borsh::try_from_slice_unchecked,
         instruction::InstructionError,
         signature::{Keypair, Signer},
         transaction::{Transaction, TransactionError},
     },
-    spl_stake_pool::{
+    gpl_stake_pool::{
         error, id, instruction,
         state::{Fee, FeeType, StakePool},
     },
@@ -51,7 +51,7 @@ async fn success() {
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     let old_stake_withdrawal_fee = stake_pool.stake_withdrawal_fee;
-    let old_sol_withdrawal_fee = stake_pool.sol_withdrawal_fee;
+    let old_gema_withdrawal_fee = stake_pool.gema_withdrawal_fee;
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::set_fee(
@@ -75,7 +75,7 @@ async fn success() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(new_withdrawal_fee),
+            FeeType::GemaWithdrawal(new_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -99,8 +99,8 @@ async fn success() {
         stake_pool.next_stake_withdrawal_fee,
         Some(new_withdrawal_fee)
     );
-    assert_eq!(stake_pool.sol_withdrawal_fee, old_sol_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, Some(new_withdrawal_fee));
+    assert_eq!(stake_pool.gema_withdrawal_fee, old_gema_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, Some(new_withdrawal_fee));
 
     let first_normal_slot = context.genesis_config().epoch_schedule.first_normal_slot;
     let slots_per_epoch = context.genesis_config().epoch_schedule.slots_per_epoch;
@@ -126,8 +126,8 @@ async fn success() {
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     assert_eq!(stake_pool.stake_withdrawal_fee, new_withdrawal_fee);
     assert_eq!(stake_pool.next_stake_withdrawal_fee, None);
-    assert_eq!(stake_pool.sol_withdrawal_fee, new_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, None);
+    assert_eq!(stake_pool.gema_withdrawal_fee, new_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, None);
 }
 
 #[tokio::test]
@@ -141,7 +141,7 @@ async fn success_fee_cannot_increase_more_than_once() {
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     let old_stake_withdrawal_fee = stake_pool.stake_withdrawal_fee;
-    let old_sol_withdrawal_fee = stake_pool.sol_withdrawal_fee;
+    let old_gema_withdrawal_fee = stake_pool.gema_withdrawal_fee;
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::set_fee(
@@ -165,7 +165,7 @@ async fn success_fee_cannot_increase_more_than_once() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(new_withdrawal_fee),
+            FeeType::GemaWithdrawal(new_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -189,8 +189,8 @@ async fn success_fee_cannot_increase_more_than_once() {
         stake_pool.next_stake_withdrawal_fee,
         Some(new_withdrawal_fee)
     );
-    assert_eq!(stake_pool.sol_withdrawal_fee, old_sol_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, Some(new_withdrawal_fee));
+    assert_eq!(stake_pool.gema_withdrawal_fee, old_gema_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, Some(new_withdrawal_fee));
 
     let first_normal_slot = context.genesis_config().epoch_schedule.first_normal_slot;
     let slots_per_epoch = context.genesis_config().epoch_schedule.slots_per_epoch;
@@ -216,8 +216,8 @@ async fn success_fee_cannot_increase_more_than_once() {
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     assert_eq!(stake_pool.stake_withdrawal_fee, new_withdrawal_fee);
     assert_eq!(stake_pool.next_stake_withdrawal_fee, None);
-    assert_eq!(stake_pool.sol_withdrawal_fee, new_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, None);
+    assert_eq!(stake_pool.gema_withdrawal_fee, new_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, None);
 
     // try setting to the old fee in the same epoch
     let transaction = Transaction::new_signed_with_payer(
@@ -241,7 +241,7 @@ async fn success_fee_cannot_increase_more_than_once() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(old_sol_withdrawal_fee),
+            FeeType::GemaWithdrawal(old_gema_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -264,10 +264,10 @@ async fn success_fee_cannot_increase_more_than_once() {
         stake_pool.next_stake_withdrawal_fee,
         Some(old_stake_withdrawal_fee)
     );
-    assert_eq!(stake_pool.sol_withdrawal_fee, new_withdrawal_fee);
+    assert_eq!(stake_pool.gema_withdrawal_fee, new_withdrawal_fee);
     assert_eq!(
-        stake_pool.next_sol_withdrawal_fee,
-        Some(old_sol_withdrawal_fee)
+        stake_pool.next_gema_withdrawal_fee,
+        Some(old_gema_withdrawal_fee)
     );
 
     let error = stake_pool_accounts
@@ -291,10 +291,10 @@ async fn success_fee_cannot_increase_more_than_once() {
         stake_pool.next_stake_withdrawal_fee,
         Some(old_stake_withdrawal_fee)
     );
-    assert_eq!(stake_pool.sol_withdrawal_fee, new_withdrawal_fee);
+    assert_eq!(stake_pool.gema_withdrawal_fee, new_withdrawal_fee);
     assert_eq!(
-        stake_pool.next_sol_withdrawal_fee,
-        Some(old_sol_withdrawal_fee)
+        stake_pool.next_gema_withdrawal_fee,
+        Some(old_gema_withdrawal_fee)
     );
 }
 
@@ -317,7 +317,7 @@ async fn success_increase_fee_from_0() {
     .await;
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     let old_stake_withdrawal_fee = stake_pool.stake_withdrawal_fee;
-    let old_sol_withdrawal_fee = stake_pool.sol_withdrawal_fee;
+    let old_gema_withdrawal_fee = stake_pool.gema_withdrawal_fee;
 
     let transaction = Transaction::new_signed_with_payer(
         &[instruction::set_fee(
@@ -341,7 +341,7 @@ async fn success_increase_fee_from_0() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(new_withdrawal_fee),
+            FeeType::GemaWithdrawal(new_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -365,8 +365,8 @@ async fn success_increase_fee_from_0() {
         stake_pool.next_stake_withdrawal_fee,
         Some(new_withdrawal_fee)
     );
-    assert_eq!(stake_pool.sol_withdrawal_fee, old_sol_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, Some(new_withdrawal_fee));
+    assert_eq!(stake_pool.gema_withdrawal_fee, old_gema_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, Some(new_withdrawal_fee));
 
     let first_normal_slot = context.genesis_config().epoch_schedule.first_normal_slot;
     let slots_per_epoch = context.genesis_config().epoch_schedule.slots_per_epoch;
@@ -392,8 +392,8 @@ async fn success_increase_fee_from_0() {
     let stake_pool = try_from_slice_unchecked::<StakePool>(stake_pool.data.as_slice()).unwrap();
     assert_eq!(stake_pool.stake_withdrawal_fee, new_withdrawal_fee);
     assert_eq!(stake_pool.next_stake_withdrawal_fee, None);
-    assert_eq!(stake_pool.sol_withdrawal_fee, new_withdrawal_fee);
-    assert_eq!(stake_pool.next_sol_withdrawal_fee, None);
+    assert_eq!(stake_pool.gema_withdrawal_fee, new_withdrawal_fee);
+    assert_eq!(stake_pool.next_gema_withdrawal_fee, None);
 }
 
 #[tokio::test]
@@ -501,7 +501,7 @@ async fn fail_high_stake_fee_increase() {
 }
 
 #[tokio::test]
-async fn fail_high_sol_fee_increase() {
+async fn fail_high_gema_fee_increase() {
     let (mut context, stake_pool_accounts, _new_stake_withdrawal_fee) = setup(None).await;
     let new_withdrawal_fee = Fee {
         numerator: 46,
@@ -513,7 +513,7 @@ async fn fail_high_sol_fee_increase() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(new_withdrawal_fee),
+            FeeType::GemaWithdrawal(new_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
@@ -576,7 +576,7 @@ async fn fail_high_stake_fee_increase_from_0() {
 }
 
 #[tokio::test]
-async fn fail_high_sol_fee_increase_from_0() {
+async fn fail_high_gema_fee_increase_from_0() {
     let (mut context, stake_pool_accounts, _new_stake_withdrawal_fee) = setup(Some(Fee {
         numerator: 0,
         denominator: 1,
@@ -591,7 +591,7 @@ async fn fail_high_sol_fee_increase_from_0() {
             &id(),
             &stake_pool_accounts.stake_pool.pubkey(),
             &stake_pool_accounts.manager.pubkey(),
-            FeeType::SolWithdrawal(new_withdrawal_fee),
+            FeeType::GemaWithdrawal(new_withdrawal_fee),
         )],
         Some(&context.payer.pubkey()),
         &[&context.payer, &stake_pool_accounts.manager],
