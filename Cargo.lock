@@ -502,6 +502,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "console"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a28b32d32ca44b70c3e4acd7db1babf555fa026e385fb95f18028f88848b3c31"
+dependencies = [
+ "encode_unicode",
+ "libc",
+ "once_cell",
+ "regex",
+ "terminal_size",
+ "unicode-width",
+ "winapi",
+]
+
+[[package]]
 name = "constant_time_eq"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -690,7 +705,7 @@ version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9dd058f8b65922819fabb4a41e7d1964e56344042c26efbccd465202c23fa0c"
 dependencies = [
- "console",
+ "console 0.14.1",
  "lazy_static",
  "tempfile",
  "zeroize",
@@ -1191,7 +1206,7 @@ dependencies = [
  "base64 0.13.0",
  "chrono",
  "clap",
- "console",
+ "console 0.14.1",
  "gemachain-account-decoder",
  "gemachain-clap-utils",
  "gemachain-client",
@@ -1502,7 +1517,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43b10c0019eff4ba14cf943b964392e696b541fdf4dd6c584b1462832328024f"
 dependencies = [
  "base32",
- "console",
+ "console 0.14.1",
  "dialoguer",
  "gemachain-sdk",
  "hidapi",
@@ -2146,7 +2161,7 @@ name = "gpl-token-cli"
 version = "2.0.15"
 dependencies = [
  "clap",
- "console",
+ "console 0.15.0",
  "gemachain-account-decoder",
  "gemachain-clap-utils",
  "gemachain-cli-config",
@@ -2463,7 +2478,7 @@ version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2d207dc617c7a380ab07ff572a6e52fa202a2a8f355860ac9c38e23f8196be1b"
 dependencies = [
- "console",
+ "console 0.15.0",
  "lazy_static",
  "number_prefix",
  "regex",
