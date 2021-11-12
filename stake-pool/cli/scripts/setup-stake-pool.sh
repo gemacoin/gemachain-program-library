@@ -7,7 +7,7 @@ max_validators=$1
 validator_list=$2
 
 keys_dir=keys
-spl_stake_pool=../../../target/debug/spl-stake-pool
+gpl_stake_pool=../../../target/debug/gpl-stake-pool
 
 mkdir -p $keys_dir
 
@@ -18,7 +18,7 @@ build_cli () {
 create_keypair () {
   if test ! -f $1
   then
-    solana-keygen new --no-passphrase -s -o $1
+    gemachain-keygen new --no-passphrase -s -o $1
   fi
 }
 
@@ -30,7 +30,7 @@ setup_pool () {
   create_keypair $stake_pool_keyfile
   create_keypair $mint_keyfile
 
-  $spl_stake_pool create-pool --epoch-fee-numerator 3 --epoch-fee-denominator 100 \
+  $gpl_stake_pool create-pool --epoch-fee-numerator 3 --epoch-fee-denominator 100 \
     --withdrawal-fee-numerator 5 --withdrawal-fee-denominator 1000 \
     --max-validators $max_validators \
     --pool-keypair $stake_pool_keyfile \
@@ -42,7 +42,7 @@ add_validator_stakes () {
   validator_list=$2
   for validator in $(cat $validator_list)
   do
-    $spl_stake_pool add-validator $pool $validator
+    $gpl_stake_pool add-validator $pool $validator
   done
 }
 
@@ -54,7 +54,7 @@ build_cli
 echo "Creating pool"
 setup_pool $max_validators $stake_pool_keyfile $mint_keyfile
 
-stake_pool_pubkey=$(solana-keygen pubkey $stake_pool_keyfile)
+stake_pool_pubkey=$(gemachain-keygen pubkey $stake_pool_keyfile)
 
 echo "Adding validator stake accounts to the pool"
 add_validator_stakes $stake_pool_pubkey $validator_list

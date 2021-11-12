@@ -7,16 +7,16 @@ the provided account's data
 
 ## Background
 
-Solana's programming model and the definitions of the Solana terms used in this
+Gemachain's programming model and the definitions of the Gemachain terms used in this
 document are available at:
 
-- https://docs.solana.com/apps
-- https://docs.solana.com/terminology
+- https://docs.gemachain.com/apps
+- https://docs.gemachain.com/terminology
 
 ## Source
 
 The Shared memory Program's source is available on
-[github](https://github.com/solana-labs/solana-program-library)
+[github](https://github.com/gemachain/gemachain-program-library)
 
 ## Interface
 

@@ -13,13 +13,13 @@ import {
   Transaction,
   TransactionInstruction,
   SYSVAR_RENT_PUBKEY,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 import type {
   Connection,
   Commitment,
   Signer,
   TransactionSignature,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 
 import * as Layout from './layout';
 import {sendAndConfirmTransaction} from './util/send-and-confirm-transaction';
@@ -38,7 +38,7 @@ const INVALID_ACCOUNT_OWNER = 'Invalid account owner';
 /**
  * Unfortunately, BufferLayout.encode uses an `instanceof` check for `Buffer`
  * which fails when using `publicKey.toBuffer()` directly because the bundled `Buffer`
- * class in `@solana/web3.js` is different from the bundled `Buffer` class in this package
+ * class in `@gemachain/web3.js` is different from the bundled `Buffer` class in this package
  */
 function pubkeyToBuffer(publicKey: PublicKey): typeof Buffer {
   return Buffer.from(publicKey.toBuffer());
@@ -336,7 +336,7 @@ export class Token {
   /**
    * Get the minimum balance for the mint to be rent exempt
    *
-   * @return Number of lamports required
+   * @return Number of carats required
    */
   static async getMinBalanceRentForExemptMint(
     connection: Connection,
@@ -347,7 +347,7 @@ export class Token {
   /**
    * Get the minimum balance for the account to be rent exempt
    *
-   * @return Number of lamports required
+   * @return Number of carats required
    */
   static async getMinBalanceRentForExemptAccount(
     connection: Connection,
@@ -360,7 +360,7 @@ export class Token {
   /**
    * Get the minimum balance for the multsig to be rent exempt
    *
-   * @return Number of lamports required
+   * @return Number of carats required
    */
   static async getMinBalanceRentForExemptMultisig(
     connection: Connection,
@@ -407,7 +407,7 @@ export class Token {
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
         newAccountPubkey: mintAccount.publicKey,
-        lamports: balanceNeeded,
+        carats: balanceNeeded,
         space: MintLayout.span,
         programId,
       }),
@@ -455,7 +455,7 @@ export class Token {
       SystemProgram.createAccount({
         fromPubkey: this.payer.publicKey,
         newAccountPubkey: newAccount.publicKey,
-        lamports: balanceNeeded,
+        carats: balanceNeeded,
         space: AccountLayout.span,
         programId: this.programId,
       }),
@@ -550,7 +550,7 @@ export class Token {
       return await this.getAccountInfo(associatedAddress);
     } catch (err) {
       // INVALID_ACCOUNT_OWNER can be possible if the associatedAddress has
-      // already been received some lamports (= became system accounts).
+      // already been received some carats (= became system accounts).
       // Assuming program derived addressing is safe, this is the only case
       // for the INVALID_ACCOUNT_OWNER in this code-path
       if (
@@ -584,13 +584,13 @@ export class Token {
    * In order to be wrapped, the account must have a balance of native tokens
    * when it is initialized with the token program.
    *
-   * This function sends lamports to the new account before initializing it.
+   * This function sends carats to the new account before initializing it.
    *
-   * @param connection A solana web3 connection
+   * @param connection A gemachain web3 connection
    * @param programId The token program ID
    * @param owner The owner of the new token account
-   * @param payer The source of the lamports to initialize, and payer of the initialization fees.
-   * @param amount The amount of lamports to wrap
+   * @param payer The source of the carats to initialize, and payer of the initialization fees.
+   * @param amount The amount of carats to wrap
    * @return {Promise<PublicKey>} The new token account
    */
   static async createWrappedNativeAccount(
@@ -612,18 +612,18 @@ export class Token {
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
         newAccountPubkey: newAccount.publicKey,
-        lamports: balanceNeeded,
+        carats: balanceNeeded,
         space: AccountLayout.span,
         programId,
       }),
     );
 
-    // Send lamports to it (these will be wrapped into native tokens by the token program)
+    // Send carats to it (these will be wrapped into native tokens by the token program)
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: payer.publicKey,
         toPubkey: newAccount.publicKey,
-        lamports: amount,
+        carats: amount,
       }),
     );
 
@@ -675,7 +675,7 @@ export class Token {
       SystemProgram.createAccount({
         fromPubkey: this.payer.publicKey,
         newAccountPubkey: multisigAccount.publicKey,
-        lamports: balanceNeeded,
+        carats: balanceNeeded,
         space: MultisigLayout.span,
         programId: this.programId,
       }),
@@ -1398,7 +1398,7 @@ export class Token {
   }
 
   /**
-   * Sync amount in native SPL token account to underlying lamports
+   * Sync amount in native GPL token account to underlying carats
    *
    * @param nativeAccount Account to sync
    */
@@ -1416,7 +1416,7 @@ export class Token {
   /**
    * Construct an InitializeMint instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Token mint account
    * @param decimals Number of decimals in token account amounts
    * @param mintAuthority Minting authority
@@ -1465,7 +1465,7 @@ export class Token {
   /**
    * Construct an InitializeAccount instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Token mint account
    * @param account New account
    * @param owner Owner of the new account
@@ -1501,7 +1501,7 @@ export class Token {
   /**
    * Construct a Transfer instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param source Source account
    * @param destination Destination account
    * @param owner Owner of the source account
@@ -1560,7 +1560,7 @@ export class Token {
   /**
    * Construct an Approve instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Public key of the account
    * @param delegate Account authorized to perform a transfer of tokens from the source account
    * @param owner Owner of the source account
@@ -1616,7 +1616,7 @@ export class Token {
   /**
    * Construct a Revoke instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Public key of the account
    * @param owner Owner of the source account
    * @param multiSigners Signing accounts if `owner` is a multiSig
@@ -1661,7 +1661,7 @@ export class Token {
   /**
    * Construct a SetAuthority instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Public key of the account
    * @param newAuthority New authority of the account
    * @param authorityType Type of authority to set
@@ -1721,7 +1721,7 @@ export class Token {
   /**
    * Construct a MintTo instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Public key of the mint
    * @param dest Public key of the account to mint to
    * @param authority The mint authority
@@ -1781,7 +1781,7 @@ export class Token {
   /**
    * Construct a Burn instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Mint for the account
    * @param account Account to burn tokens from
    * @param owner Owner of the account
@@ -1841,7 +1841,7 @@ export class Token {
   /**
    * Construct a Close instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Account to close
    * @param dest Account to receive the remaining balance of the closed account
    * @param authority Account Close authority
@@ -1890,7 +1890,7 @@ export class Token {
   /**
    * Construct a Freeze instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Account to freeze
    * @param mint Mint account
    * @param authority Mint freeze authority
@@ -1939,7 +1939,7 @@ export class Token {
   /**
    * Construct a Thaw instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Account to thaw
    * @param mint Mint account
    * @param authority Mint freeze authority
@@ -1988,7 +1988,7 @@ export class Token {
   /**
    * Construct a TransferChecked instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param source Source account
    * @param mint Mint account
    * @param destination Destination account
@@ -2054,7 +2054,7 @@ export class Token {
   /**
    * Construct an ApproveChecked instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param account Public key of the account
    * @param mint Mint account
    * @param delegate Account authorized to perform a transfer of tokens from the source account
@@ -2117,7 +2117,7 @@ export class Token {
   /**
    * Construct a MintToChecked instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Public key of the mint
    * @param dest Public key of the account to mint to
    * @param authority The mint authority
@@ -2181,7 +2181,7 @@ export class Token {
   /**
    * Construct a BurnChecked instruction
    *
-   * @param programId SPL Token program account
+   * @param programId GPL Token program account
    * @param mint Mint for the account
    * @param account Account to burn tokens from
    * @param owner Owner of the account
@@ -2244,8 +2244,8 @@ export class Token {
   /**
    * Construct a SyncNative instruction
    *
-   * @param programId SPL Token program account
-   * @param nativeAccount Account to sync lamports from
+   * @param programId GPL Token program account
+   * @param nativeAccount Account to sync carats from
    */
   static createSyncNativeInstruction(
     programId: PublicKey,
@@ -2268,8 +2268,8 @@ export class Token {
   /**
    * Get the address for the associated token account
    *
-   * @param associatedProgramId SPL Associated Token program account
-   * @param programId SPL Token program account
+   * @param associatedProgramId GPL Associated Token program account
+   * @param programId GPL Token program account
    * @param mint Token mint account
    * @param owner Owner of the new account
    * @return Public key of the associated token account
@@ -2296,8 +2296,8 @@ export class Token {
    * Construct the AssociatedTokenProgram instruction to create the associated
    * token account
    *
-   * @param associatedProgramId SPL Associated Token program account
-   * @param programId SPL Token program account
+   * @param associatedProgramId GPL Associated Token program account
+   * @param programId GPL Token program account
    * @param mint Token mint account
    * @param associatedAccount New associated account
    * @param owner Owner of the new account

@@ -2,10 +2,10 @@ import * as index from './index.js';
 import * as schema from './schema.js';
 import BN from 'bn.js';
 import assert, {deepStrictEqual} from 'assert';
-import {SOLANA_SCHEMA, PublicKey, Connection} from '@solana/web3.js';
+import {GEMACHAIN_SCHEMA, PublicKey, Connection} from '@gemachain/web3.js';
 
 // First populate schema
-schema.addStakePoolSchema(SOLANA_SCHEMA);
+schema.addStakePoolSchema(GEMACHAIN_SCHEMA);
 
 function deepStrictEqualBN(decodedData: object, expectedData: object) {
   /**
@@ -112,7 +112,7 @@ describe('schema.decode', () => {
             'hex',
           ),
         ),
-        totalStakeLamports: new BN('0', 'hex'),
+        totalStakeCarats: new BN('0', 'hex'),
         poolTokenSupply: new BN('0', 'hex'),
         lastUpdateEpoch: new BN('7c', 'hex'),
         fee: new schema.Fee({
@@ -161,7 +161,7 @@ describe('schema.decode', () => {
                 'hex',
               ),
             ),
-            stakeLamports: new BN('0', 'hex'),
+            stakeCarats: new BN('0', 'hex'),
             lastUpdateEpoch: new BN('c3', 'hex'),
           }),
           new schema.ValidatorStakeInfo({
@@ -174,7 +174,7 @@ describe('schema.decode', () => {
                 'hex',
               ),
             ),
-            stakeLamports: new BN('0', 'hex'),
+            stakeCarats: new BN('0', 'hex'),
             lastUpdateEpoch: new BN('c3', 'hex'),
           }),
           new schema.ValidatorStakeInfo({
@@ -187,7 +187,7 @@ describe('schema.decode', () => {
                 'hex',
               ),
             ),
-            stakeLamports: new BN('0', 'hex'),
+            stakeCarats: new BN('0', 'hex'),
             lastUpdateEpoch: new BN('c3', 'hex'),
           }),
         ],

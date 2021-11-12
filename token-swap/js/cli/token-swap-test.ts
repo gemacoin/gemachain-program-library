@@ -4,12 +4,12 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
-} from '@solana/web3.js';
-import {AccountLayout, Token, TOKEN_PROGRAM_ID} from '@solana/spl-token';
+} from '@gemachain/web3.js';
+import {AccountLayout, Token, TOKEN_PROGRAM_ID} from '@gemachain/gpl-token';
 
 import {TokenSwap, CurveType, TOKEN_SWAP_PROGRAM_ID} from '../src';
 import {sendAndConfirmTransaction} from '../src/util/send-and-confirm-transaction';
-import {newAccountWithLamports} from '../src/util/new-account-with-lamports';
+import {newAccountWithCarats} from '../src/util/new-account-with-carats';
 import {url} from '../src/util/url';
 import {sleep} from '../src/util/sleep';
 import {Numberu64} from '../dist';
@@ -91,8 +91,8 @@ export async function createTokenSwap(
   curveParameters?: Numberu64,
 ): Promise<void> {
   const connection = await getConnection();
-  const payer = await newAccountWithLamports(connection, 1000000000);
-  owner = await newAccountWithLamports(connection, 1000000000);
+  const payer = await newAccountWithCarats(connection, 1000000000);
+  owner = await newAccountWithCarats(connection, 1000000000);
   const tokenSwapAccount = new Account();
 
   [authority, bumpSeed] = await PublicKey.findProgramAddress(
@@ -146,7 +146,7 @@ export async function createTokenSwap(
   await mintB.mintTo(tokenAccountB, owner, [], currentSwapTokenB);
 
   console.log('creating token swap');
-  const swapPayer = await newAccountWithLamports(connection, 10000000000);
+  const swapPayer = await newAccountWithCarats(connection, 10000000000);
   tokenSwap = await TokenSwap.createTokenSwap(
     connection,
     swapPayer,
@@ -361,7 +361,7 @@ export async function createAccountAndSwapAtomic(): Promise<void> {
     SystemProgram.createAccount({
       fromPubkey: owner.publicKey,
       newAccountPubkey: newAccount.publicKey,
-      lamports: balanceNeeded,
+      carats: balanceNeeded,
       space: AccountLayout.span,
       programId: mintB.programId,
     }),

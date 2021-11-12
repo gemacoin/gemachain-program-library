@@ -1,6 +1,6 @@
 # Docs Readme
 
-SPL Docs are built using [Docusaurus 2](https://v2.docusaurus.io/) with `npm`.
+GPL Docs are built using [Docusaurus 2](https://v2.docusaurus.io/) with `npm`.
 Static content delivery is handled using `vercel`.
 
 ### Installing Docusaurus
@@ -34,4 +34,4 @@ On each PR, the docs are built, but not published.
 
 In each post-commit build, docs are built and published using `vercel`.
 
-Documentation is published to spl.solana.com
+Documentation is published to gpl.gemachain.com

@@ -1,7 +1,7 @@
 // To connect to a public cluster, set `export LIVE=1` in your
 // environment. By default, `LIVE=1` will connect to the devnet cluster.
 
-import {clusterApiUrl, Cluster} from '@solana/web3.js';
+import {clusterApiUrl, Cluster} from '@gemachain/web3.js';
 import dotenv from 'dotenv';
 
 function chooseCluster(): Cluster | undefined {
@@ -28,4 +28,4 @@ export const urlTls =
   (process.env.LIVE ? clusterApiUrl(cluster, true) : 'http://localhost:8899');
 
 export let walletUrl =
-  process.env.WALLET_URL || 'https://solana-example-webwallet.herokuapp.com/';
+  process.env.WALLET_URL || 'https://gemachain-example-webwallet.herokuapp.com/';

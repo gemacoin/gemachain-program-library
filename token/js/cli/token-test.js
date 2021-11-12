@@ -10,7 +10,7 @@ import {
   SystemProgram,
   Transaction,
   BPF_LOADER_PROGRAM_ID,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 
 import {
   Token,
@@ -19,7 +19,7 @@ import {
   NATIVE_MINT,
 } from '../client/token';
 import {url} from '../url';
-import {newAccountWithLamports} from '../client/util/new-account-with-lamports';
+import {newAccountWithCarats} from '../client/util/new-account-with-carats';
 import {sendAndConfirmTransaction} from '../client/util/send-and-confirm-transaction';
 import {sleep} from '../client/util/sleep';
 import {Store} from './store';
@@ -72,11 +72,11 @@ async function loadProgram(
   const data = await fs.readFile(path);
   const {feeCalculator} = await connection.getRecentBlockhash();
   const balanceNeeded =
-    feeCalculator.lamportsPerSignature *
+    feeCalculator.caratsPerSignature *
       (BpfLoader.getMinNumSignatures(data.length) + NUM_RETRIES) +
     (await connection.getMinimumBalanceForRentExemption(data.length));
 
-  const from = await newAccountWithLamports(connection, balanceNeeded);
+  const from = await newAccountWithCarats(connection, balanceNeeded);
   const program_account = Keypair.generate();
   console.log('Loading program:', path);
   await BpfLoader.load(
@@ -124,11 +124,11 @@ async function GetPrograms(connection: Connection): Promise<void> {
 
     programId = await loadProgram(
       connection,
-      '../../target/deploy/spl_token.so',
+      '../../target/deploy/gpl_token.so',
     );
     associatedProgramId = await loadProgram(
       connection,
-      '../../target/deploy/spl_associated_token_account.so',
+      '../../target/deploy/gpl_associated_token_account.so',
     );
     await store.save('config.json', {
       tokenProgramId: programId.toString(),
@@ -147,7 +147,7 @@ export async function loadTokenProgram(): Promise<void> {
 
 export async function createMint(): Promise<void> {
   const connection = await getConnection();
-  const payer = await newAccountWithLamports(connection, 1000000000 /* wag */);
+  const payer = await newAccountWithCarats(connection, 1000000000 /* wag */);
   testMintAuthority = Keypair.generate();
   testToken = await Token.createMint(
     connection,
@@ -508,7 +508,7 @@ export async function closeAccount(): Promise<void> {
   let tokenRentExemptAmount;
   let info = await connection.getAccountInfo(testAccount);
   if (info != null) {
-    tokenRentExemptAmount = info.lamports;
+    tokenRentExemptAmount = info.carats;
   } else {
     throw new Error('Account not found');
   }
@@ -524,7 +524,7 @@ export async function closeAccount(): Promise<void> {
 
   let destInfo = await connection.getAccountInfo(dest);
   if (destInfo !== null) {
-    assert(destInfo.lamports === 2 * tokenRentExemptAmount);
+    assert(destInfo.carats === 2 * tokenRentExemptAmount);
   } else {
     throw new Error('Account not found');
   }
@@ -606,9 +606,9 @@ export async function multisig(): Promise<void> {
 export async function nativeToken(): Promise<void> {
   const connection = await getConnection();
   // this user both pays for the creation of the new token account
-  // and provides the lamports to wrap
-  const payer = await newAccountWithLamports(connection, 2000000000 /* wag */);
-  const lamportsToWrap = 1000000000;
+  // and provides the carats to wrap
+  const payer = await newAccountWithCarats(connection, 2000000000 /* wag */);
+  const caratsToWrap = 1000000000;
 
   const token = new Token(connection, NATIVE_MINT, programId, payer);
   const owner = Keypair.generate();
@@ -617,34 +617,34 @@ export async function nativeToken(): Promise<void> {
     programId,
     owner.publicKey,
     payer,
-    lamportsToWrap,
+    caratsToWrap,
   );
   let accountInfo = await token.getAccountInfo(native);
   assert(accountInfo.isNative);
 
   // check that the new account has wrapped native tokens.
-  assert(accountInfo.amount.toNumber() === lamportsToWrap);
+  assert(accountInfo.amount.toNumber() === caratsToWrap);
 
   let balance;
   let info = await connection.getAccountInfo(native);
   if (info != null) {
-    balance = info.lamports;
+    balance = info.carats;
   } else {
     throw new Error('Account not found');
   }
 
   const programVersion = process.env.PROGRAM_VERSION;
   if (!programVersion) {
-    // transfer lamports into the native account
-    const additionalLamports = 100;
+    // transfer carats into the native account
+    const additionalCarats = 100;
     await sendAndConfirmTransaction(
-      'TransferLamports',
+      'TransferCarats',
       connection,
       new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: payer.publicKey,
           toPubkey: native,
-          lamports: additionalLamports,
+          carats: additionalCarats,
         }),
       ),
       payer,
@@ -652,19 +652,19 @@ export async function nativeToken(): Promise<void> {
 
     // no change in the amount
     accountInfo = await token.getAccountInfo(native);
-    assert(accountInfo.amount.toNumber() === lamportsToWrap);
+    assert(accountInfo.amount.toNumber() === caratsToWrap);
 
     // sync, amount changes
     await token.syncNative(native);
     accountInfo = await token.getAccountInfo(native);
     assert(
-      accountInfo.amount.toNumber() === lamportsToWrap + additionalLamports,
+      accountInfo.amount.toNumber() === caratsToWrap + additionalCarats,
     );
-    balance += additionalLamports;
+    balance += additionalCarats;
   }
 
   const balanceNeeded = await connection.getMinimumBalanceForRentExemption(0);
-  const dest = await newAccountWithLamports(connection, balanceNeeded);
+  const dest = await newAccountWithCarats(connection, balanceNeeded);
   await token.closeAccount(native, dest.publicKey, owner, []);
   info = await connection.getAccountInfo(native);
   if (info != null) {
@@ -672,7 +672,7 @@ export async function nativeToken(): Promise<void> {
   }
   info = await connection.getAccountInfo(dest.publicKey);
   if (info != null) {
-    assert(info.lamports == balanceNeeded + balance);
+    assert(info.carats == balanceNeeded + balance);
   } else {
     throw new Error('Account not found');
   }

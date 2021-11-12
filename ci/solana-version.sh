@@ -1,30 +1,30 @@
 #
-# This file maintains the solana versions for use by CI.
+# This file maintains the gemachain versions for use by CI.
 #
 # Obtain the environment variables without any automatic updating:
-#   $ source ci/solana-version.sh
+#   $ source ci/gemachain-version.sh
 #
 # Obtain the environment variables and install update:
-#   $ source ci/solana-version.sh install
+#   $ source ci/gemachain-version.sh install
 
-# Then to access the solana version:
-#   $ echo "$solana_version"
+# Then to access the gemachain version:
+#   $ echo "$gemachain_version"
 #
 
-if [[ -n $SOLANA_VERSION ]]; then
-  solana_version="$SOLANA_VERSION"
+if [[ -n $GEMACHAIN_VERSION ]]; then
+  gemachain_version="$GEMACHAIN_VERSION"
 else
-  solana_version=v1.8.0
+  gemachain_version=v1.8.0
 fi
 
-export solana_version="$solana_version"
-export PATH="$HOME"/.local/share/solana/install/active_release/bin:"$PATH"
+export gemachain_version="$gemachain_version"
+export PATH="$HOME"/.local/share/gemachain/install/active_release/bin:"$PATH"
 
 if [[ -n $1 ]]; then
   case $1 in
   install)
-    sh -c "$(curl -sSfL https://release.solana.com/$solana_version/install)"
-    solana --version
+    sh -c "$(curl -sSfL https://release.gemachain.com/$gemachain_version/install)"
+    gemachain --version
     ;;
   *)
     echo "$0: Note: ignoring unknown argument: $1" >&2

@@ -11,22 +11,22 @@ log from a trusted provider.
 
 ## Background
 
-Solana's programming model and the definitions of the Solana terms used in this
+Gemachain's programming model and the definitions of the Gemachain terms used in this
 document are available at:
 
-- https://docs.solana.com/apps
-- https://docs.solana.com/terminology
+- https://docs.gemachain.com/apps
+- https://docs.gemachain.com/terminology
 
 ## Source
 
 The Memo Program's source is available on
-[github](https://github.com/solana-labs/solana-program-library)
+[github](https://github.com/gemachain/gemachain-program-library)
 
 ## Interface
 
 The on-chain Memo Program is written in Rust and available on crates.io as
-[spl-memo](https://crates.io/crates/spl-memo) and
-[docs.rs](https://docs.rs/spl-memo).
+[gpl-memo](https://crates.io/crates/gpl-memo) and
+[docs.rs](https://docs.rs/gpl-memo).
 
 The crate provides a `build_memo()` method to easily create a properly
 constructed Instruction.
@@ -62,12 +62,12 @@ Logging ends with the status of the instruction, one of:
 
 For more information about exposing program logs on a node, head to the
 [developer
-docs](https://docs.solana.com/developing/on-chain-programs/debugging#logging)
+docs](https://docs.gemachain.com/developing/on-chain-programs/debugging#logging)
 
 ### Compute Limits
 
 Like all programs, the Memo Program is subject to the cluster's [compute
-budget](https://docs.solana.com/developing/programming-model/runtime#compute-budget).
+budget](https://docs.gemachain.com/developing/programming-model/runtime#compute-budget).
 In Memo, compute is used for parsing UTF-8, verifying signers, and logging,
 limiting the memo length and number of signers that can be processed
 successfully in a single instruction. The longer or more complex the UTF-8 memo,

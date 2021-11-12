@@ -24,7 +24,7 @@ use the deposited amount as their voting weight to vote on Proposals within that
 
 The basic building block of governance to update programs is the ProgramGovernance account.
 It ties a governed Program ID and holds configuration options defining governance rules.
-The governed Program ID is used as the seed for a [Program Derived Address](https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses),
+The governed Program ID is used as the seed for a [Program Derived Address](https://docs.gemachain.com/developing/programming-model/calling-between-programs#program-derived-addresses),
 and this program derived address is what is used as the address of the Governance account for your Program ID.
 
 What this means is that there can only ever be ONE Governance account for a given Program.
@@ -34,7 +34,7 @@ of the governed program to the Governance PDA at the creation time of the Govern
 
 ### Mint Governance account
 
-A mint governance account allows a mint authority to setup governance over an SPL Mint account.
+A mint governance account allows a mint authority to setup governance over an GPL Mint account.
 The Governance program validates at creation time that the current mint authority signed the transaction to
 create the governance and optionally can transfer the authority to the Governance account.
 Once setup the Mint Governance allows governance participants to create Proposals which execute mint instructions for
@@ -42,7 +42,7 @@ the governed Mint.
 
 ### Token Governance account
 
-A token governance account allows a token account owner to setup governance over an SPL Token account.
+A token governance account allows a token account owner to setup governance over an GPL Token account.
 The Governance program validates at creation time the current owner signed the transaction to
 create the governance and optionally can transfer the owner to the Governance account.
 Once setup the Token Governance allows participants to create Proposals to execute transfer instructions
@@ -56,7 +56,7 @@ Bpf-upgradable-loader allows any signer who has Upgrade authority over a Buffer 
 to upgrade it using its Upgrade command.
 Normally, this is the developer who created and deployed the program, and this creation of the Buffer account containing
 the new program data and overwriting of the existing Program account's data with it is handled in the background for you
-by the Solana program deploy cli command.
+by the Gemachain program deploy cli command.
 However, in order for Governance to be useful, Governance now needs this authority.
 
 In similar fashion for Mint and Token governances the relevant authorities to mint and transfer tokens
@@ -72,7 +72,7 @@ and has a set of executable instructions to it, a name and a description.
 It goes through various states (draft, voting, executing, ...) and users can vote on it
 if they have relevant Community or Council tokens.
 Its rules are determined by the Governance account that it is tied to, and when it executes,
-it is only eligible to use the [Program Derived Address](https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses)
+it is only eligible to use the [Program Derived Address](https://docs.gemachain.com/developing/programming-model/calling-between-programs#program-derived-addresses)
 authority given by the Governance account.
 So a Proposal for Sushi cannot for instance upgrade the Program for Uniswap.
 
@@ -110,7 +110,7 @@ Each Governance Realm that gets created has the option to also have a Council mi
 A council mint is simply a separate mint from the Community mint.
 What this means is that users can submit Proposals that have a different voting population from a different mint
 that can affect the same DAO. A practical application of this policy may be to have a very large population control
-major version bumps of Solana via normal SOL, for instance, but hot fixes be controlled via Council tokens,
+major version bumps of Gemachain via normal SOL, for instance, but hot fixes be controlled via Council tokens,
 of which there may be only 30, and which may be themselves minted and distributed via proposals by the governing population.
 
 Another important use case is to use the Council for DAO inception. At the beginning of a DAO life

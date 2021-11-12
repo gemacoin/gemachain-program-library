@@ -55,7 +55,7 @@ function generateConfig(configType, format) {
             // 'bs58',
             // 'buffer',
             // 'buffer-layout',
-            '@solana/web3.js',
+            '@gemachain/web3.js',
           ];
 
           break;
@@ -65,13 +65,13 @@ function generateConfig(configType, format) {
             {
               file: 'lib/index.iife.js',
               format: 'iife',
-              name: 'splToken',
+              name: 'gplToken',
               sourcemap: true,
             },
             {
               file: 'lib/index.iife.min.js',
               format: 'iife',
-              name: 'splToken',
+              name: 'gplToken',
               sourcemap: true,
               plugins: [terser({mangle: false, compress: false})],
             },
@@ -111,7 +111,7 @@ function generateConfig(configType, format) {
         'assert',
         'bn.js',
         'buffer-layout',
-        '@solana/web3.js',
+        '@gemachain/web3.js',
       ];
       break;
     default:

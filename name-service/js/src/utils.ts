@@ -8,7 +8,7 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 import BN from 'bn.js';
 
 import { HASH_PREFIX, NAME_PROGRAM_ID } from './bindings';
@@ -144,13 +144,13 @@ export async function getFilteredProgramAccounts(
     encoding: 'base64',
   });
   return resp.map(
-    ({ pubkey, account: { data, executable, owner, lamports } }) => ({
+    ({ pubkey, account: { data, executable, owner, carats } }) => ({
       publicKey: pubkey,
       accountInfo: {
         data: data,
         executable,
         owner: owner,
-        lamports,
+        carats,
       },
     })
   );

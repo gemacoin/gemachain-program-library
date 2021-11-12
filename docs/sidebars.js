@@ -1,7 +1,7 @@
 module.exports = {
   docs: {
     "Other Thing": [],
-    "Solana Program Library (SPL)": [
+    "Gemachain Program Library (GPL)": [
       "introduction",
       "token",
       "token-swap",

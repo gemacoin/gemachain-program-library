@@ -3,7 +3,7 @@ import {
   PublicKey,
   SystemProgram,
   TransactionInstruction,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 
 import {
   createInstruction,
@@ -25,18 +25,18 @@ import {
 export const NAME_PROGRAM_ID = new PublicKey(
   'namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX'
 );
-export const HASH_PREFIX = 'SPL Name Service';
+export const HASH_PREFIX = 'GPL Name Service';
 
 ////////////////////////////////////////////////////////////
 /**
  * Creates a name account with the given rent budget, allocated space, owner and class.
  *
- * @param connection The solana connection object to the RPC node
+ * @param connection The gemachain connection object to the RPC node
  * @param name The name of the new account
  * @param space The space in bytes allocated to the account
  * @param payerKey The allocation cost payer
  * @param nameOwner The pubkey to be set as owner of the new name account
- * @param lamports The budget to be set for the name account. If not specified, it'll be the minimum for rent exemption
+ * @param carats The budget to be set for the name account. If not specified, it'll be the minimum for rent exemption
  * @param nameClass The class of this new name
  * @param parentName The parent name of the new name. If specified its owner needs to sign
  * @returns
@@ -47,7 +47,7 @@ export async function createNameRegistry(
   space: number,
   payerKey: PublicKey,
   nameOwner: PublicKey,
-  lamports?: number,
+  carats?: number,
   nameClass?: PublicKey,
   parentName?: PublicKey
 ): Promise<TransactionInstruction> {
@@ -58,8 +58,8 @@ export async function createNameRegistry(
     parentName
   );
 
-  const balance = lamports
-    ? lamports
+  const balance = carats
+    ? carats
     : await connection.getMinimumBalanceForRentExemption(space);
 
   let nameParentOwner: PublicKey | undefined;
@@ -88,7 +88,7 @@ export async function createNameRegistry(
 /**
  * Overwrite the data of the given name registry.
  *
- * @param connection The solana connection object to the RPC node
+ * @param connection The gemachain connection object to the RPC node
  * @param name The name of the name registry to update
  * @param offset The offset to which the data should be written into the registry
  * @param input_data The data to be written
@@ -132,7 +132,7 @@ export async function updateNameRegistryData(
 /**
  * Change the owner of a given name account.
  *
- * @param connection The solana connection object to the RPC node
+ * @param connection The gemachain connection object to the RPC node
  * @param name The name of the name account
  * @param newOwner The new owner to be set
  * @param curentNameOwner the current name Owner
@@ -177,7 +177,7 @@ export async function transferNameOwnership(
 /**
  * Delete the name account and transfer the rent to the target.
  *
- * @param connection The solana connection object to the RPC node
+ * @param connection The gemachain connection object to the RPC node
  * @param name The name of the name account
  * @param refundTargetKey The refund destination address
  * @param nameClass The class of this name, if it exsists

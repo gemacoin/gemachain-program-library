@@ -7,7 +7,7 @@ cargo build
 cargo build-bpf
 
 if [[ $1 = -v ]]; then
-  export RUST_LOG=solana=debug
+  export RUST_LOG=gemachain=debug
 fi
 
 cargo test

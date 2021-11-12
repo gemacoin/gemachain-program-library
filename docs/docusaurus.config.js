@@ -1,22 +1,22 @@
 module.exports = {
-  title: "Solana Program Library Docs",
+  title: "Gemachain Program Library Docs",
   tagline:
-    "Solana is an open source project implementing a new, high-performance, permissionless blockchain.",
-  url: "https://spl.solana.com",
+    "Gemachain is an open source project implementing a new, high-performance, permissionless blockchain.",
+  url: "https://gpl.gemachain.com",
   baseUrl: "/",
   favicon: "img/favicon.ico",
-  organizationName: "solana-labs", // Usually your GitHub org/user name.
-  projectName: "solana-program-library", // Usually your repo name.
+  organizationName: "gemachain", // Usually your GitHub org/user name.
+  projectName: "gemachain-program-library", // Usually your repo name.
   themeConfig: {
     navbar: {
       logo: {
-        alt: "Solana Logo",
+        alt: "Gemachain Logo",
         src: "img/logo-horizontal.svg",
         srcDark: "img/logo-horizontal-dark.svg",
       },
       links: [
         {
-          href: "https://docs.solana.com/",
+          href: "https://docs.gemachain.com/",
           label: "Docs »",
           position: "left",
         },
@@ -27,7 +27,7 @@ module.exports = {
         },
 
         {
-          href: "https://github.com/solana-labs/solana-program-library",
+          href: "https://github.com/gemachain/gemachain-program-library",
           label: "GitHub",
           position: "right",
         },
@@ -45,11 +45,11 @@ module.exports = {
             },
             {
               label: "Twitter",
-              href: "https://twitter.com/solana",
+              href: "https://twitter.com/gemachain",
             },
             {
               label: "Forums",
-              href: "https://forums.solana.com",
+              href: "https://forums.gemachain.com",
             },
           ],
         },
@@ -58,12 +58,12 @@ module.exports = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/solana-labs/solana-program-library",
+              href: "https://github.com/gemachain/gemachain-program-library",
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Solana Foundation`,
+      copyright: `Copyright © ${new Date().getFullYear()} Gemachain Foundation`,
     },
   },
   plugins: [require.resolve('docusaurus-lunr-search')],

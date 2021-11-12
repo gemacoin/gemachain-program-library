@@ -30,11 +30,11 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 source $HOME/.cargo/env
 ```
 
-Install the Solana command-line tools:
+Install the Gemachain command-line tools:
 
 ```bash
-curl -sSf https://raw.githubusercontent.com/solana-labs/solana/v1.4.2/install/solana-install-init.sh | sh -s - v1.4.2
-export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+curl -sSf https://raw.githubusercontent.com/gemachain/gemachain/v1.4.2/install/gemachain-install-init.sh | sh -s - v1.4.2
+export PATH="$HOME/.local/share/gemachain/install/active_release/bin:$PATH"
 ```
 
 ### Build the TPS example app
@@ -42,8 +42,8 @@ export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 Clone this git repo:
 
 ```bash
-git clone https://github.com/solana-labs/solana-program-library.git
-cd solana-program-library
+git clone https://github.com/gemachain/gemachain-program-library.git
+cd gemachain-program-library
 ```
 
 Build the demo client:
@@ -53,19 +53,19 @@ cd themis/client_ristretto
 cargo build --example tps
 ```
 
-### Configure the default Solana wallet
+### Configure the default Gemachain wallet
 
 Point to the testnet cluster (default is mainnet-beta):
 
 ```bash
-solana config set --url http://api.testnet.solana.com
+gemachain config set --url http://api.testnet.gemachain.com
 ```
 
 Create a keypair and airdrop it some SOL:
 
 ```bash
-solana-keygen new --no-passphrase
-solana airdrop 10
+gemachain-keygen new --no-passphrase
+gemachain airdrop 10
 ```
 
 ### Run the TPS example app

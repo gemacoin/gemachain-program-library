@@ -1,10 +1,10 @@
-import {sendAndConfirmTransaction as realSendAndConfirmTransaction} from '@solana/web3.js';
+import {sendAndConfirmTransaction as realSendAndConfirmTransaction} from '@gemachain/web3.js';
 import type {
   Account,
   Connection,
   Transaction,
   TransactionSignature,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 
 export function sendAndConfirmTransaction(
   title: string,

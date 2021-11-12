@@ -1,16 +1,16 @@
 # Token Swap Program
 
-A Uniswap-like exchange for the Token program on the Solana blockchain, deployed
+A Uniswap-like exchange for the Token program on the Gemachain blockchain, deployed
 to `SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8` on all networks.
 
-Full documentation is available at https://spl.solana.com/token-swap
+Full documentation is available at https://gpl.gemachain.com/token-swap
 
 JavaScript bindings are available in the `./js` directory.
 
 ## Building
 
 To build a development version of the Token Swap program, you can use the normal
-build command for Solana programs:
+build command for Gemachain programs:
 
 ```sh
 cargo build-bpf
@@ -21,7 +21,7 @@ to fix constraints on fees and fee account owner. A developer can
 deploy the program, allow others to create pools, and earn a "protocol fee" on
 all activity.
 
-Since Solana programs cannot contain any modifiable state, we must hard-code
+Since Gemachain programs cannot contain any modifiable state, we must hard-code
 all constraints into the program.  `SwapConstraints` in `program/src/constraints.rs`
 contains all hard-coded fields for fees.  Additionally the
 `SWAP_PROGRAM_OWNER_FEE_ADDRESS` environment variable specifies the public key
@@ -72,8 +72,8 @@ exact problem.
 ### Integration tests
 
 You can test the JavaScript bindings and on-chain interactions using
-`solana-test-validator`, included in the Solana Tool Suite.  See the
-[CLI installation instructions](https://docs.solana.com/cli/install-solana-cli-tools).
+`gemachain-test-validator`, included in the Gemachain Tool Suite.  See the
+[CLI installation instructions](https://docs.gemachain.com/cli/install-gemachain-cli-tools).
 
 From `./js`, install the required modules:
 

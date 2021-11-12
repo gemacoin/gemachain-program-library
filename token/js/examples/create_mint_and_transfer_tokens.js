@@ -1,5 +1,5 @@
-const web3 = require('@solana/web3.js');
-const splToken = require('@solana/spl-token');
+const web3 = require('@gemachain/web3.js');
+const gplToken = require('@gemachain/gpl-token');
 
 (async () => {
   // Connect to cluster
@@ -12,7 +12,7 @@ const splToken = require('@solana/spl-token');
   var fromWallet = web3.Keypair.generate();
   var fromAirdropSignature = await connection.requestAirdrop(
     fromWallet.publicKey,
-    web3.LAMPORTS_PER_SOL,
+    web3.CARATS_PER_SOL,
   );
   // Wait for airdrop confirmation
   await connection.confirmTransaction(fromAirdropSignature);
@@ -21,21 +21,21 @@ const splToken = require('@solana/spl-token');
   const toWallet = web3.Keypair.generate();
 
   // Create new token mint
-  const mint = await splToken.Token.createMint(
+  const mint = await gplToken.Token.createMint(
     connection,
     fromWallet,
     fromWallet.publicKey,
     null,
     9,
-    splToken.TOKEN_PROGRAM_ID,
+    gplToken.TOKEN_PROGRAM_ID,
   );
 
-  // Get the token account of the fromWallet Solana address, if it does not exist, create it
+  // Get the token account of the fromWallet Gemachain address, if it does not exist, create it
   const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
     fromWallet.publicKey,
   );
 
-  //get the token account of the toWallet Solana address, if it does not exist, create it
+  //get the token account of the toWallet Gemachain address, if it does not exist, create it
   const toTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
     toWallet.publicKey,
   );
@@ -50,8 +50,8 @@ const splToken = require('@solana/spl-token');
 
   // Add token transfer instructions to transaction
   const transaction = new web3.Transaction().add(
-    splToken.Token.createTransferInstruction(
-      splToken.TOKEN_PROGRAM_ID,
+    gplToken.Token.createTransferInstruction(
+      gplToken.TOKEN_PROGRAM_ID,
       fromTokenAccount.address,
       toTokenAccount.address,
       fromWallet.publicKey,

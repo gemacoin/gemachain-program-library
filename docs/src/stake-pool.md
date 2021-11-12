@@ -19,8 +19,8 @@ stake and earn rewards without managing stakes.
 
 Additional information regarding staking and stake programming is available at:
 
-- https://solana.com/staking
-- https://docs.solana.com/staking/stake-programming
+- https://gemachain.com/staking
+- https://docs.gemachain.com/staking/stake-programming
 
 ## Motivation
 
@@ -37,11 +37,11 @@ or SOL from the reserve.
 
 This means that stake pool managers and stakers must be comfortable with
 creating and delegating stakes, which are more advanced operations than sending and
-receiving SPL tokens and SOL. Additional information on stake operations are
+receiving GPL tokens and SOL. Additional information on stake operations are
 available at:
 
-- https://docs.solana.com/cli/delegate-stake
-- https://docs.solana.com/cli/manage-stake-accounts
+- https://docs.gemachain.com/cli/delegate-stake
+- https://docs.gemachain.com/cli/manage-stake-accounts
 
 To reach a wider audience of users, stake pool managers are encouraged
 to provide a market for their pool's tokens, through an AMM
@@ -71,7 +71,7 @@ Once the stake becomes active, which happens at the following epoch boundary
 (maximum 2 days), the user can deposit their stake into the pool using the
 `deposit-stake` instruction.
 
-In exchange for their deposit (SOL or stake), the user receives SPL tokens
+In exchange for their deposit (SOL or stake), the user receives GPL tokens
 representing their fractional ownership in pool. A percentage of the rewards
 earned by the pool goes to the pool manager as an epoch fee.
 
@@ -84,7 +84,7 @@ Note that this operation will fail if there is not enough SOL in the stake pool'
 reserve, which is normal if the stake pool manager stakes all of the SOL in the pool.
 
 Alternatively, they can use the `withdraw-stake` instruction to withdraw an
-activated stake account in exchange for their SPL pool tokens. The user will get
+activated stake account in exchange for their GPL pool tokens. The user will get
 back a SOL stake account immediately. The ability to withdraw stake is always
 possible, under all circumstances.
 
@@ -163,79 +163,79 @@ Note: in order to keep user funds safe, stake withdrawals are always permitted.
 
 ## Background
 
-Solana's programming model and the definitions of the Solana terms used in this
+Gemachain's programming model and the definitions of the Gemachain terms used in this
 document are available at:
 
-- https://docs.solana.com/apps
-- https://docs.solana.com/terminology
+- https://docs.gemachain.com/apps
+- https://docs.gemachain.com/terminology
 
 ## Source
 
 The Stake Pool Program's source is available on
-[github](https://github.com/solana-labs/solana-program-library).
+[github](https://github.com/gemachain/gemachain-program-library).
 
 For information about the types and instructions, the Stake Pool Rust docs are
-available at [docs.rs](https://docs.rs/spl-stake-pool/0.5.0/spl_stake_pool/).
+available at [docs.rs](https://docs.rs/gpl-stake-pool/0.5.0/gpl_stake_pool/).
 
 ## Command-line Utility
 
 The following explains the instructions available in the Stake Pool Program along
 with examples using the command-line utility.
 
-The `spl-stake-pool` command-line utility can be used to experiment with SPL
+The `gpl-stake-pool` command-line utility can be used to experiment with GPL
 tokens.  Once you have [Rust installed](https://rustup.rs/), run:
 ```console
-$ cargo install spl-stake-pool-cli
+$ cargo install gpl-stake-pool-cli
 ```
 
-Run `spl-stake-pool --help` for a full description of available commands.
+Run `gpl-stake-pool --help` for a full description of available commands.
 
 ### Configuration
 
-The `spl-stake-pool` configuration is shared with the `solana` command-line tool.
+The `gpl-stake-pool` configuration is shared with the `gemachain` command-line tool.
 
 #### Current Configuration
 
 ```console
-solana config get
-Config File: ${HOME}/.config/solana/cli/config.yml
-RPC URL: https://api.mainnet-beta.solana.com
-WebSocket URL: wss://api.mainnet-beta.solana.com/ (computed)
-Keypair Path: ${HOME}/.config/solana/id.json
+gemachain config get
+Config File: ${HOME}/.config/gemachain/cli/config.yml
+RPC URL: https://api.mainnet-beta.gemachain.com
+WebSocket URL: wss://api.mainnet-beta.gemachain.com/ (computed)
+Keypair Path: ${HOME}/.config/gemachain/id.json
 ```
 
 #### Cluster RPC URL
 
-See [Solana clusters](https://docs.solana.com/clusters) for cluster-specific RPC URLs
+See [Gemachain clusters](https://docs.gemachain.com/clusters) for cluster-specific RPC URLs
 ```console
-solana config set --url https://api.devnet.solana.com
+gemachain config set --url https://api.devnet.gemachain.com
 ```
 
 #### Default Keypair
 
-See [Keypair conventions](https://docs.solana.com/cli/conventions#keypair-conventions)
+See [Keypair conventions](https://docs.gemachain.com/cli/conventions#keypair-conventions)
 for information on how to setup a keypair if you don't already have one.
 
 Keypair File
 ```console
-solana config set --keypair ${HOME}/new-keypair.json
+gemachain config set --keypair ${HOME}/new-keypair.json
 ```
 
-Hardware Wallet URL (See [URL spec](https://docs.solana.com/wallet-guide/hardware-wallets#specify-a-keypair-url))
+Hardware Wallet URL (See [URL spec](https://docs.gemachain.com/wallet-guide/hardware-wallets#specify-a-keypair-url))
 ```console
-solana config set --keypair usb://ledger/
+gemachain config set --keypair usb://ledger/
 ```
 
 #### Run Locally
 
 If you would like to test a stake pool locally without having to wait for stakes
 to activate and deactivate, you can run the stake pool locally using the
-`solana-test-validator` tool with shorter epochs, and pulling the current program
+`gemachain-test-validator` tool with shorter epochs, and pulling the current program
 from devnet.
 
 ```console
-$ solana-test-validator -c SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy -c EmiU8AQkB2sswTxVB6aCmsAJftoowZGGDXuytm6X65R3 --url devnet --slots-per-epoch 32
-$ solana config set --url http://127.0.0.1:8899
+$ gemachain-test-validator -c SPoo1Ku8WFXoNDMHPsrGSTSG1Y47rzgn41SLUNakuHy -c EmiU8AQkB2sswTxVB6aCmsAJftoowZGGDXuytm6X65R3 --url devnet --slots-per-epoch 32
+$ gemachain config set --url http://127.0.0.1:8899
 ```
 
 ## Stake Pool Manager Examples
@@ -243,12 +243,12 @@ $ solana config set --url http://127.0.0.1:8899
 ### Create a stake pool
 
 The stake pool manager controls the stake pool from a high level, and in exchange
-receives a fee in the form of SPL tokens. The manager
+receives a fee in the form of GPL tokens. The manager
 sets the fee on creation. Let's create a pool with a 3% fee and a maximum of 1000
 validator stake accounts:
 
 ```console
-$ spl-stake-pool create-pool --fee-numerator 3 --fee-denominator 100 --max-validators 1000
+$ gpl-stake-pool create-pool --fee-numerator 3 --fee-denominator 100 --max-validators 1000
 Creating reserve stake DVwDn4LTRztuai4QeenM6fyzgiwUGpVXVNZ1mgKE1Pyc
 Creating mint BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Creating associated token account DgyZrAq88bnG1TNRxpgDQzWXpzEurCvfY2ukKFWBvADQ to receive stake pool tokens of mint BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB, owned by 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
@@ -260,13 +260,13 @@ Signature: 5z6uH3EuPcujeWGpAjBtciSUR3TxtMBgWYU4ULagUso4QGzE9JenhYHwYthJ4b3rS57By
 
 The unique stake pool identifier is `Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR`.
 
-The identifier for the stake pool's SPL token mint is
+The identifier for the stake pool's GPL token mint is
 `BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB`. The stake pool has full control
 over the mint.
 
 The pool creator's fee account identifier is
 `DgyZrAq88bnG1TNRxpgDQzWXpzEurCvfY2ukKFWBvADQ`. Every epoch, as stake accounts
-in the stake pool earn rewards, the program will mint SPL pool tokens
+in the stake pool earn rewards, the program will mint GPL pool tokens
 equal to 3% of the gains on that epoch into this account. If no gains were observed,
 nothing will be deposited.
 
@@ -281,16 +281,16 @@ than 0.5 SOL.
 The stake pool manager may pass their administrator privileges to another account.
 
 ```console
-$ spl-stake-pool set-manager Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --new-manager 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
+$ gpl-stake-pool set-manager Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --new-manager 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
 Signature: 39N5gkaqXuWm6JPEUWfenKXeG4nSa71p7iHb9zurvdZcsWmbjdmSXwLVYfhAVHWucTY77sJ8SkUNpVpVAhe4eZ53
 ```
 
-At the same time, they may also change the SPL token account that receives fees
-every epoch. The mint for the provided token account must be the SPL token mint,
+At the same time, they may also change the GPL token account that receives fees
+every epoch. The mint for the provided token account must be the GPL token mint,
 `BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB` in our example.
 
 ```console
-$ spl-stake-pool set-manager Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --new-fee-receiver HoCsh97wRxRXVjtG7dyfsXSwH9VxdDzC7GvAsBE1eqJz
+$ gpl-stake-pool set-manager Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --new-fee-receiver HoCsh97wRxRXVjtG7dyfsXSwH9VxdDzC7GvAsBE1eqJz
 Signature: 4aK8yzYvPBkP4PyuXTcCm529kjEH6tTt4ixc5D5ZyCrHwc4pvxAHj6wcr4cpAE1e3LddE87J1GLD466aiifcXoAY
 ```
 
@@ -302,7 +302,7 @@ passing the numerator and denominator for the fraction that make up the fee.
 For an epoch fee of 10%, they could run:
 
 ```console
-$ spl-stake-pool set-fee Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR epoch 10 100
+$ gpl-stake-pool set-fee Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR epoch 10 100
 Signature: 5yPXfVj5cbKBfZiEVi2UR5bXzVDuc2c3ruBwSjkAqpvxPHigwGHiS1mXQVE4qwok5moMWT5RNYAMvkE9bnfQ1i93
 ```
 
@@ -331,7 +331,7 @@ in a percentage amount.
 To set a stake deposit referral fee of 80%, they may run:
 
 ```console
-$ spl-stake-pool set-referral-fee Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR stake 80
+$ gpl-stake-pool set-referral-fee Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR stake 80
 Signature: 4vhaBEDhuKkVwMxy7TpyfHEk3Z5kGZKerD1AgajQBdiMRQLZuNZKVR3KQaqbUYZM7UyfRXgkZNdAeP1NfvmwKdqb
 ```
 
@@ -344,7 +344,7 @@ In order to manage the stake accounts, the stake pool manager or
 staker can set the staker authority of the stake pool's managed accounts.
 
 ```console
-$ spl-stake-pool set-staker Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
+$ gpl-stake-pool set-staker Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
 Signature: 39N5gkaqXuWm6JPEUWfenKXeG4nSa71p7iHb9zurvdZcsWmbjdmSXwLVYfhAVHWucTY77sJ8SkUNpVpVAhe4eZ53
 ```
 
@@ -368,7 +368,7 @@ it restricts who can use the pool.
 As an example, let's say a pool wants to restrict all SOL withdrawals.
 
 ```console
-$ spl-stake-pool set-funding-authority Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR sol-withdraw AZ1PgxWSxw4ezX8gvpNgGsr39jJHCwtkaXr1mNMwWWeK
+$ gpl-stake-pool set-funding-authority Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR sol-withdraw AZ1PgxWSxw4ezX8gvpNgGsr39jJHCwtkaXr1mNMwWWeK
 Signature: 3gx7ckGNSL7gUUyxh4CU3RH3Lyt88hiCvYQ4QRKtnmrZHvAS93ebP6bf39WYGTeKDMVSJUuwBEmk9VFSaWtXsHVV
 ```
 
@@ -379,7 +379,7 @@ After some time, if the manager wishes to enable SOL withdrawals, they can remov
 the restriction:
 
 ```console
-$ spl-stake-pool set-funding-authority Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR sol-withdraw --unset
+$ gpl-stake-pool set-funding-authority Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR sol-withdraw --unset
 Signature: 5kWeBqoxyvANMHCP4ydsZRf8QU4hMotLnKkFbTEdvqEVywo4F3MpZtay7D57FbjJZpdp72fc3vrbxJi9qDLfLCnD
 ```
 
@@ -402,7 +402,7 @@ to the stake pool, the staker must use the `add-validator` command.
 Let's add some random validators to the stake pool.
 
 ```console
-$ spl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
+$ gpl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
 Adding stake account F8e8Ympp4MkDSPZdvRxdQUZXRkMBDdyqgHa363GShAPt, delegated to 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
 Signature: 5tdpsx64mVcSHBK8vMbBzFDHnEZB6GUmVpqSXXE5hezMAzPYwZbJCBtAHakDAiuWNcrMongGrmwDaeywhVz4i8pi
 ```
@@ -411,18 +411,18 @@ In order to maximize censorship resistance, we want to distribute our SOL to as
 many validators as possible, so let's add a few more.
 
 ```console
-$ spl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
+$ gpl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
 Adding stake account 5AaobwjccyHnXhFCd24uiX6VqPjXE3Ry4o92fJjqqjAr, delegated to J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
 Signature: 4xeve6gWuiffqBLAMcqa8s7dCMvBmSVdKbDu5WQhigLiXHdCjSNEwoZRexTZji786qgEjXg3nrUh4HcTt3RauZV5
-$ spl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
+$ gpl-stake-pool add-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Adding stake account 3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx, delegated to EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Signature: 4VJYHpPmWkP99TdgYUTgLYixmhqmqsEkWtg4j7zvGZFjYbnLgryu48aV6ub8bqDyULzKckUhb6tvcmZmMX5AFf5G
 ```
 
-We can see the status of a stake account using the Solana command-line utility.
+We can see the status of a stake account using the Gemachain command-line utility.
 
 ```console
-$ solana stake-account 5AaobwjccyHnXhFCd24uiX6VqPjXE3Ry4o92fJjqqjAr
+$ gemachain stake-account 5AaobwjccyHnXhFCd24uiX6VqPjXE3Ry4o92fJjqqjAr
 Balance: 0.00328288 SOL
 Rent Exempt Reserve: 0.00228288 SOL
 Delegated Stake: 0.001 SOL
@@ -441,7 +441,7 @@ withdraw authority, program addresses derived from the stake pool's address.
 We can also see the status of the stake pool.
 
 ```console
-$ spl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Stake Pool: Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Pool Token Mint: BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Epoch Fee: 3/100 of epoch rewards
@@ -480,7 +480,7 @@ Let's assume that the validator stake account delegated to
 7.5 SOL. To reduce that number, the staker can run:
 
 ```console
-$ spl-stake-pool decrease-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H 6.5
+$ gpl-stake-pool decrease-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H 6.5
 Signature: ZpQGwT85rJ8Y9afdkXhKo3TVv4xgTz741mmZj2vW7mihYseAkFsazWxza2y8eNGY4HDJm15c1cStwyiQzaM3RpH
 ```
 
@@ -488,7 +488,7 @@ Now, let's try to remove validator `J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
 stake account `5AaobwjccyHnXhFCd24uiX6VqPjXE3Ry4o92fJjqqjAr`.
 
 ```console
-$ spl-stake-pool remove-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
+$ gpl-stake-pool remove-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
 Removing stake account 5AaobwjccyHnXhFCd24uiX6VqPjXE3Ry4o92fJjqqjAr, delegated to J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H
 Creating account to receive stake nHEEyey8KkgHuVRAUDzkH5Q4PkA4veSHuTxgG6C8L2G
 Signature: 4XprnR768Ch6LUvqUVLTjMCiqdYvtjNfECh4izErqwbsASTGjUBz7NtLZHAiraTqhs7b9PoSAazetdsgXa6J4wVu
@@ -505,14 +505,14 @@ The authority for the withdrawn stake account can also be specified using the
 `--new-authority` flag:
 
 ```console
-$ spl-stake-pool remove-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H --new-authority 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
+$ gpl-stake-pool remove-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H --new-authority 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
 Signature: 5rrQ3xhDWyiPkUTAQkNAeq31n6sMf1xsg2x9hVY8Vj1NonwBnhxuTv87nADLkwC8Xzc4CGTNCTX2Vph9esWnXk2d
 ```
 
 We can check the removed stake account:
 
 ```console
-$ solana stake-account nHEEyey8KkgHuVRAUDzkH5Q4PkA4veSHuTxgG6C8L2G
+$ gemachain stake-account nHEEyey8KkgHuVRAUDzkH5Q4PkA4veSHuTxgG6C8L2G
 Balance: 0.003282880 SOL
 Rent Exempt Reserve: 0.00328288 SOL
 Delegated Stake: 0.001000000 SOL
@@ -531,7 +531,7 @@ For example, let's say the staker wants the same delegation to every validator
 in the pool. When they look at the state of the pool, they see:
 
 ```console
-$ spl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Stake Pool: Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Pool Token Mint: BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Epoch Fee: 3/100 of epoch rewards
@@ -565,11 +565,11 @@ First, they need to decrease the amount on stake account
 They decrease that amount of SOL:
 
 ```sh
-$ spl-stake-pool decrease-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ 60
+$ gpl-stake-pool decrease-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ 60
 Signature: ZpQGwT85rJ8Y9afdkXhKo3TVv4xgTz741mmZj2vW7mihYseAkFsazWxza2y8eNGY4HDJm15c1cStwyiQzaM3RpH
 ```
 
-Internally, this instruction splits and deactivates 60 SOL from the
+Internally, this instruction gplits and deactivates 60 SOL from the
 validator stake account `3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx` into a
 transient stake account, owned and managed entirely by the stake pool.
 
@@ -587,19 +587,19 @@ can increase the stake on the two other validators,
 They add 30 SOL to `J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H`:
 
 ```sh
-$ spl-stake-pool increase-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H 30
+$ gpl-stake-pool increase-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR J3xu64PWShcMen99kU3igxtwbke2Nwfo8pkZNRgrq66H 30
 Signature: 3GJACzjUGLPjcd9RLUW86AfBLWKapZRkxnEMc2yHT6erYtcKBgCapzyrVH6VN8Utxj7e2mtvzcigwLm6ZafXyTMw
 ```
 
 And they add 30 SOL to `38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk`:
 
 ```sh
-$ spl-stake-pool increase-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk 30
+$ gpl-stake-pool increase-validator-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk 30
 Signature: 4zaKYu3MQ3as8reLbuHKaXN8FNaHvpHuiZtsJeARo67UKMo6wUUoWE88Fy8N4EYQYicuwULTNffcUD3a9jY88PoU
 ```
 
 Internally, this instruction also uses transient stake accounts.  This time, the
-stake pool splits from the reserve stake, into the transient stake account,
+stake pool gplits from the reserve stake, into the transient stake account,
 then activates it to the appropriate validator.
 
 One to two epochs later, once the transient stakes activate, the `update` command
@@ -607,7 +607,7 @@ automatically merges the transient stakes into the validator stake account, leav
 a fully rebalanced stake pool:
 
 ```console
-$ spl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Stake Pool: Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Pool Token Mint: BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Preferred Deposit Validator: 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
@@ -649,28 +649,28 @@ stake account, making this attack impossible without a lot of funds.
 Let's set a preferred deposit validator stake account:
 
 ```console
-$ spl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR deposit --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
+$ gpl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR deposit --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Signature: j6fbTqGJ8ehgKnSPns1adaSeFwg5M3wP1a32qYwZsQjymYoSejFUXLNGwvHSouJcFm4C78HUoC8xd7cvb5iActL
 ```
 
 And then let's set the preferred withdraw validator stake account to the same one:
 
 ```console
-$ spl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR withdraw --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
+$ gpl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR withdraw --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Signature: 4MKdYLyFqU6H3311YZDeLtsoeGZMzswBHyBCRjHfkzuN1rB4LXJbPfkgUGLKkdbsxJvPRub7SqB1zNPTqDdwti2w
 ```
 
 At any time, they may also unset the preferred validator:
 
 ```console
-$ spl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR withdraw --unset
+$ gpl-stake-pool set-preferred-validator Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR withdraw --unset
 Signature: 5Qh9FA3EXtJ7nKw7UyxmMWXnTMLRKQqcpvfEsEyBtxSPqzPAXp2vFXnPg1Pw8f37JFdvyzYay65CtA8Z1ewzVkvF
 ```
 
 The preferred validators are marked in the `list` command:
 
 ```console
-$ spl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Stake Pool: Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Pool Token Mint: BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Preferred Deposit Validator: EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
@@ -688,7 +688,7 @@ command-line utility has a special instruction for finding out which vote
 accounts are already associated with the stake pool.
 
 ```console
-$ spl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool list Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Stake Pool: Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Pool Token Mint: BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 Preferred Deposit Validator: 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
@@ -714,17 +714,17 @@ Stake pools accept SOL deposits directly from a normal SOL wallet account, and
 in exchange mint the appropriate amount of pool tokens.
 
 ```console
-$ spl-stake-pool deposit-sol Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 100
+$ gpl-stake-pool deposit-sol Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 100
 Using existing associated token account DgyZrAq88bnG1TNRxpgDQzWXpzEurCvfY2ukKFWBvADQ to receive stake pool tokens of mint BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB, owned by 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
 Signature: 23CptpZaq33njCpJPAvk8XS53xXwpfqF1sGxChk3VDB5mzz7XPKQqwsreun3iwZ6b51AyHqGBaUyc6tx9fqvF9JK
 ```
 
 In return, the stake pool has minted us new pool tokens, representing our share
 of ownership in the pool.  We can double-check our stake pool account using the
-SPL token command-line utility.
+GPL token command-line utility.
 
 ```console
-$ spl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
+$ gpl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 100.00000000
 ```
 
@@ -734,7 +734,7 @@ Stake pools allow SOL withdrawals directly from the reserve and into a normal
 SOL wallet account, and in exchange burns the provided pool tokens.
 
 ```console
-$ spl-stake-pool withdraw-sol Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 2
+$ gpl-stake-pool withdraw-sol Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 2
 Signature: 4bqZKUUrjVspqTGqGqX4zxnHnJB67WbeukKUZRmxJ2yFmr275CtHPjZNzQJD9Pe7Q6mSxnUpcVv9FUdAbGP9RyBc
 ```
 
@@ -742,14 +742,14 @@ The stake pool burned 2 pool tokens. In return, the stake pool sent SOL to the
 fee payer for the transaction.  You can check that the pool tokens have been burned:
 
 ```console
-$ spl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
+$ gpl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 98.00000000
 ```
 
 And you can check that the fee payer has been credited:
 
 ```console
-$ solana balance
+$ gemachain balance
 49.660334743 SOL
 ```
 
@@ -762,7 +762,7 @@ stake pool. Using the `list` command from the previous section, we see that
 create a stake account and delegate our stake there.
 
 ```console
-$ solana-keygen new --no-passphrase -o stake-account.json
+$ gemachain-keygen new --no-passphrase -o stake-account.json
 Generating a new keypair
 Wrote new keypair to stake-account.json
 ============================================================================
@@ -771,9 +771,9 @@ pubkey: 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ
 Save this seed phrase to recover your new keypair:
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ============================================================================
-$ solana create-stake-account stake-account.json 10
+$ gemachain create-stake-account stake-account.json 10
 Signature: 5Y9r6MNoqJzVX8TWryAJbdp8i2DvintfxbYWoY6VcLEPgphK2tdydhtJTd3o3dF7QdM2Pg8sBFDZuyNcMag3nPvj
-$ solana delegate-stake 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
+$ gemachain delegate-stake 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ 38DYMkwYCvsj8TC6cNaEvFHHVDYeWDp1qUgMgyjNqZXk
 Signature: 2cDjHXSHjuadGQf1NQpPi43A8R19aCifsY16yTcictKPHcSAXN5TvXZ58nDJwkYs12tuZfTh5WVgAMSvptfrKdPP
 ```
 
@@ -781,7 +781,7 @@ Two epochs later, when the stake is fully active and has received one epoch of
 rewards, we can deposit the stake into the stake pool.
 
 ```console
-$ spl-stake-pool deposit-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ
+$ gpl-stake-pool deposit-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ
 Depositing stake 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ into stake pool account F8e8Ympp4MkDSPZdvRxdQUZXRkMBDdyqgHa363GShAPt
 Using existing associated token account DgyZrAq88bnG1TNRxpgDQzWXpzEurCvfY2ukKFWBvADQ to receive stake pool tokens of mint BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB, owned by 4SnSuUtJGKvk2GYpBwmEsWG53zTurVM8yXGsoiZQyMJn
 Signature: 45x2UtA1b49eBPtRHdkvA3k8JneZzfwjptNN1kKQZaPABYiJ4hSA8qwi7qLNN5b3Fr4Z6vXhJprrTCpkk3f8UqgD
@@ -789,21 +789,21 @@ Signature: 45x2UtA1b49eBPtRHdkvA3k8JneZzfwjptNN1kKQZaPABYiJ4hSA8qwi7qLNN5b3Fr4Z6
 
 The CLI will default to using the fee payer's
 [Associated Token Account](associated-token-account.md) for stake pool tokens.
-Alternatively, you can create an SPL token account yourself and pass it as the
+Alternatively, you can create an GPL token account yourself and pass it as the
 `token-receiver` for the command.
 
 ```console
-$ spl-stake-pool deposit-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ --token-receiver 34XMHa3JUPv46ftU4dGHvemZ9oKVjnciRePYMcX3rjEF
+$ gpl-stake-pool deposit-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ --token-receiver 34XMHa3JUPv46ftU4dGHvemZ9oKVjnciRePYMcX3rjEF
 Depositing stake 97wBBiLVA7fUViEew8yV8R6tTdKithZDVz8LHLfF9sTJ into stake pool account F8e8Ympp4MkDSPZdvRxdQUZXRkMBDdyqgHa363GShAPt
 Signature: 4AESGZzqBVfj5xQnMiPWAwzJnAtQDRFK1Ha6jqKKTs46Zm5fw3LqgU1mRAT6CKTywVfFMHZCLm1hcQNScSMwVvjQ
 ```
 
 In return, the stake pool has minted us new pool tokens, representing our share
 of ownership in the pool.  We can double-check our stake pool account using the
-SPL token command-line utility.
+GPL token command-line utility.
 
 ```console
-$ spl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
+$ gpl-token balance BoNneHKDrX9BHjjvSpPfnQyRjsnc9WFH71v8wrgCd7LB
 10.00000000
 ```
 
@@ -815,7 +815,7 @@ In order to calculate the proper value of these stake pool tokens, we must updat
 the total value managed by the stake pool every epoch.
 
 ```console
-$ spl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Signature: 2rtPNGKFSSnXFCb6MKG5wHp34dkB5hJWNhro8EU2oGh1USafAgzu98EgoRnPLi7ojQfmTpvXk4S7DWXYGu5t85Ka
 Signature: 5V2oCNvZCNJfC6QXHmR2UHGxVMip6nfZixYkVjFQBTyTf2Z9s9GJ9BjkxSFGvUsvW6zc2cCRv9Lqucu1cgHMFcVU
 ```
@@ -824,7 +824,7 @@ If another user already updated the stake pool balance for the current epoch, we
 see a different output.
 
 ```sh
-$ spl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
+$ gpl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR
 Update not required
 ```
 
@@ -838,7 +838,7 @@ not possible, there is the option to only update the stake pool balances without
 performing merges using the `--no-merge` flag.
 
 ```sh
-$ spl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --no-merge
+$ gpl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --no-merge
 Signature: 5cjdZG727uzwnEEG3vJ1vskA9WsXibaEHh7imXSb2S1cwEYK4Q3btr2GEeAV8EffK4CEQ2WM6PQxawkJAHoZ4jsQ
 Signature: EBHbSRstJ3HxKwYKak8vEwVMKr1UBxdbqs5KuX3XYt4ppPjhaziGEtvL2TJCm1HLokbrtMeTEv57Ef4xhByJtJP
 ```
@@ -847,7 +847,7 @@ Later on, whenever the transient stakes are ready to be merged, it is possible t
 force another update in the same epoch using the `--force` flag.
 
 ```sh
-$ spl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --force
+$ gpl-stake-pool update Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR --force
 Signature: 5RneEBwJkFytBJaJdkvCTHFrG3QzE3SGf9vdBm9gteCcHV4HwaHzj3mjX1hZg4yCREQSgmo3H9bPF6auMmMFTSTo
 Signature: 1215wJUY7vj82TQoGCacQ2VJZ157HnCTvfsUXkYph3nZzJNmeDaGmy1nCD7hkhFfxnQYYxVtec5TkDFGGB4e7EvG
 ```
@@ -860,7 +860,7 @@ pool tokens in exchange for an activated stake account.
 Let's withdraw active staked SOL in exchange for 5 pool tokens.
 
 ```console
-$ spl-stake-pool withdraw-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5
+$ gpl-stake-pool withdraw-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5
 Withdrawing ◎5.000000000, or 5 pool tokens, from stake account 3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx, delegated to EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Creating account to receive stake 5GuAyPAt6577HoGhSVRNBv6aHohVtjQ8q7q5i3X1p4tB
 Signature: 5fzaKt5MU8bLjJRgNZyEktKsgweSQzFRpubCGKPeuk9shNQb4CtTkbgZ2X5MmC1VRDZ3YcCTPdtL9sFpXYfoqaeV
@@ -871,7 +871,7 @@ active stake account, delegated to `EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Let's double-check the status of the stake account:
 
 ```console
-$ solana stake-account 5GuAyPAt6577HoGhSVRNBv6aHohVtjQ8q7q5i3X1p4tB
+$ gemachain stake-account 5GuAyPAt6577HoGhSVRNBv6aHohVtjQ8q7q5i3X1p4tB
 Balance: 5.00228288 SOL
 Rent Exempt Reserve: 0.00228288 SOL
 Delegated Stake: 5 SOL
@@ -890,17 +890,17 @@ Alternatively, the user can specify an existing uninitialized stake account to
 receive their stake using the `--stake-receiver` parameter.
 
 ```console
-$ spl-stake-pool withdraw-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR  --amount 0.02 --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ --stake-receiver CZF2z3JJoDmJRcVjtsrz1BKUUGNL3VPW5FPFqge1bzmQ
+$ gpl-stake-pool withdraw-stake Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR  --amount 0.02 --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ --stake-receiver CZF2z3JJoDmJRcVjtsrz1BKUUGNL3VPW5FPFqge1bzmQ
 Withdrawing ◎5.000000000, or 5 pool tokens, from stake account 3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx, delegated to EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Signature: 2xBPVPJ749AE4hHNCNYdjuHv1EdMvxm9uvvraWfTA7Urrvecwh9w64URCyLLroLQ2RKDGE2QELM2ZHd8qRkjavJM
 ```
 
 By default, the withdraw command uses the `token-owner`'s associated token account to
-source the pool tokens. It's possible to specify the SPL token account using
+source the pool tokens. It's possible to specify the GPL token account using
 the `--pool-account` flag.
 
 ```console
-$ spl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5 --pool-account 34XMHa3JUPv46ftU4dGHvemZ9oKVjnciRePYMcX3rjEF
+$ gpl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5 --pool-account 34XMHa3JUPv46ftU4dGHvemZ9oKVjnciRePYMcX3rjEF
 Withdrawing ◎5.000000000, or 5 pool tokens, from stake account 3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx, delegated to EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Creating account to receive stake CZF2z3JJoDmJRcVjtsrz1BKUUGNL3VPW5FPFqge1bzmQ
 Signature: 2xBPVPJ749AE4hHNCNYdjuHv1EdMvxm9uvvraWfTA7Urrvecwh9w64URCyLLroLQ2RKDGE2QELM2ZHd8qRkjavJM
@@ -911,13 +911,13 @@ accounts in the pool. It's also possible to specify a specific vote account for
 the withdraw using the `--vote-account` flag.
 
 ```console
-$ spl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR  --amount 5 --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
+$ gpl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR  --amount 5 --vote-account EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Withdrawing ◎5.000000000, or 5 pool tokens, from stake account 3k7Nwu9jUSc6SNG11wzufKYoZXRFgxWamheGLYWp5Rvx, delegated to EhRbKi4Vhm1oUCGWHiLEMYZqDrHwEd7Jgzgi26QJKvfQ
 Creating account to receive stake CZF2z3JJoDmJRcVjtsrz1BKUUGNL3VPW5FPFqge1bzmQ
 Signature: 2xBPVPJ749AE4hHNCNYdjuHv1EdMvxm9uvvraWfTA7Urrvecwh9w64URCyLLroLQ2RKDGE2QELM2ZHd8qRkjavJM
 ```
 
-Note that the associated validator stake account must have enough lamports to
+Note that the associated validator stake account must have enough carats to
 satisfy the pool token amount requested.
 
 #### Special case: exiting pool with a delinquent staker
@@ -932,7 +932,7 @@ reserve, but only if all of the validator stake accounts are at the minimum amou
 `0.001 SOL + stake account rent exemption`.
 
 ```console
-$ spl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5 --use-reserve
+$ gpl-stake-pool withdraw Zg5YBPAk8RqBR9kaLLSoN5C8Uv7nErBz1WC63HTsCPR 5 --use-reserve
 Withdrawing ◎5.000000000, or 5 pool tokens, from stake account J5XB7mWpeaUZxZ6ogXT57qSCobczx27vLZYSgfSbZoBB
 Creating account to receive stake 51XdXiBSsVzeuY79xJwWAGZgeKzzgFKWajkwvWyrRiNE
 Signature: yQH9n7Go6iCMEYXqWef38ZYBPwXDmbwKAJFJ4EHD6TusBpusKsfNuT3TV9TL8FmxR2N9ExZTZwbD9Njc3rMvUcf
@@ -962,7 +962,7 @@ Every stake pool is initialized with an undelegated reserve stake account, used
 to hold undelegated stake in process of rebalancing. After the staker decreases
 the stake on a validator, one epoch later, the update operation will merge the
 decreased stake into the reserve. Conversely, whenever the staker increases the
-stake on a validator, the lamports are drawn from the reserve stake account.
+stake on a validator, the carats are drawn from the reserve stake account.
 
 ### Safety of Funds
 
@@ -1009,7 +1009,7 @@ epoch after activation for your stake account to match up with the stake pool's 
 
 ### Transaction sizes
 
-The Solana transaction processor has two important limitations:
+The Gemachain transaction processor has two important limitations:
 
 * size of the overall transaction, limited to roughly 1 MTU / packet
 * computation budget per instruction

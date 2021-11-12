@@ -1,4 +1,4 @@
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@gemachain/web3.js';
 
 import { Numberu32, Numberu64 } from './utils';
 
@@ -9,7 +9,7 @@ export function createInstruction(
   nameOwnerKey: PublicKey,
   payerKey: PublicKey,
   hashed_name: Buffer,
-  lamports: Numberu64,
+  carats: Numberu64,
   space: Numberu32,
   nameClassKey?: PublicKey,
   nameParent?: PublicKey,
@@ -19,7 +19,7 @@ export function createInstruction(
     Buffer.from(Int8Array.from([0])),
     new Numberu32(hashed_name.length).toBuffer(),
     hashed_name,
-    lamports.toBuffer(),
+    carats.toBuffer(),
     space.toBuffer(),
   ];
 

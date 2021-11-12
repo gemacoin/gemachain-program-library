@@ -1,5 +1,5 @@
 import * as schema from './schema.js';
-import solanaWeb3 from '@solana/web3.js';
+import gemachainWeb3 from '@gemachain/web3.js';
 import assert from 'assert';
 
 export class StakePoolAccounts {
@@ -12,13 +12,13 @@ export class StakePoolAccounts {
 }
 
 export interface StakePoolAccount {
-  pubkey: solanaWeb3.PublicKey;
-  account: solanaWeb3.AccountInfo<schema.StakePool>;
+  pubkey: gemachainWeb3.PublicKey;
+  account: gemachainWeb3.AccountInfo<schema.StakePool>;
 }
 
 export interface ValidatorListAccount {
-  pubkey: solanaWeb3.PublicKey;
-  account: solanaWeb3.AccountInfo<schema.ValidatorList>;
+  pubkey: gemachainWeb3.PublicKey;
+  account: gemachainWeb3.AccountInfo<schema.ValidatorList>;
 }
 
 /**
@@ -27,8 +27,8 @@ export interface ValidatorListAccount {
  * @param stakePoolPubKey: The public key (address) of the stake pool account.
  */
 export async function getStakePoolAccount(
-  connection: solanaWeb3.Connection,
-  stakePoolPubKey: solanaWeb3.PublicKey,
+  connection: gemachainWeb3.Connection,
+  stakePoolPubKey: gemachainWeb3.PublicKey,
 ): Promise<StakePoolAccount> {
   const account = await connection.getAccountInfo(stakePoolPubKey);
 
@@ -37,7 +37,7 @@ export async function getStakePoolAccount(
     account: {
       data: schema.StakePool.decode(account.data),
       executable: account.executable,
-      lamports: account.lamports,
+      carats: account.carats,
       owner: account.owner,
     },
   };
@@ -49,8 +49,8 @@ export async function getStakePoolAccount(
  * @param validatorListPubKey: The public key (address) of the validator list account.
  */
 export async function getValidatorListAccount(
-  connection: solanaWeb3.Connection,
-  validatorListPubKey: solanaWeb3.PublicKey,
+  connection: gemachainWeb3.Connection,
+  validatorListPubKey: gemachainWeb3.PublicKey,
 ): Promise<ValidatorListAccount> {
   try {
     const account = await connection.getAccountInfo(validatorListPubKey);
@@ -60,7 +60,7 @@ export async function getValidatorListAccount(
       account: {
         data: schema.ValidatorList.decodeUnchecked(account.data),
         executable: account.executable,
-        lamports: account.lamports,
+        carats: account.carats,
         owner: account.owner,
       },
     };
@@ -75,8 +75,8 @@ export async function getValidatorListAccount(
  * @param stakePoolProgramAddress: The public key (address) of the StakePool program.
  */
 export async function getStakePoolAccounts(
-  connection: solanaWeb3.Connection,
-  stakePoolProgramAddress: solanaWeb3.PublicKey,
+  connection: gemachainWeb3.Connection,
+  stakePoolProgramAddress: gemachainWeb3.PublicKey,
 ): Promise<(StakePoolAccount | ValidatorListAccount)[]> {
   try {
     let response = await connection.getProgramAccounts(stakePoolProgramAddress);
@@ -110,7 +110,7 @@ export async function getStakePoolAccounts(
         account: {
           data: decodedData,
           executable: a.account.executable,
-          lamports: a.account.lamports,
+          carats: a.account.carats,
           owner: a.account.owner,
         },
       };
@@ -125,9 +125,9 @@ export async function getStakePoolAccounts(
 /**
  * Helper function to pretty print a schema.PublicKey
  * Pretty prints a PublicKey in base58 format */
-export function prettyPrintPubKey(pubKey: solanaWeb3.PublicKey): string {
-  return new solanaWeb3.PublicKey(
-    new solanaWeb3.PublicKey(pubKey.toBuffer()).toBytes().reverse(),
+export function prettyPrintPubKey(pubKey: gemachainWeb3.PublicKey): string {
+  return new gemachainWeb3.PublicKey(
+    new gemachainWeb3.PublicKey(pubKey.toBuffer()).toBytes().reverse(),
   ).toString();
 }
 
@@ -144,13 +144,13 @@ export function prettyPrintAccount(
   }
 
   for (const val in sp) {
-    if (sp[val] instanceof solanaWeb3.PublicKey) {
+    if (sp[val] instanceof gemachainWeb3.PublicKey) {
       console.log(val, prettyPrintPubKey(sp[val]));
     } else {
       console.log(val, sp[val]);
     }
   }
   console.log('Executable?:', account.account.executable);
-  console.log('Lamports:', account.account.lamports);
+  console.log('Carats:', account.account.carats);
   console.log('Owner PubKey:', account.account.owner.toString());
 }

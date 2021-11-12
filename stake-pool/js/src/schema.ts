@@ -1,6 +1,6 @@
 import {Schema, serialize, deserializeUnchecked} from 'borsh';
 import BN from 'bn.js';
-import {Struct, Enum, PublicKey} from '@solana/web3.js';
+import {Struct, Enum, PublicKey} from '@gemachain/web3.js';
 
 export class Fee extends Struct {
   denominator: BN;
@@ -27,7 +27,7 @@ export class StakePool extends Struct {
   reserveStake: PublicKey;
   poolMint: PublicKey;
   managerFeeAccount: PublicKey;
-  totalStakeLamports: BN;
+  totalStakeCarats: BN;
   poolTokenSupply: BN;
   lastUpdateEpoch: BN;
   fee: Fee;
@@ -41,7 +41,7 @@ export class ValidatorList extends Struct {
 export class ValidatorStakeInfo extends Struct {
   status: StakeStatus;
   voteAccountAddress: PublicKey;
-  stakeLamports: BN;
+  stakeCarats: BN;
   lastUpdateEpoch: BN;
 }
 export class StakeStatus extends Enum {}
@@ -99,7 +99,7 @@ export function addStakePoolSchema(schema: Schema): void {
       ['poolMint', PublicKey],
       ['managerFeeAccount', PublicKey],
       ['tokenProgramId', PublicKey],
-      ['totalStakeLamports', 'u64'],
+      ['totalStakeCarats', 'u64'],
       ['poolTokenSupply', 'u64'],
       ['lastUpdateEpoch', 'u64'],
       ['fee', Fee],
@@ -132,7 +132,7 @@ export function addStakePoolSchema(schema: Schema): void {
     fields: [
       ['status', StakeStatus],
       ['voteAccountAddress', PublicKey],
-      ['stakeLamports', 'u64'],
+      ['stakeCarats', 'u64'],
       ['lastUpdateEpoch', 'u64'],
     ],
   });

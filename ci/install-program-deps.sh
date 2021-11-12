@@ -3,7 +3,7 @@
 set -e
 
 source ci/rust-version.sh stable
-source ci/solana-version.sh install
+source ci/gemachain-version.sh install
 
 set -x
 

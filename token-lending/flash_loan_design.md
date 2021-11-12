@@ -60,4 +60,4 @@ pub enum FlashLoanReceiverInstruction {
 
 ```
 
-You can view a sample implementation [here](https://github.com/solana-labs/solana-program-library/tree/master/token-lending/program/tests/helpers/flash_loan_receiver.rs).
+You can view a sample implementation [here](https://github.com/gemachain/gemachain-program-library/tree/master/token-lending/program/tests/helpers/flash_loan_receiver.rs).

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Patches the SPL crates for developing against a local solana monorepo
+# Patches the GPL crates for developing against a local gemachain monorepo
 #
 
-solana_dir=$1
-if [[ -z $solana_dir ]]; then
-  echo "Usage: $0 <path-to-solana-monorepo>"
+gemachain_dir=$1
+if [[ -z $gemachain_dir ]]; then
+  echo "Usage: $0 <path-to-gemachain-monorepo>"
   exit 1
 fi
 
@@ -14,20 +14,20 @@ workspace_crates=(
   themis/client_ristretto/Cargo.toml
 )
 
-if [[ ! -r "$solana_dir"/scripts/read-cargo-variable.sh ]]; then
-  echo "$solana_dir is not a path to the solana monorepo"
+if [[ ! -r "$gemachain_dir"/scripts/read-cargo-variable.sh ]]; then
+  echo "$gemachain_dir is not a path to the gemachain monorepo"
   exit 1
 fi
 
 set -e
 
-solana_dir=$(cd "$solana_dir" && pwd)
+gemachain_dir=$(cd "$gemachain_dir" && pwd)
 cd "$(dirname "$0")"
 
-source "$solana_dir"/scripts/read-cargo-variable.sh
-solana_ver=$(readCargoVariable version "$solana_dir"/sdk/Cargo.toml)
+source "$gemachain_dir"/scripts/read-cargo-variable.sh
+gemachain_ver=$(readCargoVariable version "$gemachain_dir"/sdk/Cargo.toml)
 
-echo "Patching in $solana_ver from $solana_dir"
+echo "Patching in $gemachain_ver from $gemachain_dir"
 echo
 for crate in "${workspace_crates[@]}"; do
   if grep -q '\[patch.crates-io\]' "$crate"; then
@@ -35,27 +35,27 @@ for crate in "${workspace_crates[@]}"; do
   else
     cat >> "$crate" <<PATCH
 [patch.crates-io]
-solana-account-decoder = {path = "$solana_dir/account-decoder" }
-solana-banks-client = { path = "$solana_dir/banks-client"}
-solana-banks-server = { path = "$solana_dir/banks-server"}
-solana-bpf-loader-program = { path = "$solana_dir/programs/bpf_loader" }
-solana-clap-utils = {path = "$solana_dir/clap-utils" }
-solana-cli-config = {path = "$solana_dir/cli-config" }
-solana-cli-output = {path = "$solana_dir/cli-output" }
-solana-client = { path = "$solana_dir/client"}
-solana-core = { path = "$solana_dir/core"}
-solana-logger = {path = "$solana_dir/logger" }
-solana-notifier = { path = "$solana_dir/notifier" }
-solana-remote-wallet = {path = "$solana_dir/remote-wallet" }
-solana-program = { path = "$solana_dir/sdk/program" }
-solana-program-test = { path = "$solana_dir/program-test" }
-solana-runtime = { path = "$solana_dir/runtime" }
-solana-sdk = { path = "$solana_dir/sdk" }
-solana-stake-program = { path = "$solana_dir/programs/stake" }
-solana-transaction-status = { path = "$solana_dir/transaction-status" }
-solana-vote-program = { path = "$solana_dir/programs/vote" }
+gemachain-account-decoder = {path = "$gemachain_dir/account-decoder" }
+gemachain-banks-client = { path = "$gemachain_dir/banks-client"}
+gemachain-banks-server = { path = "$gemachain_dir/banks-server"}
+gemachain-bpf-loader-program = { path = "$gemachain_dir/programs/bpf_loader" }
+gemachain-clap-utils = {path = "$gemachain_dir/clap-utils" }
+gemachain-cli-config = {path = "$gemachain_dir/cli-config" }
+gemachain-cli-output = {path = "$gemachain_dir/cli-output" }
+gemachain-client = { path = "$gemachain_dir/client"}
+gemachain-core = { path = "$gemachain_dir/core"}
+gemachain-logger = {path = "$gemachain_dir/logger" }
+gemachain-notifier = { path = "$gemachain_dir/notifier" }
+gemachain-remote-wallet = {path = "$gemachain_dir/remote-wallet" }
+gemachain-program = { path = "$gemachain_dir/sdk/program" }
+gemachain-program-test = { path = "$gemachain_dir/program-test" }
+gemachain-runtime = { path = "$gemachain_dir/runtime" }
+gemachain-sdk = { path = "$gemachain_dir/sdk" }
+gemachain-stake-program = { path = "$gemachain_dir/programs/stake" }
+gemachain-transaction-status = { path = "$gemachain_dir/transaction-status" }
+gemachain-vote-program = { path = "$gemachain_dir/programs/vote" }
 PATCH
   fi
 done
 
-./update-solana-dependencies.sh "$solana_ver"
+./update-gemachain-dependencies.sh "$gemachain_ver"

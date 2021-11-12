@@ -2,14 +2,14 @@ import assert from 'assert';
 import BN from 'bn.js';
 import {Buffer} from 'buffer';
 import * as BufferLayout from 'buffer-layout';
-import type {Connection, TransactionSignature} from '@solana/web3.js';
+import type {Connection, TransactionSignature} from '@gemachain/web3.js';
 import {
   Account,
   PublicKey,
   SystemProgram,
   Transaction,
   TransactionInstruction,
-} from '@solana/web3.js';
+} from '@gemachain/web3.js';
 
 import * as Layout from './layout';
 import {sendAndConfirmTransaction} from './util/send-and-confirm-transaction';
@@ -160,7 +160,7 @@ export class TokenSwap {
   /**
    * Get the minimum balance for the token swap account to be rent exempt
    *
-   * @return Number of lamports required
+   * @return Number of carats required
    */
   static async getMinBalanceRentForExemptTokenSwap(
     connection: Connection,
@@ -400,7 +400,7 @@ export class TokenSwap {
       SystemProgram.createAccount({
         fromPubkey: payer.publicKey,
         newAccountPubkey: tokenSwapAccount.publicKey,
-        lamports: balanceNeeded,
+        carats: balanceNeeded,
         space: TokenSwapLayout.span,
         programId: swapProgramId,
       }),
